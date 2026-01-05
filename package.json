@@ -1,0 +1,15 @@
+{
+  "name": "exodusxe",
+  "version": "1.0.0",
+  "description": "Universal web remote - control any website from your phone",
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.14.2",
+    "nanoid": "^5.0.4"
+  }
+}

@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>ExodusXE Remote</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #000;
+      color: #fff;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: 12px 16px;
+      padding-top: max(12px, env(safe-area-inset-top));
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+      z-index: 100;
+    }
+    .logo {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: #444;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #333;
+    }
+    .status-dot.connected { background: #0f0; box-shadow: 0 0 8px #0f0; }
+    .room-code {
+      font-size: 10px;
+      font-family: monospace;
+      color: #666;
+      letter-spacing: 2px;
+    }
+    .profile-btn {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: #888;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    /* Main Remote Area */
+    .remote-area {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px 20px;
+    }
+
+    /* Universal Layout (D-Pad + Actions) */
+    .layout-universal {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    /* D-Pad */
+    .dpad {
+      position: relative;
+      width: 150px;
+      height: 150px;
+    }
+    .dpad-bg {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 140px; height: 140px;
+      background: radial-gradient(circle at 30% 30%, #1a1a1a, #0a0a0a);
+      border-radius: 50%;
+      box-shadow: inset 0 2px 4px rgba(255,255,255,0.05), 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .dpad-btn {
+      position: absolute;
+      width: 48px; height: 48px;
+      background: linear-gradient(145deg, #222, #111);
+      border: none;
+      border-radius: 12px;
+      color: #555;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+      transition: all 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .dpad-btn:active { background: #333; color: #fff; transform: scale(0.95); }
+    .dpad-btn.up { top: 0; left: 50%; transform: translateX(-50%); }
+    .dpad-btn.down { bottom: 0; left: 50%; transform: translateX(-50%); }
+    .dpad-btn.left { left: 0; top: 50%; transform: translateY(-50%); }
+    .dpad-btn.right { right: 0; top: 50%; transform: translateY(-50%); }
+    .dpad-btn.up:active { transform: translateX(-50%) scale(0.95); }
+    .dpad-btn.down:active { transform: translateX(-50%) scale(0.95); }
+    .dpad-btn.left:active { transform: translateY(-50%) scale(0.95); }
+    .dpad-btn.right:active { transform: translateY(-50%) scale(0.95); }
+    .dpad-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 30px; height: 30px;
+      background: #0a0a0a;
+      border-radius: 50%;
+    }
+
+    /* Action Buttons */
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .action-btn {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      border: none;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.3), 0 6px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+      transition: all 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .action-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,0.3); }
+    .action-btn.a { background: linear-gradient(145deg, #3a3, #282); color: #fff; }
+    .action-btn.b { background: linear-gradient(145deg, #a33, #822); color: #fff; }
+    .action-btn.x { background: linear-gradient(145deg, #33a, #228); color: #fff; }
+    .action-btn.y { background: linear-gradient(145deg, #aa3, #882); color: #fff; }
+
+    /* Media Layout */
+    .layout-media {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      width: 100%;
+      max-width: 300px;
+    }
+    .media-main {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .media-btn {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(145deg, #222, #111);
+      color: #888;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .media-btn:active { background: #333; color: #fff; }
+    .media-btn.play {
+      width: 80px; height: 80px;
+      background: linear-gradient(145deg, #333, #1a1a1a);
+      font-size: 32px;
+    }
+    .media-secondary {
+      display: flex;
+      gap: 16px;
+    }
+    .media-sm {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      border: none;
+      background: #1a1a1a;
+      color: #666;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .media-sm:active { background: #333; color: #fff; }
+
+    /* Swipe Layout (Presentations) */
+    .layout-swipe {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      width: 100%;
+    }
+    .swipe-area {
+      width: 100%;
+      max-width: 300px;
+      height: 200px;
+      background: linear-gradient(145deg, #111, #0a0a0a);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .swipe-hint {
+      font-size: 12px;
+      color: #333;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .swipe-indicator {
+      position: absolute;
+      font-size: 48px;
+      color: #333;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .swipe-indicator.show { opacity: 1; color: #fff; }
+    .swipe-actions {
+      display: flex;
+      gap: 16px;
+    }
+
+    /* Profile Selector */
+    .profile-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.95);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .profile-overlay.active { display: flex; }
+    .profile-list {
+      width: 100%;
+      max-width: 320px;
+    }
+    .profile-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .profile-title {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      color: #666;
+    }
+    .profile-close {
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .profile-item {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .profile-item:active, .profile-item.active {
+      background: #1a1a1a;
+      border-color: #0f0;
+    }
+    .profile-name {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .profile-desc {
+      font-size: 11px;
+      color: #666;
+    }
+
+    /* Hide layouts by default */
+    .layout-universal, .layout-media, .layout-swipe { display: none; }
+    .layout-universal.active { display: flex; }
+    .layout-media.active { display: flex; }
+    .layout-swipe.active { display: flex; }
+  </style>
+</head>
+<body>
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="logo">EXODUS<span style="color:#0f0">XE</span></div>
+    <div class="status">
+      <div id="statusDot" class="status-dot"></div>
+      <span id="roomCode" class="room-code"></span>
+    </div>
+    <button class="profile-btn" onclick="openProfiles()">PROFILES</button>
+  </div>
+
+  <!-- Remote Area -->
+  <div class="remote-area">
+    <!-- Universal Layout -->
+    <div id="layoutUniversal" class="layout-universal active">
+      <div class="dpad">
+        <div class="dpad-bg"></div>
+        <button class="dpad-btn up" data-action="up">▲</button>
+        <button class="dpad-btn down" data-action="down">▼</button>
+        <button class="dpad-btn left" data-action="left">◀</button>
+        <button class="dpad-btn right" data-action="right">▶</button>
+        <div class="dpad-center"></div>
+      </div>
+      <div class="actions">
+        <button class="action-btn y" data-action="y">Y</button>
+        <button class="action-btn x" data-action="x">X</button>
+        <button class="action-btn a" data-action="a">A</button>
+        <button class="action-btn b" data-action="b">B</button>
+      </div>
+    </div>
+
+    <!-- Media Layout -->
+    <div id="layoutMedia" class="layout-media">
+      <div class="media-main">
+        <button class="media-btn" data-action="seekBack">⏪</button>
+        <button class="media-btn play" data-action="play">▶</button>
+        <button class="media-btn" data-action="seekForward">⏩</button>
+      </div>
+      <div class="media-secondary">
+        <button class="media-sm" data-action="volumeDown">🔉</button>
+        <button class="media-sm" data-action="mute">🔇</button>
+        <button class="media-sm" data-action="volumeUp">🔊</button>
+        <button class="media-sm" data-action="fullscreen">⛶</button>
+        <button class="media-sm" data-action="captions">CC</button>
+      </div>
+    </div>
+
+    <!-- Swipe Layout (Presentations) -->
+    <div id="layoutSwipe" class="layout-swipe">
+      <div id="swipeArea" class="swipe-area">
+        <span class="swipe-hint">Swipe to navigate</span>
+        <span id="swipeIndicator" class="swipe-indicator">→</span>
+      </div>
+      <div class="swipe-actions">
+        <button class="media-sm" data-action="a">✓</button>
+        <button class="media-sm" data-action="b">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Selector -->
+  <div id="profileOverlay" class="profile-overlay">
+    <div class="profile-list">
+      <div class="profile-header">
+        <span class="profile-title">SELECT PROFILE</span>
+        <button class="profile-close" onclick="closeProfiles()">×</button>
+      </div>
+      <div id="profileItems"></div>
+    </div>
+  </div>
+
+  <script>
+    const pathParts = window.location.pathname.split('/');
+    const roomId = pathParts[pathParts.length - 1];
+
+    let ws = null;
+    let currentProfile = 'universal';
+    let profiles = {};
+
+    // Connect WebSocket
+    function connect() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${protocol}//${window.location.host}/ws/${roomId}`);
+
+      ws.onopen = () => {
+        ws.send(JSON.stringify({ type: 'join', roomId, role: 'controller' }));
+        document.getElementById('statusDot').classList.add('connected');
+        document.getElementById('roomCode').textContent = roomId;
+      };
+
+      ws.onmessage = (e) => {
+        const data = JSON.parse(e.data);
+        console.log('Remote received:', data);
+
+        if (data.type === 'joined' && data.profile) {
+          currentProfile = Object.keys(profiles).find(k => profiles[k].name === data.profile.name) || 'universal';
+          setLayout(data.profile.layout);
+        }
+        if (data.type === 'profileChanged' && data.profile) {
+          console.log('Profile changed to:', data.profile);
+          currentProfile = Object.keys(profiles).find(k => profiles[k].name === data.profile.name) || 'universal';
+          setLayout(data.profile.layout);
+        }
+        if (data.type === 'status') {
+          // Connection status update
+        }
+
+        // Auto-detected site from browser
+        if (data.type === 'siteDetected') {
+          console.log('Site detected:', data.site, '-> auto-switching to', data.profileKey);
+          currentProfile = data.profileKey;
+          setLayout(data.profile.layout);
+          showSiteNotification(data.site, data.profile.name);
+        }
+      };
+
+    // Show notification when site is detected
+    function showSiteNotification(site, profileName) {
+      const existing = document.getElementById('site-notification');
+      if (existing) existing.remove();
+
+      const notification = document.createElement('div');
+      notification.id = 'site-notification';
+      notification.style.cssText = `
+        position: fixed;
+        top: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 255, 0, 0.2);
+        border: 1px solid #0f0;
+        color: #0f0;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 11px;
+        z-index: 1000;
+        animation: fadeOut 3s forwards;
+      `;
+      notification.innerHTML = `<strong>${site}</strong> → ${profileName}`;
+      document.body.appendChild(notification);
+
+      setTimeout(() => notification.remove(), 3000);
+    }
+
+      ws.onclose = () => {
+        document.getElementById('statusDot').classList.remove('connected');
+        setTimeout(connect, 2000);
+      };
+    }
+
+    // Send action
+    function sendAction(action) {
+      console.log('sendAction called:', action, 'ws state:', ws?.readyState);
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        const msg = JSON.stringify({ type: 'action', action });
+        console.log('Sending:', msg);
+        ws.send(msg);
+        vibrate();
+      } else {
+        console.log('WebSocket not ready');
+      }
+    }
+
+    // Send gesture
+    function sendGesture(gesture, data = {}) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'gesture', gesture, data }));
+        vibrate();
+      }
+    }
+
+    // Vibrate
+    function vibrate() {
+      if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    // Set layout
+    function setLayout(layout) {
+      document.querySelectorAll('[class^="layout-"]').forEach(el => el.classList.remove('active'));
+
+      if (layout === 'media') {
+        document.getElementById('layoutMedia').classList.add('active');
+      } else if (layout === 'swipe+actions') {
+        document.getElementById('layoutSwipe').classList.add('active');
+      } else {
+        document.getElementById('layoutUniversal').classList.add('active');
+      }
+    }
+
+    // Profile management
+    async function loadProfiles() {
+      const res = await fetch('/api/profiles');
+      profiles = await res.json();
+      renderProfiles();
+    }
+
+    function renderProfiles() {
+      const container = document.getElementById('profileItems');
+      container.innerHTML = '';
+
+      Object.entries(profiles).forEach(([key, profile]) => {
+        const item = document.createElement('div');
+        item.className = 'profile-item' + (key === currentProfile ? ' active' : '');
+        item.innerHTML = `
+          <div class="profile-name">${profile.name}</div>
+          <div class="profile-desc">${profile.description}</div>
+        `;
+        item.onclick = () => selectProfile(key);
+        container.appendChild(item);
+      });
+    }
+
+    function selectProfile(key) {
+      currentProfile = key;
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'setProfile', profile: key }));
+      }
+      closeProfiles();
+    }
+
+    function openProfiles() {
+      document.getElementById('profileOverlay').classList.add('active');
+    }
+
+    function closeProfiles() {
+      document.getElementById('profileOverlay').classList.remove('active');
+    }
+
+    // Button handlers
+    document.querySelectorAll('[data-action]').forEach(btn => {
+      btn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        sendAction(btn.dataset.action);
+      });
+      btn.addEventListener('click', () => sendAction(btn.dataset.action));
+    });
+
+    // Swipe handling
+    let touchStartX = 0, touchStartY = 0;
+    const swipeArea = document.getElementById('swipeArea');
+
+    if (swipeArea) {
+      swipeArea.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      });
+
+      swipeArea.addEventListener('touchend', (e) => {
+        const deltaX = e.changedTouches[0].clientX - touchStartX;
+        const deltaY = e.changedTouches[0].clientY - touchStartY;
+        const threshold = 50;
+
+        const indicator = document.getElementById('swipeIndicator');
+
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > threshold) {
+          if (deltaX > 0) {
+            sendGesture('swipeRight');
+            indicator.textContent = '←';
+          } else {
+            sendGesture('swipeLeft');
+            indicator.textContent = '→';
+          }
+          indicator.classList.add('show');
+          setTimeout(() => indicator.classList.remove('show'), 300);
+        } else if (Math.abs(deltaY) > threshold) {
+          if (deltaY > 0) {
+            sendGesture('swipeDown');
+            indicator.textContent = '↓';
+          } else {
+            sendGesture('swipeUp');
+            indicator.textContent = '↑';
+          }
+          indicator.classList.add('show');
+          setTimeout(() => indicator.classList.remove('show'), 300);
+        } else {
+          sendGesture('tap');
+        }
+      });
+    }
+
+    // Initialize
+    connect();
+    loadProfiles();
+  </script>
+</body>
+</html>
