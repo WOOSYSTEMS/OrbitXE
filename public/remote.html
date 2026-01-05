@@ -4,600 +4,681 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#000000">
   <title>ExodusXE Remote</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --accent: #00ff88;
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --surface2: #1e1e1e;
+      --text: #ffffff;
+      --text2: #666666;
+      --safe-top: env(safe-area-inset-top);
+      --safe-bottom: env(safe-area-inset-bottom);
+    }
+
     html, body {
       height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif;
       overflow: hidden;
       touch-action: none;
       user-select: none;
-      -webkit-user-select: none;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #000;
-      color: #fff;
     }
 
-    /* Top Bar */
-    .top-bar {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      padding: 12px 16px;
-      padding-top: max(12px, env(safe-area-inset-top));
+    .app {
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
+      height: 100%;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+    }
+
+    /* Header */
+    .header {
+      display: flex;
       align-items: center;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
-      z-index: 100;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: var(--surface);
     }
+
     .logo {
-      font-size: 10px;
+      font-size: 16px;
       font-weight: 700;
-      letter-spacing: 3px;
-      color: #444;
+      letter-spacing: 1px;
     }
+    .logo span { color: var(--accent); }
+
     .status {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text2);
     }
     .status-dot {
-      width: 6px; height: 6px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: #333;
+      transition: all 0.3s;
     }
-    .status-dot.connected { background: #0f0; box-shadow: 0 0 8px #0f0; }
-    .room-code {
-      font-size: 10px;
-      font-family: monospace;
-      color: #666;
-      letter-spacing: 2px;
+    .status-dot.connected { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+    /* Tab bar */
+    .tab-bar {
+      display: flex;
+      gap: 6px;
+      padding: 8px 12px;
+      overflow-x: auto;
+      background: var(--surface);
+      border-bottom: 1px solid #222;
+      scrollbar-width: none;
     }
-    .profile-btn {
-      background: rgba(255,255,255,0.1);
-      border: none;
-      color: #888;
-      font-size: 9px;
-      font-weight: 600;
-      letter-spacing: 1px;
+    .tab-bar::-webkit-scrollbar { display: none; }
+
+    .tab-item {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
       padding: 6px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    /* Main Remote Area */
-    .remote-area {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 60px 20px 20px;
-    }
-
-    /* Universal Layout (D-Pad + Actions) */
-    .layout-universal {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-      max-width: 500px;
-    }
-
-    /* D-Pad */
-    .dpad {
-      position: relative;
-      width: 150px;
-      height: 150px;
-    }
-    .dpad-bg {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 140px; height: 140px;
-      background: radial-gradient(circle at 30% 30%, #1a1a1a, #0a0a0a);
-      border-radius: 50%;
-      box-shadow: inset 0 2px 4px rgba(255,255,255,0.05), 0 4px 20px rgba(0,0,0,0.5);
-    }
-    .dpad-btn {
-      position: absolute;
-      width: 48px; height: 48px;
-      background: linear-gradient(145deg, #222, #111);
-      border: none;
-      border-radius: 12px;
-      color: #555;
-      font-size: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
-      transition: all 0.1s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .dpad-btn:active { background: #333; color: #fff; transform: scale(0.95); }
-    .dpad-btn.up { top: 0; left: 50%; transform: translateX(-50%); }
-    .dpad-btn.down { bottom: 0; left: 50%; transform: translateX(-50%); }
-    .dpad-btn.left { left: 0; top: 50%; transform: translateY(-50%); }
-    .dpad-btn.right { right: 0; top: 50%; transform: translateY(-50%); }
-    .dpad-btn.up:active { transform: translateX(-50%) scale(0.95); }
-    .dpad-btn.down:active { transform: translateX(-50%) scale(0.95); }
-    .dpad-btn.left:active { transform: translateY(-50%) scale(0.95); }
-    .dpad-btn.right:active { transform: translateY(-50%) scale(0.95); }
-    .dpad-center {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 30px; height: 30px;
-      background: #0a0a0a;
-      border-radius: 50%;
-    }
-
-    /* Action Buttons */
-    .actions {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-    .action-btn {
-      width: 56px; height: 56px;
-      border-radius: 50%;
-      border: none;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      box-shadow: 0 4px 0 rgba(0,0,0,0.3), 0 6px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
-      transition: all 0.1s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .action-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,0.3); }
-    .action-btn.a { background: linear-gradient(145deg, #3a3, #282); color: #fff; }
-    .action-btn.b { background: linear-gradient(145deg, #a33, #822); color: #fff; }
-    .action-btn.x { background: linear-gradient(145deg, #33a, #228); color: #fff; }
-    .action-btn.y { background: linear-gradient(145deg, #aa3, #882); color: #fff; }
-
-    /* Media Layout */
-    .layout-media {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 24px;
-      width: 100%;
-      max-width: 300px;
-    }
-    .media-main {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-    .media-btn {
-      width: 64px; height: 64px;
-      border-radius: 50%;
-      border: none;
-      background: linear-gradient(145deg, #222, #111);
-      color: #888;
-      font-size: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-      -webkit-tap-highlight-color: transparent;
-    }
-    .media-btn:active { background: #333; color: #fff; }
-    .media-btn.play {
-      width: 80px; height: 80px;
-      background: linear-gradient(145deg, #333, #1a1a1a);
-      font-size: 32px;
-    }
-    .media-secondary {
-      display: flex;
-      gap: 16px;
-    }
-    .media-sm {
-      width: 48px; height: 48px;
-      border-radius: 50%;
-      border: none;
-      background: #1a1a1a;
-      color: #666;
-      font-size: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .media-sm:active { background: #333; color: #fff; }
-
-    /* Swipe Layout (Presentations) */
-    .layout-swipe {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-      width: 100%;
-    }
-    .swipe-area {
-      width: 100%;
-      max-width: 300px;
-      height: 200px;
-      background: linear-gradient(145deg, #111, #0a0a0a);
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      overflow: hidden;
-    }
-    .swipe-hint {
-      font-size: 12px;
-      color: #333;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-    }
-    .swipe-indicator {
-      position: absolute;
-      font-size: 48px;
-      color: #333;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-    .swipe-indicator.show { opacity: 1; color: #fff; }
-    .swipe-actions {
-      display: flex;
-      gap: 16px;
-    }
-
-    /* Profile Selector */
-    .profile-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.95);
-      z-index: 200;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .profile-overlay.active { display: flex; }
-    .profile-list {
-      width: 100%;
-      max-width: 320px;
-    }
-    .profile-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    .profile-title {
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 2px;
-      color: #666;
-    }
-    .profile-close {
-      background: none;
-      border: none;
-      color: #666;
-      font-size: 24px;
-      cursor: pointer;
-    }
-    .profile-item {
-      background: #111;
-      border: 1px solid #222;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 12px;
+      background: var(--surface2);
+      border-radius: 6px;
+      font-size: 11px;
+      max-width: 120px;
       cursor: pointer;
       transition: all 0.2s;
+      border: 1px solid transparent;
     }
-    .profile-item:active, .profile-item.active {
-      background: #1a1a1a;
-      border-color: #0f0;
+    .tab-item.active {
+      border-color: var(--accent);
+      background: rgba(0, 255, 136, 0.1);
     }
-    .profile-name {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 4px;
+    .tab-item img {
+      width: 14px;
+      height: 14px;
+      border-radius: 2px;
     }
-    .profile-desc {
-      font-size: 11px;
-      color: #666;
+    .tab-item span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
-    /* Hide layouts by default */
-    .layout-universal, .layout-media, .layout-swipe { display: none; }
-    .layout-universal.active { display: flex; }
-    .layout-media.active { display: flex; }
-    .layout-swipe.active { display: flex; }
+    /* Active tab display */
+    .active-tab {
+      padding: 8px 16px;
+      font-size: 12px;
+      color: var(--text2);
+      background: var(--surface);
+      border-bottom: 1px solid #222;
+    }
+    .active-tab strong { color: var(--accent); font-weight: 500; }
+
+    /* Main area */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Trackpad */
+    .trackpad {
+      flex: 1;
+      margin: 12px;
+      background: linear-gradient(145deg, var(--surface), var(--surface2));
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #222;
+    }
+
+    .trackpad-hint {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #333;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .trackpad-hint svg { margin-bottom: 8px; }
+    .trackpad-hint .title { font-size: 13px; font-weight: 500; }
+    .trackpad-hint .sub { font-size: 11px; margin-top: 4px; }
+
+    .trackpad.active .trackpad-hint { opacity: 0.3; }
+
+    /* Context controls */
+    .context-controls {
+      display: flex;
+      gap: 6px;
+      padding: 6px 12px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      background: var(--surface);
+    }
+    .context-controls::-webkit-scrollbar { display: none; }
+
+    .ctx-btn {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border: 1px solid #333;
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .ctx-btn:active {
+      transform: scale(0.95);
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
+
+    /* Bottom bar */
+    .bottom-bar {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr 1fr;
+      gap: 8px;
+      padding: 10px 12px;
+      background: var(--surface);
+      border-top: 1px solid #222;
+    }
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      background: var(--surface2);
+      border: 1px solid #333;
+      border-radius: 12px;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .action-btn:active { transform: scale(0.95); }
+    .action-btn.primary {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
+    .action-btn svg { width: 22px; height: 22px; }
+
+    /* Keyboard overlay */
+    .keyboard-overlay {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-top: 1px solid #333;
+      transform: translateY(100%);
+      transition: transform 0.25s ease;
+      z-index: 100;
+      padding-bottom: var(--safe-bottom);
+    }
+    .keyboard-overlay.active { transform: translateY(0); }
+
+    .keyboard-header {
+      display: flex;
+      align-items: center;
+      padding: 10px 12px;
+      gap: 10px;
+      border-bottom: 1px solid #222;
+    }
+    .keyboard-input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 16px;
+    }
+    .keyboard-input:focus { outline: none; border-color: var(--accent); }
+
+    .keyboard-done {
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      color: #000;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .keyboard-grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 4px;
+      padding: 8px;
+    }
+
+    .key {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface2);
+      border: none;
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+    .key:active { background: var(--accent); color: #000; }
+    .key.wide { grid-column: span 2; font-size: 14px; }
+    .key.space { grid-column: span 6; font-size: 12px; }
+
+    /* Scroll buttons in trackpad */
+    .scroll-btns {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .scroll-btn {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid #333;
+      border-radius: 10px;
+      color: #666;
+      cursor: pointer;
+    }
+    .scroll-btn:active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+    /* Connection overlay */
+    .connecting {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      z-index: 200;
+      transition: opacity 0.3s;
+    }
+    .connecting.hidden { opacity: 0; pointer-events: none; }
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid #222;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .connecting p { margin-top: 16px; color: var(--text2); font-size: 13px; }
+
+    /* Touch feedback */
+    .touch-ripple {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      background: rgba(0, 255, 136, 0.3);
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      pointer-events: none;
+      animation: ripple 0.4s ease-out forwards;
+    }
+    @keyframes ripple {
+      to { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+    }
   </style>
 </head>
 <body>
-  <!-- Top Bar -->
-  <div class="top-bar">
-    <div class="logo">EXODUS<span style="color:#0f0">XE</span></div>
-    <div class="status">
-      <div id="statusDot" class="status-dot"></div>
-      <span id="roomCode" class="room-code"></span>
-    </div>
-    <button class="profile-btn" onclick="openProfiles()">PROFILES</button>
+  <div class="connecting" id="connecting">
+    <div class="spinner"></div>
+    <p>Connecting to browser...</p>
   </div>
 
-  <!-- Remote Area -->
-  <div class="remote-area">
-    <!-- Universal Layout -->
-    <div id="layoutUniversal" class="layout-universal active">
-      <div class="dpad">
-        <div class="dpad-bg"></div>
-        <button class="dpad-btn up" data-action="up">▲</button>
-        <button class="dpad-btn down" data-action="down">▼</button>
-        <button class="dpad-btn left" data-action="left">◀</button>
-        <button class="dpad-btn right" data-action="right">▶</button>
-        <div class="dpad-center"></div>
+  <div class="app">
+    <header class="header">
+      <div class="logo">EXODUS<span>XE</span></div>
+      <div class="status">
+        <span id="statusText">Waiting</span>
+        <div class="status-dot" id="statusDot"></div>
       </div>
-      <div class="actions">
-        <button class="action-btn y" data-action="y">Y</button>
-        <button class="action-btn x" data-action="x">X</button>
-        <button class="action-btn a" data-action="a">A</button>
-        <button class="action-btn b" data-action="b">B</button>
-      </div>
+    </header>
+
+    <div class="tab-bar" id="tabBar"></div>
+
+    <div class="active-tab" id="activeTab">
+      <strong>Waiting for browser...</strong>
     </div>
 
-    <!-- Media Layout -->
-    <div id="layoutMedia" class="layout-media">
-      <div class="media-main">
-        <button class="media-btn" data-action="seekBack">⏪</button>
-        <button class="media-btn play" data-action="play">▶</button>
-        <button class="media-btn" data-action="seekForward">⏩</button>
+    <div class="main">
+      <div class="trackpad" id="trackpad">
+        <div class="trackpad-hint">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l3 3 3-3M19 9l3 3-3 3"/>
+            <circle cx="12" cy="12" r="2"/>
+          </svg>
+          <div class="title">Swipe to move cursor</div>
+          <div class="sub">Tap to click · Hold for right-click</div>
+        </div>
+
+        <div class="scroll-btns">
+          <button class="scroll-btn" data-scroll="up">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
+          </button>
+          <button class="scroll-btn" data-scroll="down">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+        </div>
       </div>
-      <div class="media-secondary">
-        <button class="media-sm" data-action="volumeDown">🔉</button>
-        <button class="media-sm" data-action="mute">🔇</button>
-        <button class="media-sm" data-action="volumeUp">🔊</button>
-        <button class="media-sm" data-action="fullscreen">⛶</button>
-        <button class="media-sm" data-action="captions">CC</button>
-      </div>
+
+      <div class="context-controls" id="contextControls"></div>
     </div>
 
-    <!-- Swipe Layout (Presentations) -->
-    <div id="layoutSwipe" class="layout-swipe">
-      <div id="swipeArea" class="swipe-area">
-        <span class="swipe-hint">Swipe to navigate</span>
-        <span id="swipeIndicator" class="swipe-indicator">→</span>
-      </div>
-      <div class="swipe-actions">
-        <button class="media-sm" data-action="a">✓</button>
-        <button class="media-sm" data-action="b">✕</button>
-      </div>
+    <div class="bottom-bar">
+      <button class="action-btn" id="btnBack">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <button class="action-btn primary" id="btnKeyboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M8 16h8"/></svg>
+      </button>
+      <button class="action-btn" id="btnRefresh">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+      </button>
     </div>
   </div>
 
-  <!-- Profile Selector -->
-  <div id="profileOverlay" class="profile-overlay">
-    <div class="profile-list">
-      <div class="profile-header">
-        <span class="profile-title">SELECT PROFILE</span>
-        <button class="profile-close" onclick="closeProfiles()">×</button>
-      </div>
-      <div id="profileItems"></div>
+  <div class="keyboard-overlay" id="keyboardOverlay">
+    <div class="keyboard-header">
+      <input type="text" class="keyboard-input" id="keyboardInput" placeholder="Type here..." autocomplete="off" autocapitalize="off" autocorrect="off">
+      <button class="keyboard-done" id="keyboardDone">Done</button>
     </div>
+    <div class="keyboard-grid" id="keyboardGrid"></div>
   </div>
 
   <script>
-    const pathParts = window.location.pathname.split('/');
-    const roomId = pathParts[pathParts.length - 1];
-
     let ws = null;
-    let currentProfile = 'universal';
-    let profiles = {};
+    let connected = false;
+    let activeTab = null;
+    let siteType = 'universal';
+    let tabs = [];
 
-    // Connect WebSocket
+    const roomId = window.location.pathname.split('/').pop();
+    const wsUrl = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws/${roomId}`;
+
+    // Connect
     function connect() {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      ws = new WebSocket(`${protocol}//${window.location.host}/ws/${roomId}`);
+      ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
         ws.send(JSON.stringify({ type: 'join', roomId, role: 'controller' }));
-        document.getElementById('statusDot').classList.add('connected');
-        document.getElementById('roomCode').textContent = roomId;
+        ws.send(JSON.stringify({ type: 'getTabs' }));
       };
 
       ws.onmessage = (e) => {
-        const data = JSON.parse(e.data);
-        console.log('Remote received:', data);
+        const msg = JSON.parse(e.data);
 
-        if (data.type === 'joined' && data.profile) {
-          currentProfile = Object.keys(profiles).find(k => profiles[k].name === data.profile.name) || 'universal';
-          setLayout(data.profile.layout);
-        }
-        if (data.type === 'profileChanged' && data.profile) {
-          console.log('Profile changed to:', data.profile);
-          currentProfile = Object.keys(profiles).find(k => profiles[k].name === data.profile.name) || 'universal';
-          setLayout(data.profile.layout);
-        }
-        if (data.type === 'status') {
-          // Connection status update
+        if (msg.type === 'joined' || msg.type === 'status') {
+          connected = msg.displays > 0;
+          updateStatus();
         }
 
-        // Auto-detected site from browser
-        if (data.type === 'siteDetected') {
-          console.log('Site detected:', data.site, '-> auto-switching to', data.profileKey);
-          currentProfile = data.profileKey;
-          setLayout(data.profile.layout);
-          showSiteNotification(data.site, data.profile.name);
+        if (msg.type === 'activeTab') {
+          activeTab = msg.tab;
+          siteType = msg.siteType || 'universal';
+          updateActiveTab();
+          updateContextControls();
+        }
+
+        if (msg.type === 'tabList') {
+          tabs = msg.tabs;
+          renderTabs();
         }
       };
 
-    // Show notification when site is detected
-    function showSiteNotification(site, profileName) {
-      const existing = document.getElementById('site-notification');
-      if (existing) existing.remove();
-
-      const notification = document.createElement('div');
-      notification.id = 'site-notification';
-      notification.style.cssText = `
-        position: fixed;
-        top: 60px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(0, 255, 0, 0.2);
-        border: 1px solid #0f0;
-        color: #0f0;
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-size: 11px;
-        z-index: 1000;
-        animation: fadeOut 3s forwards;
-      `;
-      notification.innerHTML = `<strong>${site}</strong> → ${profileName}`;
-      document.body.appendChild(notification);
-
-      setTimeout(() => notification.remove(), 3000);
-    }
-
       ws.onclose = () => {
-        document.getElementById('statusDot').classList.remove('connected');
+        connected = false;
+        updateStatus();
         setTimeout(connect, 2000);
       };
     }
 
-    // Send action
-    function sendAction(action) {
-      console.log('sendAction called:', action, 'ws state:', ws?.readyState);
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        const msg = JSON.stringify({ type: 'action', action });
-        console.log('Sending:', msg);
-        ws.send(msg);
-        vibrate();
-      } else {
-        console.log('WebSocket not ready');
-      }
-    }
-
-    // Send gesture
-    function sendGesture(gesture, data = {}) {
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: 'gesture', gesture, data }));
+    function send(msg) {
+      if (ws?.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(msg));
         vibrate();
       }
     }
 
-    // Vibrate
     function vibrate() {
-      if (navigator.vibrate) navigator.vibrate(20);
+      if (navigator.vibrate) navigator.vibrate(15);
     }
 
-    // Set layout
-    function setLayout(layout) {
-      document.querySelectorAll('[class^="layout-"]').forEach(el => el.classList.remove('active'));
+    // Status
+    function updateStatus() {
+      document.getElementById('connecting').classList.toggle('hidden', connected);
+      document.getElementById('statusDot').classList.toggle('connected', connected);
+      document.getElementById('statusText').textContent = connected ? 'Connected' : 'Waiting';
+    }
 
-      if (layout === 'media') {
-        document.getElementById('layoutMedia').classList.add('active');
-      } else if (layout === 'swipe+actions') {
-        document.getElementById('layoutSwipe').classList.add('active');
-      } else {
-        document.getElementById('layoutUniversal').classList.add('active');
+    function updateActiveTab() {
+      const el = document.getElementById('activeTab');
+      if (activeTab) {
+        try {
+          const host = new URL(activeTab.url).hostname.replace('www.', '');
+          el.innerHTML = `<strong>${siteType}</strong> · ${host}`;
+        } catch (e) {
+          el.innerHTML = `<strong>${activeTab.title?.slice(0, 30) || 'Tab'}</strong>`;
+        }
       }
     }
 
-    // Profile management
-    async function loadProfiles() {
-      const res = await fetch('/api/profiles');
-      profiles = await res.json();
-      renderProfiles();
-    }
+    // Tabs
+    function renderTabs() {
+      const bar = document.getElementById('tabBar');
+      bar.innerHTML = tabs.slice(0, 8).map(t => `
+        <div class="tab-item ${t.active ? 'active' : ''}" data-id="${t.id}">
+          <img src="${t.favIconUrl || ''}" onerror="this.style.display='none'">
+          <span>${t.title?.slice(0, 15) || 'Tab'}</span>
+        </div>
+      `).join('');
 
-    function renderProfiles() {
-      const container = document.getElementById('profileItems');
-      container.innerHTML = '';
-
-      Object.entries(profiles).forEach(([key, profile]) => {
-        const item = document.createElement('div');
-        item.className = 'profile-item' + (key === currentProfile ? ' active' : '');
-        item.innerHTML = `
-          <div class="profile-name">${profile.name}</div>
-          <div class="profile-desc">${profile.description}</div>
-        `;
-        item.onclick = () => selectProfile(key);
-        container.appendChild(item);
+      bar.querySelectorAll('.tab-item').forEach(el => {
+        el.onclick = () => send({ type: 'switchTab', tabId: parseInt(el.dataset.id) });
       });
     }
 
-    function selectProfile(key) {
-      currentProfile = key;
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: 'setProfile', profile: key }));
+    // Context controls
+    const contexts = {
+      youtube: [
+        { icon: '⏯️', action: 'play', label: 'Play' },
+        { icon: '⏪', action: 'seekBack', label: '-10s' },
+        { icon: '⏩', action: 'seekForward', label: '+10s' },
+        { icon: '🔇', action: 'mute', label: 'Mute' },
+        { icon: '⛶', action: 'fullscreen', label: 'Full' },
+        { icon: '⏭️', action: 'next', label: 'Next' }
+      ],
+      netflix: [
+        { icon: '⏯️', action: 'play' }, { icon: '⏪', action: 'seekBack' },
+        { icon: '⏩', action: 'seekForward' }, { icon: '🔇', action: 'mute' }, { icon: '⛶', action: 'fullscreen' }
+      ],
+      slides: [
+        { icon: '◀️', action: 'prev', label: 'Prev' }, { icon: '▶️', action: 'next', label: 'Next' },
+        { icon: '▶️', action: 'play', label: 'Present' }, { icon: '✖️', action: 'exit', label: 'Exit' }
+      ],
+      zoom: [
+        { icon: '🎤', action: 'mute', label: 'Mute' }, { icon: '📹', action: 'video', label: 'Video' },
+        { icon: '💬', action: 'chat', label: 'Chat' }, { icon: '📴', action: 'leave', label: 'Leave' }
+      ],
+      meet: [
+        { icon: '🎤', action: 'mute', label: 'Mute' }, { icon: '📹', action: 'video', label: 'Video' },
+        { icon: '💬', action: 'chat', label: 'Chat' }, { icon: '📴', action: 'leave', label: 'Leave' }
+      ],
+      universal: [
+        { icon: '↑', action: 'up' }, { icon: '↓', action: 'down' },
+        { icon: '↵', action: 'enter' }, { icon: '⎋', action: 'escape' },
+        { icon: '␣', action: 'space' }, { icon: '⇥', action: 'tab' }
+      ]
+    };
+
+    function updateContextControls() {
+      const btns = contexts[siteType] || contexts.universal;
+      document.getElementById('contextControls').innerHTML = btns.map(b =>
+        `<button class="ctx-btn" data-action="${b.action}">${b.icon}${b.label ? ' ' + b.label : ''}</button>`
+      ).join('');
+
+      document.querySelectorAll('.ctx-btn').forEach(el => {
+        el.onclick = () => send({ type: 'action', action: el.dataset.action });
+      });
+    }
+
+    // Trackpad
+    const trackpad = document.getElementById('trackpad');
+    let lastTouch = null, touchStart = 0, moved = false;
+
+    trackpad.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      trackpad.classList.add('active');
+      lastTouch = e.touches[0];
+      touchStart = Date.now();
+      moved = false;
+    }, { passive: false });
+
+    trackpad.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (!lastTouch) return;
+      const t = e.touches[0];
+      const dx = t.clientX - lastTouch.clientX;
+      const dy = t.clientY - lastTouch.clientY;
+      if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+        moved = true;
+        send({ type: 'mouse', x: dx, y: dy });
       }
-      closeProfiles();
-    }
+      lastTouch = t;
+    }, { passive: false });
 
-    function openProfiles() {
-      document.getElementById('profileOverlay').classList.add('active');
-    }
+    trackpad.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      trackpad.classList.remove('active');
+      const duration = Date.now() - touchStart;
 
-    function closeProfiles() {
-      document.getElementById('profileOverlay').classList.remove('active');
-    }
+      if (!moved) {
+        // Create ripple
+        const rect = trackpad.getBoundingClientRect();
+        const x = e.changedTouches[0].clientX - rect.left;
+        const y = e.changedTouches[0].clientY - rect.top;
+        const ripple = document.createElement('div');
+        ripple.className = 'touch-ripple';
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+        trackpad.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 400);
 
-    // Button handlers
-    document.querySelectorAll('[data-action]').forEach(btn => {
-      btn.addEventListener('touchstart', (e) => {
+        if (duration < 200) {
+          send({ type: 'mouse', x: 0, y: 0, action: 'click' });
+        } else if (duration >= 400) {
+          send({ type: 'mouse', x: 0, y: 0, action: 'rightClick' });
+        }
+      }
+      lastTouch = null;
+    }, { passive: false });
+
+    // Two-finger scroll
+    let lastTwoFinger = null;
+    trackpad.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2) {
         e.preventDefault();
-        sendAction(btn.dataset.action);
-      });
-      btn.addEventListener('click', () => sendAction(btn.dataset.action));
+        const avgY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        if (lastTwoFinger !== null) {
+          const dy = lastTwoFinger - avgY;
+          send({ type: 'scroll', deltaY: dy * 3 });
+        }
+        lastTwoFinger = avgY;
+      } else {
+        lastTwoFinger = null;
+      }
+    }, { passive: false });
+
+    trackpad.addEventListener('touchend', () => { lastTwoFinger = null; });
+
+    // Scroll buttons
+    document.querySelectorAll('[data-scroll]').forEach(btn => {
+      btn.onclick = () => send({ type: 'scroll', deltaY: btn.dataset.scroll === 'up' ? -300 : 300 });
     });
 
-    // Swipe handling
-    let touchStartX = 0, touchStartY = 0;
-    const swipeArea = document.getElementById('swipeArea');
+    // Bottom buttons
+    document.getElementById('btnBack').onclick = () => send({ type: 'action', action: 'back' });
+    document.getElementById('btnRefresh').onclick = () => send({ type: 'action', action: 'refresh' });
 
-    if (swipeArea) {
-      swipeArea.addEventListener('touchstart', (e) => {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-      });
+    // Keyboard
+    const keyboardOverlay = document.getElementById('keyboardOverlay');
+    const keyboardInput = document.getElementById('keyboardInput');
+    const keys = '1234567890qwertyuiopasdfghjkl⌫zxcvbnm,.↵'.split('');
 
-      swipeArea.addEventListener('touchend', (e) => {
-        const deltaX = e.changedTouches[0].clientX - touchStartX;
-        const deltaY = e.changedTouches[0].clientY - touchStartY;
-        const threshold = 50;
+    document.getElementById('keyboardGrid').innerHTML = keys.map(k => {
+      if (k === '⌫') return `<button class="key wide" data-key="Backspace">⌫</button>`;
+      if (k === '↵') return `<button class="key wide" data-key="Enter">↵</button>`;
+      return `<button class="key" data-char="${k}">${k}</button>`;
+    }).join('') + `<button class="key space" data-key="Space">space</button>`;
 
-        const indicator = document.getElementById('swipeIndicator');
-
-        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > threshold) {
-          if (deltaX > 0) {
-            sendGesture('swipeRight');
-            indicator.textContent = '←';
-          } else {
-            sendGesture('swipeLeft');
-            indicator.textContent = '→';
-          }
-          indicator.classList.add('show');
-          setTimeout(() => indicator.classList.remove('show'), 300);
-        } else if (Math.abs(deltaY) > threshold) {
-          if (deltaY > 0) {
-            sendGesture('swipeDown');
-            indicator.textContent = '↓';
-          } else {
-            sendGesture('swipeUp');
-            indicator.textContent = '↑';
-          }
-          indicator.classList.add('show');
-          setTimeout(() => indicator.classList.remove('show'), 300);
-        } else {
-          sendGesture('tap');
+    document.querySelectorAll('#keyboardGrid .key').forEach(key => {
+      key.onclick = () => {
+        if (key.dataset.key) {
+          send({ type: 'keyboard', key: key.dataset.key });
+          if (key.dataset.key === 'Backspace') keyboardInput.value = keyboardInput.value.slice(0, -1);
+        } else if (key.dataset.char) {
+          send({ type: 'keyboard', text: key.dataset.char });
+          keyboardInput.value += key.dataset.char;
         }
-      });
-    }
+      };
+    });
 
-    // Initialize
+    keyboardInput.addEventListener('input', (e) => {
+      if (e.data) send({ type: 'keyboard', text: e.data });
+    });
+
+    keyboardInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' || e.key === 'Enter') {
+        send({ type: 'keyboard', key: e.key });
+      }
+    });
+
+    document.getElementById('btnKeyboard').onclick = () => {
+      keyboardOverlay.classList.add('active');
+      setTimeout(() => keyboardInput.focus(), 100);
+    };
+
+    document.getElementById('keyboardDone').onclick = () => {
+      keyboardOverlay.classList.remove('active');
+      keyboardInput.blur();
+      keyboardInput.value = '';
+    };
+
+    // Init
+    updateContextControls();
     connect();
-    loadProfiles();
   </script>
 </body>
 </html>
