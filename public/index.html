@@ -11,11 +11,12 @@
 
     :root {
       --accent: #00ff88;
-      --bg: #0a0a0a;
-      --surface: #111;
-      --surface2: #1a1a1a;
+      --accent-dim: rgba(0, 255, 136, 0.1);
+      --bg: #050505;
+      --surface: #0a0a0a;
+      --surface2: #111;
       --text: #fff;
-      --text2: #888;
+      --text2: #666;
     }
 
     html { scroll-behavior: smooth; }
@@ -25,6 +26,76 @@
       background: var(--bg);
       color: var(--text);
       line-height: 1.6;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* Custom Cursor */
+    .cursor {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform 0.1s, width 0.2s, height 0.2s, background 0.2s;
+      transform: translate(-50%, -50%);
+    }
+    .cursor.hover {
+      width: 50px;
+      height: 50px;
+      background: rgba(0, 255, 136, 0.1);
+    }
+    .cursor-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+    }
+
+    /* Floating Particles */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 50%;
+      opacity: 0.3;
+      animation: float 20s infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.3; }
+      90% { opacity: 0.3; }
+      100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* Glow Effect */
+    .glow {
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(0, 255, 136, 0.15) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+      transform: translate(-50%, -50%);
+      transition: opacity 0.3s;
     }
 
     /* Navigation */
@@ -37,45 +108,77 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(10, 10, 10, 0.9);
+      background: rgba(5, 5, 5, 0.8);
       backdrop-filter: blur(20px);
       z-index: 100;
-      border-bottom: 1px solid #222;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
     }
 
     .logo {
       font-size: 24px;
       font-weight: 700;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
+      position: relative;
     }
-    .logo span { color: var(--accent); }
+    .logo span {
+      color: var(--accent);
+      text-shadow: 0 0 30px var(--accent);
+    }
 
     .nav-links {
       display: flex;
-      gap: 30px;
+      gap: 40px;
       list-style: none;
     }
     .nav-links a {
       color: var(--text2);
       text-decoration: none;
       font-size: 14px;
-      transition: color 0.2s;
+      transition: all 0.3s;
+      position: relative;
     }
-    .nav-links a:hover { color: var(--accent); }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent);
+      transition: width 0.3s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a:hover::after { width: 100%; }
 
     .nav-cta {
-      background: var(--accent);
-      color: #000;
-      padding: 10px 24px;
-      border-radius: 8px;
+      background: transparent;
+      color: var(--accent);
+      padding: 12px 28px;
+      border-radius: 30px;
       text-decoration: none;
       font-weight: 600;
       font-size: 14px;
-      transition: transform 0.2s, box-shadow 0.2s;
+      border: 2px solid var(--accent);
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .nav-cta::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: var(--accent);
+      transition: left 0.3s;
+      z-index: -1;
     }
     .nav-cta:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+      color: #000;
+    }
+    .nav-cta:hover::before {
+      left: 0;
     }
 
     /* Hero */
@@ -87,97 +190,228 @@
       align-items: center;
       text-align: center;
       padding: 120px 20px 80px;
-      background: radial-gradient(ellipse at top, #0f1a0f 0%, var(--bg) 60%);
+      position: relative;
+      z-index: 2;
     }
 
     .hero-badge {
-      background: var(--surface2);
-      border: 1px solid #333;
-      padding: 8px 16px;
+      background: rgba(0, 255, 136, 0.1);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      padding: 10px 20px;
       border-radius: 50px;
       font-size: 13px;
-      color: var(--text2);
+      color: var(--accent);
       margin-bottom: 30px;
+      animation: fadeInUp 0.8s ease;
+      backdrop-filter: blur(10px);
     }
-    .hero-badge span { color: var(--accent); }
 
     .hero h1 {
-      font-size: clamp(40px, 8vw, 72px);
+      font-size: clamp(40px, 8vw, 80px);
       font-weight: 700;
       line-height: 1.1;
       margin-bottom: 24px;
-      max-width: 800px;
+      max-width: 900px;
+      animation: fadeInUp 0.8s ease 0.1s both;
     }
-    .hero h1 span { color: var(--accent); }
+    .hero h1 span {
+      color: var(--accent);
+      text-shadow: 0 0 60px rgba(0, 255, 136, 0.5);
+      position: relative;
+    }
 
-    .hero p {
-      font-size: 18px;
+    .hero > p {
+      font-size: 20px;
       color: var(--text2);
-      max-width: 500px;
+      max-width: 550px;
       margin-bottom: 40px;
+      animation: fadeInUp 0.8s ease 0.2s both;
     }
 
     .hero-buttons {
       display: flex;
-      gap: 16px;
+      gap: 20px;
       flex-wrap: wrap;
       justify-content: center;
+      animation: fadeInUp 0.8s ease 0.3s both;
     }
 
     .btn-primary {
       background: var(--accent);
       color: #000;
-      padding: 16px 32px;
-      border-radius: 12px;
+      padding: 18px 40px;
+      border-radius: 50px;
       text-decoration: none;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 16px;
       display: flex;
       align-items: center;
-      gap: 10px;
-      transition: all 0.2s;
+      gap: 12px;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255,255,255,0.3);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
     }
     .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 15px 40px rgba(0, 255, 136, 0.4);
+      transform: translateY(-3px);
+      box-shadow: 0 20px 60px rgba(0, 255, 136, 0.4);
+    }
+    .btn-primary:active::after {
+      width: 300px;
+      height: 300px;
     }
 
     .btn-secondary {
-      background: var(--surface2);
+      background: transparent;
       color: var(--text);
-      padding: 16px 32px;
-      border-radius: 12px;
+      padding: 18px 40px;
+      border-radius: 50px;
       text-decoration: none;
       font-weight: 500;
       font-size: 16px;
-      border: 1px solid #333;
-      transition: all 0.2s;
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: all 0.3s;
     }
     .btn-secondary:hover {
       border-color: var(--accent);
       color: var(--accent);
+      background: rgba(0, 255, 136, 0.05);
     }
 
-    /* Demo visual */
+    /* Hero Demo */
     .hero-demo {
-      margin-top: 60px;
+      margin-top: 80px;
       display: flex;
-      gap: 40px;
+      gap: 60px;
       align-items: center;
-      flex-wrap: wrap;
       justify-content: center;
+      animation: fadeInUp 0.8s ease 0.4s both;
+      perspective: 1000px;
+    }
+
+    .demo-phone {
+      background: linear-gradient(145deg, #151515, #0a0a0a);
+      border-radius: 30px;
+      border: 3px solid #222;
+      width: 200px;
+      padding: 20px 15px;
+      transition: transform 0.3s;
+      transform-style: preserve-3d;
+    }
+    .demo-phone:hover {
+      transform: rotateY(-10deg) rotateX(5deg) scale(1.05);
+      border-color: var(--accent);
+      box-shadow: 0 30px 60px rgba(0, 255, 136, 0.2);
+    }
+
+    .demo-phone-screen {
+      background: var(--bg);
+      border-radius: 16px;
+      padding: 20px 12px;
+      text-align: center;
+    }
+    .demo-phone-logo {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 15px;
+      letter-spacing: 2px;
+    }
+    .demo-phone-logo span { color: var(--accent); }
+    .demo-trackpad {
+      background: linear-gradient(145deg, #1a1a1a, #111);
+      border-radius: 12px;
+      height: 100px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+      font-size: 11px;
+      border: 1px solid #222;
+    }
+    .demo-buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+    .demo-btn {
+      width: 40px;
+      height: 32px;
+      background: #1a1a1a;
+      border-radius: 8px;
+      border: 1px solid #222;
+      transition: all 0.3s;
+    }
+    .demo-btn.accent {
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+    }
+
+    .demo-connection {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .connection-line {
+      width: 100px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), transparent, var(--accent));
+      position: relative;
+      overflow: hidden;
+    }
+    .connection-line::after {
+      content: '';
+      position: absolute;
+      width: 30px;
+      height: 100%;
+      background: var(--accent);
+      box-shadow: 0 0 20px var(--accent);
+      animation: signal 1.5s infinite;
+    }
+    @keyframes signal {
+      0% { left: -30px; }
+      100% { left: 100%; }
+    }
+    .connection-icon {
+      color: var(--accent);
+      font-size: 24px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.1); }
     }
 
     .demo-browser {
-      background: var(--surface);
-      border-radius: 12px;
-      border: 1px solid #333;
-      width: 400px;
+      background: linear-gradient(145deg, #151515, #0a0a0a);
+      border-radius: 16px;
+      border: 2px solid #222;
+      width: 350px;
       overflow: hidden;
+      transition: transform 0.3s;
+      transform-style: preserve-3d;
+    }
+    .demo-browser:hover {
+      transform: rotateY(10deg) rotateX(-5deg) scale(1.02);
+      border-color: var(--accent);
+      box-shadow: 0 30px 60px rgba(0, 255, 136, 0.15);
     }
     .demo-browser-bar {
-      background: var(--surface2);
-      padding: 12px 16px;
+      background: #111;
+      padding: 14px 18px;
       display: flex;
       gap: 8px;
       align-items: center;
@@ -186,82 +420,73 @@
       width: 12px;
       height: 12px;
       border-radius: 50%;
-      background: #333;
+      transition: transform 0.2s;
     }
+    .demo-dot:hover { transform: scale(1.3); }
     .demo-dot.red { background: #ff5f57; }
     .demo-dot.yellow { background: #febc2e; }
     .demo-dot.green { background: #28c840; }
     .demo-browser-content {
-      padding: 40px;
+      padding: 50px 30px;
       text-align: center;
       color: var(--text2);
     }
-
-    .demo-phone {
-      background: var(--surface);
-      border-radius: 24px;
-      border: 3px solid #333;
-      width: 180px;
-      padding: 20px 12px;
+    .demo-cursor {
+      font-size: 60px;
+      margin: 20px 0;
+      animation: cursorMove 3s ease-in-out infinite;
     }
-    .demo-phone-screen {
-      background: var(--bg);
-      border-radius: 12px;
-      padding: 16px 8px;
+    @keyframes cursorMove {
+      0%, 100% { transform: translate(0, 0); }
+      25% { transform: translate(20px, -10px); }
+      50% { transform: translate(-15px, 15px); }
+      75% { transform: translate(10px, 5px); }
+    }
+
+    /* Sections Common */
+    section {
+      position: relative;
+      z-index: 2;
+    }
+
+    .section-title {
       text-align: center;
+      margin-bottom: 80px;
     }
-    .demo-phone-logo {
-      font-size: 12px;
-      font-weight: 700;
-      margin-bottom: 12px;
+    .section-title h2 {
+      font-size: 48px;
+      margin-bottom: 20px;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.8s;
     }
-    .demo-phone-logo span { color: var(--accent); }
-    .demo-trackpad {
-      background: var(--surface2);
-      border-radius: 8px;
-      height: 80px;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #333;
-      font-size: 10px;
+    .section-title h2.visible {
+      opacity: 1;
+      transform: translateY(0);
     }
-    .demo-buttons {
-      display: flex;
-      gap: 6px;
-      justify-content: center;
+    .section-title p {
+      color: var(--text2);
+      font-size: 18px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.8s 0.2s;
     }
-    .demo-btn {
-      width: 36px;
-      height: 28px;
-      background: var(--surface2);
-      border-radius: 6px;
-    }
-    .demo-btn.accent { background: var(--accent); }
-
-    .demo-arrow {
-      color: var(--accent);
-      font-size: 32px;
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 0.5; transform: translateX(0); }
-      50% { opacity: 1; transform: translateX(10px); }
+    .section-title p.visible {
+      opacity: 1;
+      transform: translateY(0);
     }
 
     /* Showcase */
     .showcase {
-      padding: 100px 20px;
-      background: var(--surface);
-      overflow: hidden;
+      padding: 120px 20px;
+      background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 50%, var(--bg) 100%);
     }
 
     .showcase-scroll {
       display: flex;
-      gap: 24px;
+      gap: 30px;
       overflow-x: auto;
-      padding: 20px 0;
+      padding: 30px 0;
       scroll-snap-type: x mandatory;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
@@ -272,56 +497,62 @@
       flex-shrink: 0;
       scroll-snap-align: center;
       text-align: center;
+      transition: transform 0.5s;
     }
-    .showcase-item:first-child { margin-left: calc(50vw - 140px); }
-    .showcase-item:last-child { margin-right: calc(50vw - 140px); }
+    .showcase-item:first-child { margin-left: calc(50vw - 150px); }
+    .showcase-item:last-child { margin-right: calc(50vw - 150px); }
 
     .showcase-item img {
-      width: 280px;
+      width: 300px;
       height: auto;
-      border-radius: 24px;
-      border: 3px solid #333;
-      transition: transform 0.3s, border-color 0.3s;
+      border-radius: 30px;
+      border: 3px solid #222;
+      transition: all 0.5s;
+      filter: brightness(0.8);
     }
-    .showcase-item img:hover {
-      transform: scale(1.02);
+    .showcase-item:hover img {
+      transform: scale(1.05) translateY(-10px);
       border-color: var(--accent);
+      filter: brightness(1);
+      box-shadow: 0 30px 60px rgba(0, 255, 136, 0.2);
     }
 
     .showcase-item p {
-      margin-top: 16px;
+      margin-top: 20px;
       color: var(--text2);
       font-size: 14px;
+      transition: color 0.3s;
+    }
+    .showcase-item:hover p {
+      color: var(--accent);
     }
 
     /* Features */
     .features {
-      padding: 100px 20px;
-      max-width: 1000px;
+      padding: 120px 20px;
+      max-width: 1100px;
       margin: 0 auto;
-    }
-
-    .section-title {
-      text-align: center;
-      margin-bottom: 60px;
-    }
-    .section-title h2 {
-      font-size: 36px;
-      margin-bottom: 16px;
-    }
-    .section-title p {
-      color: var(--text2);
-      font-size: 18px;
     }
 
     .feature-row {
       display: flex;
       align-items: center;
-      gap: 60px;
-      margin-bottom: 80px;
+      gap: 80px;
+      margin-bottom: 120px;
+      opacity: 0;
+      transform: translateX(-50px);
+      transition: all 0.8s;
+    }
+    .feature-row.visible {
+      opacity: 1;
+      transform: translateX(0);
     }
     .feature-row:nth-child(even) {
       flex-direction: row-reverse;
+      transform: translateX(50px);
+    }
+    .feature-row:nth-child(even).visible {
+      transform: translateX(0);
     }
     .feature-row:last-child {
       margin-bottom: 0;
@@ -331,167 +562,291 @@
       flex: 1;
     }
     .feature-content h3 {
-      font-size: 28px;
-      margin-bottom: 16px;
+      font-size: 36px;
+      margin-bottom: 20px;
+      position: relative;
+      display: inline-block;
+    }
+    .feature-content h3::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 0;
+      width: 60px;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 3px;
     }
     .feature-content p {
       color: var(--text2);
-      font-size: 16px;
-      line-height: 1.7;
+      font-size: 18px;
+      line-height: 1.8;
     }
 
     .feature-visual {
       flex: 1;
-      background: var(--surface);
-      border: 1px solid #222;
+      position: relative;
+    }
+    .feature-visual img {
+      height: 400px;
+      border-radius: 24px;
+      transition: all 0.5s;
+      border: 2px solid #222;
+    }
+    .feature-visual:hover img {
+      transform: scale(1.03);
+      border-color: var(--accent);
+      box-shadow: 0 30px 80px rgba(0, 255, 136, 0.15);
+    }
+    .feature-visual::before {
+      content: '';
+      position: absolute;
+      top: -20px;
+      right: -20px;
+      width: 100px;
+      height: 100px;
+      border: 2px solid var(--accent);
       border-radius: 20px;
-      padding: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 200px;
+      opacity: 0.3;
+      z-index: -1;
     }
-    .feature-visual .icon {
-      font-size: 64px;
-      color: var(--accent);
-    }
-
-    @media (max-width: 768px) {
-      .feature-row, .feature-row:nth-child(even) {
-        flex-direction: column;
-        gap: 30px;
-        text-align: center;
-      }
-      .feature-visual {
-        width: 100%;
-        padding: 30px;
-      }
+    .feature-visual::after {
+      content: '';
+      position: absolute;
+      bottom: -20px;
+      left: -20px;
+      width: 60px;
+      height: 60px;
+      background: var(--accent);
+      border-radius: 12px;
+      opacity: 0.1;
+      z-index: -1;
     }
 
     /* How it works */
     .how-it-works {
-      padding: 100px 20px;
-      background: var(--surface);
+      padding: 120px 20px;
+      background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 100%);
     }
 
     .steps {
-      max-width: 800px;
+      max-width: 900px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
-      gap: 40px;
+      gap: 60px;
     }
 
     .step {
       display: flex;
-      gap: 24px;
-      align-items: flex-start;
+      gap: 40px;
+      align-items: center;
+      padding: 40px;
+      background: linear-gradient(145deg, rgba(20,20,20,0.5), rgba(10,10,10,0.5));
+      border-radius: 24px;
+      border: 1px solid #1a1a1a;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.6s, border-color 0.3s, box-shadow 0.3s;
+    }
+    .step.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .step:hover {
+      border-color: var(--accent);
+      box-shadow: 0 20px 60px rgba(0, 255, 136, 0.1);
+      transform: translateY(-5px);
     }
 
     .step-number {
-      width: 48px;
-      height: 48px;
-      background: var(--accent);
+      width: 70px;
+      height: 70px;
+      background: linear-gradient(145deg, var(--accent), #00cc6a);
       color: #000;
-      border-radius: 50%;
+      border-radius: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 700;
-      font-size: 20px;
+      font-weight: 800;
+      font-size: 28px;
       flex-shrink: 0;
+      box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
     }
 
     .step-content h3 {
-      font-size: 20px;
-      margin-bottom: 8px;
+      font-size: 24px;
+      margin-bottom: 10px;
     }
     .step-content p {
       color: var(--text2);
+      font-size: 16px;
     }
 
     /* Use cases */
     .use-cases {
-      padding: 100px 20px;
+      padding: 120px 20px;
+    }
+    .use-cases-container {
       max-width: 1200px;
       margin: 0 auto;
     }
 
     .use-cases-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 30px;
     }
 
     .use-case {
-      background: var(--surface);
-      border: 1px solid #222;
-      border-radius: 12px;
-      padding: 24px;
+      background: linear-gradient(145deg, #111, #0a0a0a);
+      border: 1px solid #1a1a1a;
+      border-radius: 20px;
+      padding: 40px 30px;
       text-align: center;
+      opacity: 0;
+      transform: translateY(30px) scale(0.95);
+      transition: all 0.5s;
+    }
+    .use-case.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .use-case:hover {
+      border-color: var(--accent);
+      transform: translateY(-10px) scale(1.02);
+      box-shadow: 0 30px 60px rgba(0, 255, 136, 0.1);
     }
     .use-case-icon {
-      font-size: 14px;
-      font-weight: 700;
+      font-size: 16px;
+      font-weight: 800;
       color: var(--accent);
       background: rgba(0, 255, 136, 0.1);
-      padding: 8px 12px;
-      border-radius: 6px;
+      padding: 12px 20px;
+      border-radius: 10px;
       display: inline-block;
-      margin-bottom: 12px;
-      letter-spacing: 1px;
+      margin-bottom: 20px;
+      letter-spacing: 2px;
+      transition: all 0.3s;
+    }
+    .use-case:hover .use-case-icon {
+      background: var(--accent);
+      color: #000;
+      transform: scale(1.1);
     }
     .use-case h3 {
-      font-size: 16px;
-      margin-bottom: 8px;
+      font-size: 20px;
+      margin-bottom: 10px;
     }
     .use-case p {
       color: var(--text2);
-      font-size: 14px;
+      font-size: 15px;
     }
 
     /* CTA */
     .cta {
-      padding: 100px 20px;
+      padding: 150px 20px;
       text-align: center;
-      background: radial-gradient(ellipse at bottom, #0f1a0f 0%, var(--bg) 60%);
+      position: relative;
+      overflow: hidden;
+    }
+    .cta::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(0, 255, 136, 0.1) 0%, transparent 70%);
+      transform: translate(-50%, -50%);
+      animation: ctaPulse 4s ease-in-out infinite;
+    }
+    @keyframes ctaPulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+      50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
     }
 
     .cta h2 {
-      font-size: 36px;
-      margin-bottom: 16px;
+      font-size: 52px;
+      margin-bottom: 20px;
+      position: relative;
     }
-    .cta p {
+    .cta > p {
       color: var(--text2);
-      margin-bottom: 32px;
-      font-size: 18px;
+      margin-bottom: 40px;
+      font-size: 20px;
+      position: relative;
+    }
+    .cta .btn-primary {
+      position: relative;
     }
 
     /* Footer */
     footer {
-      padding: 40px 20px;
-      border-top: 1px solid #222;
+      padding: 50px 20px;
+      border-top: 1px solid #1a1a1a;
       text-align: center;
       color: var(--text2);
       font-size: 14px;
+      position: relative;
+      z-index: 2;
     }
     footer a {
       color: var(--accent);
       text-decoration: none;
+      transition: opacity 0.3s;
+    }
+    footer a:hover {
+      opacity: 0.7;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     /* Mobile */
     @media (max-width: 768px) {
+      body { cursor: auto; }
+      .cursor, .cursor-dot, .glow { display: none; }
       nav { padding: 16px 20px; }
       .nav-links { display: none; }
       .hero { padding: 100px 20px 60px; }
-      .hero-demo { flex-direction: column; }
-      .demo-arrow { transform: rotate(90deg); }
-      .demo-browser { width: 100%; max-width: 350px; }
+      .hero h1 { font-size: 36px; }
+      .hero-demo { flex-direction: column; gap: 30px; }
+      .demo-browser { width: 100%; max-width: 320px; }
+      .demo-phone { width: 180px; }
+      .demo-connection { transform: rotate(90deg); }
+      .feature-row, .feature-row:nth-child(even) {
+        flex-direction: column;
+        gap: 40px;
+        text-align: center;
+      }
+      .feature-content h3::after { left: 50%; transform: translateX(-50%); }
+      .feature-visual img { height: 300px; }
+      .step { flex-direction: column; text-align: center; }
+      .cta h2 { font-size: 32px; }
     }
   </style>
 </head>
 <body>
+  <!-- Custom Cursor -->
+  <div class="cursor"></div>
+  <div class="cursor-dot"></div>
+
+  <!-- Mouse Glow -->
+  <div class="glow"></div>
+
+  <!-- Floating Particles -->
+  <div class="particles"></div>
+
   <nav>
     <div class="logo">ORBIT<span>XE</span></div>
     <ul class="nav-links">
@@ -503,12 +858,12 @@
   </nav>
 
   <section class="hero">
-    <div class="hero-badge"><span>NEW</span> Universal Web Remote for Chrome</div>
+    <div class="hero-badge">Universal Web Remote for Chrome</div>
     <h1>Control Any Website<br>From Your <span>Phone</span></h1>
     <p>Turn your phone into a wireless trackpad, keyboard, and smart remote. No app download required.</p>
     <div class="hero-buttons">
       <a href="#download" class="btn-primary">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C8.21 0 5.831 1.757 4.632 4.501c-1.01 2.312-1.055 4.756-.021 7.084 1.026 2.31 2.946 4.097 5.389 5.015v3.4l-2.293-2.293-1.414 1.414L12 24.828l5.707-5.707-1.414-1.414L14 19.999V16.6c2.443-.918 4.363-2.705 5.389-5.015 1.034-2.328.989-4.772-.021-7.084C18.169 1.757 15.79 0 12 0zm0 2c2.857 0 4.723 1.243 5.628 3.318.831 1.902.869 3.876.053 5.713-.816 1.837-2.396 3.268-4.431 4.003L12 15.401V9h3l-5-6v6H7l5 6z"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm-1 14.59l-3.29-3.3 1.41-1.41L11 13.76l4.88-4.88 1.41 1.41L11 16.59z"/></svg>
         Add to Chrome
       </a>
       <a href="#how-it-works" class="btn-secondary">See How It Works</a>
@@ -526,7 +881,13 @@
           </div>
         </div>
       </div>
-      <div class="demo-arrow">→</div>
+
+      <div class="demo-connection">
+        <div class="connection-line"></div>
+        <div class="connection-icon">~</div>
+        <div class="connection-line"></div>
+      </div>
+
       <div class="demo-browser">
         <div class="demo-browser-bar">
           <div class="demo-dot red"></div>
@@ -535,7 +896,7 @@
         </div>
         <div class="demo-browser-content">
           <p>Your cursor moves here</p>
-          <p style="font-size: 48px; margin: 20px 0;">↖</p>
+          <div class="demo-cursor">^</div>
           <p style="color: var(--accent);">Controlled by your phone</p>
         </div>
       </div>
@@ -583,7 +944,7 @@
         <p>Use your phone screen as a trackpad. Swipe to move the cursor anywhere on screen, tap to click, and hold for right-click. It's like having a wireless mouse in your pocket.</p>
       </div>
       <div class="feature-visual">
-        <img src="/images/remote-universal.png" alt="Trackpad" style="height: 300px; border-radius: 16px;">
+        <img src="/images/remote-universal.png" alt="Trackpad">
       </div>
     </div>
 
@@ -593,7 +954,7 @@
         <p>Type using your phone's keyboard with autocorrect, swipe typing, and all your familiar features. No more squinting at tiny on-screen keyboards.</p>
       </div>
       <div class="feature-visual">
-        <img src="/images/keyboard.png" alt="Keyboard" style="height: 300px; border-radius: 16px;">
+        <img src="/images/keyboard.png" alt="Keyboard">
       </div>
     </div>
 
@@ -603,7 +964,7 @@
         <p>OrbitXE auto-detects YouTube, Netflix, Zoom and other sites, showing relevant controls like play, pause, mute, skip, and fullscreen automatically.</p>
       </div>
       <div class="feature-visual">
-        <img src="/images/remote-youtube.png" alt="YouTube Controls" style="height: 300px; border-radius: 16px;">
+        <img src="/images/remote-youtube.png" alt="YouTube Controls">
       </div>
     </div>
 
@@ -613,7 +974,7 @@
         <p>Switch between browser tabs, open new tabs, and navigate to any URL - all from your phone. See all your open tabs and jump to any one instantly.</p>
       </div>
       <div class="feature-visual">
-        <img src="/images/url-input.png" alt="Tab Management" style="height: 300px; border-radius: 16px;">
+        <img src="/images/url-input.png" alt="Tab Management">
       </div>
     </div>
 
@@ -623,7 +984,7 @@
         <p>Just scan a QR code with your phone camera and you're connected. Works on any phone with a web browser - iPhone, Android, anything.</p>
       </div>
       <div class="feature-visual">
-        <img src="/images/popup.png" alt="QR Code" style="height: 300px; border-radius: 16px;">
+        <img src="/images/popup.png" alt="QR Code">
       </div>
     </div>
   </section>
@@ -660,41 +1021,43 @@
   </section>
 
   <section class="use-cases" id="use-cases">
-    <div class="section-title">
-      <h2>Perfect For</h2>
-      <p>Use OrbitXE in any scenario</p>
-    </div>
+    <div class="use-cases-container">
+      <div class="section-title">
+        <h2>Perfect For</h2>
+        <p>Use OrbitXE in any scenario</p>
+      </div>
 
-    <div class="use-cases-grid">
-      <div class="use-case">
-        <div class="use-case-icon">TV</div>
-        <h3>Movie Nights</h3>
-        <p>Control Netflix from the couch</p>
-      </div>
-      <div class="use-case">
-        <div class="use-case-icon">PPT</div>
-        <h3>Presentations</h3>
-        <p>Navigate slides wirelessly</p>
-      </div>
-      <div class="use-case">
-        <div class="use-case-icon">MUS</div>
-        <h3>Music Control</h3>
-        <p>Play/pause YouTube, Spotify</p>
-      </div>
-      <div class="use-case">
-        <div class="use-case-icon">MON</div>
-        <h3>TV Setup</h3>
-        <p>Browser on TV, control from phone</p>
-      </div>
-      <div class="use-case">
-        <div class="use-case-icon">CAM</div>
-        <h3>Video Calls</h3>
-        <p>Mute/unmute Zoom from anywhere</p>
-      </div>
-      <div class="use-case">
-        <div class="use-case-icon">WEB</div>
-        <h3>Lazy Browsing</h3>
-        <p>Browse from bed, phone as remote</p>
+      <div class="use-cases-grid">
+        <div class="use-case">
+          <div class="use-case-icon">TV</div>
+          <h3>Movie Nights</h3>
+          <p>Control Netflix from the couch</p>
+        </div>
+        <div class="use-case">
+          <div class="use-case-icon">PPT</div>
+          <h3>Presentations</h3>
+          <p>Navigate slides wirelessly</p>
+        </div>
+        <div class="use-case">
+          <div class="use-case-icon">MUS</div>
+          <h3>Music Control</h3>
+          <p>Play/pause YouTube, Spotify</p>
+        </div>
+        <div class="use-case">
+          <div class="use-case-icon">MON</div>
+          <h3>TV Setup</h3>
+          <p>Browser on TV, control from phone</p>
+        </div>
+        <div class="use-case">
+          <div class="use-case-icon">CAM</div>
+          <h3>Video Calls</h3>
+          <p>Mute/unmute Zoom from anywhere</p>
+        </div>
+        <div class="use-case">
+          <div class="use-case-icon">WEB</div>
+          <h3>Lazy Browsing</h3>
+          <p>Browse from bed, phone as remote</p>
+        </div>
       </div>
     </div>
   </section>
@@ -702,14 +1065,146 @@
   <section class="cta" id="download">
     <h2>Ready to Take Control?</h2>
     <p>Install OrbitXE and start controlling your browser from your phone today.</p>
-    <a href="#" class="btn-primary" style="display: inline-flex;">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C8.21 0 5.831 1.757 4.632 4.501c-1.01 2.312-1.055 4.756-.021 7.084 1.026 2.31 2.946 4.097 5.389 5.015v3.4l-2.293-2.293-1.414 1.414L12 24.828l5.707-5.707-1.414-1.414L14 19.999V16.6c2.443-.918 4.363-2.705 5.389-5.015 1.034-2.328.989-4.772-.021-7.084C18.169 1.757 15.79 0 12 0zm0 2c2.857 0 4.723 1.243 5.628 3.318.831 1.902.869 3.876.053 5.713-.816 1.837-2.396 3.268-4.431 4.003L12 15.401V9h3l-5-6v6H7l5 6z"/></svg>
+    <a href="#" class="btn-primary">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm-1 14.59l-3.29-3.3 1.41-1.41L11 13.76l4.88-4.88 1.41 1.41L11 16.59z"/></svg>
       Add to Chrome - It's Free
     </a>
   </section>
 
   <footer>
-    <p>&copy; 2025 WOOSYSTEMS. All rights reserved. | <a href="/privacy">Privacy Policy</a> | <a href="/terms">Terms of Service</a></p>
+    <p>2025 WOOSYSTEMS. All rights reserved. | <a href="/privacy">Privacy Policy</a> | <a href="/terms">Terms of Service</a></p>
   </footer>
+
+  <script>
+    // Custom Cursor
+    const cursor = document.querySelector('.cursor');
+    const cursorDot = document.querySelector('.cursor-dot');
+    const glow = document.querySelector('.glow');
+
+    let mouseX = 0, mouseY = 0;
+    let cursorX = 0, cursorY = 0;
+
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      cursorDot.style.left = mouseX + 'px';
+      cursorDot.style.top = mouseY + 'px';
+      glow.style.left = mouseX + 'px';
+      glow.style.top = mouseY + 'px';
+    });
+
+    function animateCursor() {
+      cursorX += (mouseX - cursorX) * 0.15;
+      cursorY += (mouseY - cursorY) * 0.15;
+      cursor.style.left = cursorX + 'px';
+      cursor.style.top = cursorY + 'px';
+      requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+
+    // Cursor hover effect
+    const hoverElements = document.querySelectorAll('a, button, .demo-phone, .demo-browser, .showcase-item, .use-case, .step');
+    hoverElements.forEach(el => {
+      el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+      el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+    });
+
+    // Floating Particles
+    const particlesContainer = document.querySelector('.particles');
+    for (let i = 0; i < 30; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.animationDelay = Math.random() * 20 + 's';
+      particle.style.animationDuration = (15 + Math.random() * 15) + 's';
+      particlesContainer.appendChild(particle);
+    }
+
+    // Scroll Animations
+    const observerOptions = {
+      threshold: 0.2,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.section-title h2, .section-title p, .feature-row, .step, .use-case').forEach(el => {
+      observer.observe(el);
+    });
+
+    // Stagger use-case animations
+    document.querySelectorAll('.use-case').forEach((el, i) => {
+      el.style.transitionDelay = (i * 0.1) + 's';
+    });
+
+    // Parallax on mouse move for hero
+    const heroDemo = document.querySelector('.hero-demo');
+    document.querySelector('.hero').addEventListener('mousemove', (e) => {
+      const rect = heroDemo.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const moveX = (e.clientX - centerX) / 50;
+      const moveY = (e.clientY - centerY) / 50;
+      heroDemo.style.transform = `translate(${moveX}px, ${moveY}px)`;
+    });
+
+    // Button ripple effect
+    document.querySelectorAll('.btn-primary').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        const rect = this.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const ripple = document.createElement('span');
+        ripple.style.cssText = `
+          position: absolute;
+          background: rgba(255,255,255,0.4);
+          border-radius: 50%;
+          transform: translate(-50%, -50%);
+          pointer-events: none;
+          width: 0;
+          height: 0;
+          left: ${x}px;
+          top: ${y}px;
+          animation: ripple 0.6s ease-out;
+        `;
+        this.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
+      });
+    });
+
+    // Add ripple animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes ripple {
+        to {
+          width: 300px;
+          height: 300px;
+          opacity: 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Smooth reveal for nav on scroll
+    let lastScroll = 0;
+    const nav = document.querySelector('nav');
+    window.addEventListener('scroll', () => {
+      const currentScroll = window.pageYOffset;
+      if (currentScroll > lastScroll && currentScroll > 100) {
+        nav.style.transform = 'translateY(-100%)';
+      } else {
+        nav.style.transform = 'translateY(0)';
+      }
+      lastScroll = currentScroll;
+    });
+    nav.style.transition = 'transform 0.3s';
+  </script>
 </body>
 </html>
