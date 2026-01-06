@@ -434,7 +434,14 @@
 
       ws.onopen = () => {
         ws.send(JSON.stringify({ type: 'join', roomId, role: 'controller' }));
-        ws.send(JSON.stringify({ type: 'getTabs' }));
+        // Request tabs after a short delay to ensure browser is ready
+        setTimeout(() => {
+          ws.send(JSON.stringify({ type: 'getTabs' }));
+        }, 500);
+        // Request again after longer delay as backup
+        setTimeout(() => {
+          ws.send(JSON.stringify({ type: 'getTabs' }));
+        }, 2000);
       };
 
       ws.onmessage = (e) => {
@@ -630,7 +637,11 @@
 
     // Bottom buttons
     document.getElementById('btnBack').onclick = () => send({ type: 'action', action: 'back' });
-    document.getElementById('btnRefresh').onclick = () => send({ type: 'action', action: 'refresh' });
+    document.getElementById('btnRefresh').onclick = () => {
+      // Refresh both the page and the tab list
+      send({ type: 'action', action: 'refresh' });
+      send({ type: 'getTabs' });
+    };
 
     // Keyboard
     const keyboardOverlay = document.getElementById('keyboardOverlay');

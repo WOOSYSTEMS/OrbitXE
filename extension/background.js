@@ -247,9 +247,13 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
-chrome.tabs.onCreated.addListener(() => {
-  console.log('ExodusXE: New tab created');
-  sendTabList();
+chrome.tabs.onCreated.addListener((tab) => {
+  console.log('ExodusXE: New tab created:', tab.id);
+  // Wait for tab to be ready
+  setTimeout(() => {
+    sendTabList();
+    sendActiveTabInfo();
+  }, 300);
 });
 
 chrome.tabs.onRemoved.addListener(() => {
@@ -313,12 +317,15 @@ chrome.runtime.onStartup.addListener(() => {
   });
 });
 
-// Keep service worker alive with regular pings
+// Keep service worker alive with regular pings and tab updates
 setInterval(() => {
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: 'ping' }));
+    // Also send tab updates periodically
+    sendTabList();
+    sendActiveTabInfo();
   }
-}, 20000);
+}, 15000);
 
 // Also respond to alarms to keep alive
 chrome.alarms?.create('keepAlive', { periodInMinutes: 0.4 });
