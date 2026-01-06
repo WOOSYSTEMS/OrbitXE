@@ -44,6 +44,16 @@ app.get('/remote/:roomId', (req, res) => {
   res.sendFile(join(__dirname, '../public/remote.html'));
 });
 
+// Privacy policy
+app.get('/privacy', (req, res) => {
+  res.sendFile(join(__dirname, '../public/privacy.html'));
+});
+
+// Terms of service
+app.get('/terms', (req, res) => {
+  res.sendFile(join(__dirname, '../public/terms.html'));
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', rooms: rooms.size });

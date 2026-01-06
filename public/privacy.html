@@ -8,8 +8,8 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
       --accent: #00ff88;
-      --bg: #0a0a0a;
-      --surface: #111;
+      --bg: #050505;
+      --surface: #0a0a0a;
       --text: #fff;
       --text2: #888;
     }
@@ -18,41 +18,185 @@
       background: var(--bg);
       color: var(--text);
       line-height: 1.8;
+      overflow-x: hidden;
+      cursor: none;
     }
+
+    /* Custom Cursor */
+    .cursor {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform 0.1s, width 0.2s, height 0.2s, background 0.2s;
+      transform: translate(-50%, -50%);
+    }
+    .cursor.hover {
+      width: 50px;
+      height: 50px;
+      background: rgba(0, 255, 136, 0.1);
+    }
+    .cursor-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+    }
+
+    /* Floating Particles */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 50%;
+      opacity: 0.3;
+      animation: float 20s infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.3; }
+      90% { opacity: 0.3; }
+      100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* Glow Effect */
+    .glow {
+      position: fixed;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(0, 255, 136, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+      transform: translate(-50%, -50%);
+    }
+
     nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
       padding: 20px 40px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid #222;
+      background: rgba(5, 5, 5, 0.8);
+      backdrop-filter: blur(20px);
+      z-index: 100;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
     }
     .logo {
       font-size: 24px;
       font-weight: 700;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
       text-decoration: none;
       color: var(--text);
     }
-    .logo span { color: var(--accent); }
+    .logo span {
+      color: var(--accent);
+      text-shadow: 0 0 30px var(--accent);
+    }
+    .nav-cta {
+      background: transparent;
+      color: var(--accent);
+      padding: 12px 28px;
+      border-radius: 30px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+      border: 2px solid var(--accent);
+      transition: all 0.3s;
+    }
+    .nav-cta:hover {
+      background: var(--accent);
+      color: #000;
+    }
+
     .container {
       max-width: 800px;
       margin: 0 auto;
-      padding: 60px 20px;
+      padding: 140px 20px 80px;
+      position: relative;
+      z-index: 2;
     }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 60px;
+      animation: fadeInUp 0.8s ease;
+    }
+
     h1 {
-      font-size: 36px;
-      margin-bottom: 10px;
+      font-size: 48px;
+      margin-bottom: 15px;
+      background: linear-gradient(135deg, var(--text), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
+
     .updated {
       color: var(--text2);
-      margin-bottom: 40px;
+      font-size: 14px;
+      padding: 8px 20px;
+      background: rgba(0, 255, 136, 0.1);
+      border-radius: 50px;
+      display: inline-block;
     }
+
+    .content-section {
+      background: linear-gradient(145deg, rgba(20,20,20,0.6), rgba(8,8,8,0.8));
+      border: 1px solid #1a1a1a;
+      border-radius: 24px;
+      padding: 40px;
+      margin-bottom: 30px;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.6s, border-color 0.3s;
+    }
+    .content-section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .content-section:hover {
+      border-color: rgba(0, 255, 136, 0.3);
+      box-shadow: 0 20px 60px rgba(0, 255, 136, 0.05);
+    }
+
     h2 {
       font-size: 24px;
-      margin-top: 40px;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
       color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
+    h2::before {
+      content: '';
+      width: 4px;
+      height: 24px;
+      background: var(--accent);
+      border-radius: 4px;
+    }
+
     p, li {
       color: var(--text2);
       margin-bottom: 16px;
@@ -61,99 +205,232 @@
       margin-left: 24px;
       margin-bottom: 16px;
     }
-    a { color: var(--accent); }
+    li {
+      margin-bottom: 10px;
+      position: relative;
+    }
+    li::marker {
+      color: var(--accent);
+    }
+    strong {
+      color: var(--text);
+    }
+    a {
+      color: var(--accent);
+      text-decoration: none;
+      transition: opacity 0.3s;
+    }
+    a:hover {
+      opacity: 0.7;
+    }
+
     footer {
       padding: 40px 20px;
-      border-top: 1px solid #222;
+      border-top: 1px solid #1a1a1a;
       text-align: center;
       color: var(--text2);
       font-size: 14px;
+      position: relative;
+      z-index: 2;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 768px) {
+      body { cursor: auto; }
+      .cursor, .cursor-dot, .glow { display: none; }
+      nav { padding: 16px 20px; }
+      h1 { font-size: 32px; }
+      .container { padding: 120px 20px 60px; }
+      .content-section { padding: 30px 20px; }
     }
   </style>
 </head>
 <body>
+  <div class="cursor"></div>
+  <div class="cursor-dot"></div>
+  <div class="glow"></div>
+  <div class="particles"></div>
+
   <nav>
     <a href="/" class="logo">ORBIT<span>XE</span></a>
+    <a href="/" class="nav-cta">Back to Home</a>
   </nav>
 
   <div class="container">
-    <h1>Privacy Policy</h1>
-    <p class="updated">Last updated: January 6, 2025</p>
+    <div class="page-header">
+      <h1>Privacy Policy</h1>
+      <span class="updated">Last updated: January 6, 2025</span>
+    </div>
 
-    <p>WOOSYSTEMS ("we", "our", or "us") operates OrbitXE. This Privacy Policy explains how we collect, use, and protect information when you use our Chrome extension and web-based remote control service.</p>
+    <div class="content-section">
+      <p>WOOSYSTEMS ("we", "our", or "us") operates OrbitXE. This Privacy Policy explains how we collect, use, and protect information when you use our Chrome extension and web-based remote control service.</p>
+    </div>
 
-    <h2>1. Information We Collect</h2>
-    <p>OrbitXE is designed with privacy in mind. We collect minimal information necessary to provide the service:</p>
-    <ul>
-      <li><strong>Session Data:</strong> Temporary room IDs generated to connect your phone to your browser. These are randomly generated and not linked to any personal information.</li>
-      <li><strong>Tab Information:</strong> Titles and URLs of your browser tabs are transmitted between your devices solely to enable the remote control functionality. This data is not stored on our servers.</li>
-      <li><strong>Usage Data:</strong> We may collect anonymous, aggregated usage statistics to improve our service.</li>
-    </ul>
+    <div class="content-section">
+      <h2>1. Information We Collect</h2>
+      <p>OrbitXE is designed with privacy in mind. We collect minimal information necessary to provide the service:</p>
+      <ul>
+        <li><strong>Session Data:</strong> Temporary room IDs generated to connect your phone to your browser. These are randomly generated and not linked to any personal information.</li>
+        <li><strong>Tab Information:</strong> Titles and URLs of your browser tabs are transmitted between your devices solely to enable the remote control functionality. This data is not stored on our servers.</li>
+        <li><strong>Usage Data:</strong> We may collect anonymous, aggregated usage statistics to improve our service.</li>
+      </ul>
+    </div>
 
-    <h2>2. Information We Do NOT Collect</h2>
-    <ul>
-      <li>Personal identification information (name, email, address)</li>
-      <li>Browsing history or content of web pages</li>
-      <li>Passwords or form data</li>
-      <li>Cookies or tracking identifiers</li>
-      <li>Location data</li>
-    </ul>
+    <div class="content-section">
+      <h2>2. Information We Do NOT Collect</h2>
+      <ul>
+        <li>Personal identification information (name, email, address)</li>
+        <li>Browsing history or content of web pages</li>
+        <li>Passwords or form data</li>
+        <li>Cookies or tracking identifiers</li>
+        <li>Location data</li>
+      </ul>
+    </div>
 
-    <h2>3. How We Use Information</h2>
-    <p>The limited information we process is used exclusively to:</p>
-    <ul>
-      <li>Establish and maintain the connection between your phone and browser</li>
-      <li>Transmit control commands (mouse movements, keyboard input, etc.)</li>
-      <li>Display tab information on your phone remote</li>
-    </ul>
+    <div class="content-section">
+      <h2>3. How We Use Information</h2>
+      <p>The limited information we process is used exclusively to:</p>
+      <ul>
+        <li>Establish and maintain the connection between your phone and browser</li>
+        <li>Transmit control commands (mouse movements, keyboard input, etc.)</li>
+        <li>Display tab information on your phone remote</li>
+      </ul>
+    </div>
 
-    <h2>4. Data Transmission and Security</h2>
-    <p>All data transmitted between your devices passes through our secure WebSocket servers using encrypted connections (WSS/HTTPS). Control commands and tab information are transmitted in real-time and are NOT stored or logged on our servers.</p>
+    <div class="content-section">
+      <h2>4. Data Transmission and Security</h2>
+      <p>All data transmitted between your devices passes through our secure WebSocket servers using encrypted connections (WSS/HTTPS). Control commands and tab information are transmitted in real-time and are NOT stored or logged on our servers.</p>
+    </div>
 
-    <h2>5. Data Retention</h2>
-    <p>Session data is temporary and is automatically deleted when you disconnect or close your browser. We do not maintain any persistent records of your sessions or activities.</p>
+    <div class="content-section">
+      <h2>5. Data Retention</h2>
+      <p>Session data is temporary and is automatically deleted when you disconnect or close your browser. We do not maintain any persistent records of your sessions or activities.</p>
+    </div>
 
-    <h2>6. Third-Party Services</h2>
-    <p>OrbitXE uses the following third-party services:</p>
-    <ul>
-      <li><strong>Railway:</strong> For hosting our server infrastructure</li>
-      <li><strong>Chrome Web Store:</strong> For extension distribution</li>
-    </ul>
-    <p>These services have their own privacy policies that govern their data practices.</p>
+    <div class="content-section">
+      <h2>6. Third-Party Services</h2>
+      <p>OrbitXE uses the following third-party services:</p>
+      <ul>
+        <li><strong>Railway:</strong> For hosting our server infrastructure</li>
+        <li><strong>Chrome Web Store:</strong> For extension distribution</li>
+      </ul>
+      <p>These services have their own privacy policies that govern their data practices.</p>
+    </div>
 
-    <h2>7. Your Rights</h2>
-    <p>Since we do not collect personal information, there is no personal data for you to access, modify, or delete. You can stop using OrbitXE at any time by:</p>
-    <ul>
-      <li>Closing the remote control page on your phone</li>
-      <li>Clicking "New Session" to end the current connection</li>
-      <li>Uninstalling the Chrome extension</li>
-    </ul>
+    <div class="content-section">
+      <h2>7. Your Rights</h2>
+      <p>Since we do not collect personal information, there is no personal data for you to access, modify, or delete. You can stop using OrbitXE at any time by:</p>
+      <ul>
+        <li>Closing the remote control page on your phone</li>
+        <li>Clicking "New Session" to end the current connection</li>
+        <li>Uninstalling the Chrome extension</li>
+      </ul>
+    </div>
 
-    <h2>8. Children's Privacy</h2>
-    <p>OrbitXE is not directed at children under 13. We do not knowingly collect information from children.</p>
+    <div class="content-section">
+      <h2>8. Children's Privacy</h2>
+      <p>OrbitXE is not directed at children under 13. We do not knowingly collect information from children.</p>
+    </div>
 
-    <h2>9. Disclaimer of Liability</h2>
-    <p>OrbitXE is provided "as is" without warranties of any kind. We are not responsible for:</p>
-    <ul>
-      <li>Any damages arising from the use or inability to use the service</li>
-      <li>Unauthorized access to your devices resulting from your own security practices</li>
-      <li>Content of websites you access using OrbitXE</li>
-      <li>Actions taken on websites through the remote control functionality</li>
-    </ul>
+    <div class="content-section">
+      <h2>9. Disclaimer of Liability</h2>
+      <p>OrbitXE is provided "as is" without warranties of any kind. We are not responsible for:</p>
+      <ul>
+        <li>Any damages arising from the use or inability to use the service</li>
+        <li>Unauthorized access to your devices resulting from your own security practices</li>
+        <li>Content of websites you access using OrbitXE</li>
+        <li>Actions taken on websites through the remote control functionality</li>
+      </ul>
+    </div>
 
-    <h2>10. Limitation of Liability</h2>
-    <p>To the maximum extent permitted by law, WOOSYSTEMS shall not be liable for any indirect, incidental, special, consequential, or punitive damages, regardless of the cause of action or whether we have been advised of the possibility of such damages.</p>
+    <div class="content-section">
+      <h2>10. Limitation of Liability</h2>
+      <p>To the maximum extent permitted by law, WOOSYSTEMS shall not be liable for any indirect, incidental, special, consequential, or punitive damages, regardless of the cause of action or whether we have been advised of the possibility of such damages.</p>
+    </div>
 
-    <h2>11. Changes to This Policy</h2>
-    <p>We may update this Privacy Policy from time to time. We will notify users of any material changes by updating the "Last updated" date at the top of this page.</p>
+    <div class="content-section">
+      <h2>11. Changes to This Policy</h2>
+      <p>We may update this Privacy Policy from time to time. We will notify users of any material changes by updating the "Last updated" date at the top of this page.</p>
+    </div>
 
-    <h2>12. Contact Us</h2>
-    <p>If you have questions about this Privacy Policy, please contact us at:</p>
-    <p>WOOSYSTEMS<br>Email: privacy@woosystems.com</p>
+    <div class="content-section">
+      <h2>12. Contact Us</h2>
+      <p>If you have questions about this Privacy Policy, please contact us at:</p>
+      <p>WOOSYSTEMS<br>Email: privacy@woosystems.com</p>
+    </div>
   </div>
 
   <footer>
-    <p>&copy; 2025 WOOSYSTEMS. All rights reserved. | <a href="/">Back to Home</a></p>
+    <p>2025 WOOSYSTEMS. All rights reserved. | <a href="/">Home</a> | <a href="/terms">Terms of Service</a></p>
   </footer>
+
+  <script>
+    // Custom Cursor
+    const cursor = document.querySelector('.cursor');
+    const cursorDot = document.querySelector('.cursor-dot');
+    const glow = document.querySelector('.glow');
+
+    let mouseX = 0, mouseY = 0;
+    let cursorX = 0, cursorY = 0;
+
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      cursorDot.style.left = mouseX + 'px';
+      cursorDot.style.top = mouseY + 'px';
+      glow.style.left = mouseX + 'px';
+      glow.style.top = mouseY + 'px';
+    });
+
+    function animateCursor() {
+      cursorX += (mouseX - cursorX) * 0.15;
+      cursorY += (mouseY - cursorY) * 0.15;
+      cursor.style.left = cursorX + 'px';
+      cursor.style.top = cursorY + 'px';
+      requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+
+    // Cursor hover effect
+    document.querySelectorAll('a, button').forEach(el => {
+      el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+      el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+    });
+
+    // Floating Particles
+    const particlesContainer = document.querySelector('.particles');
+    for (let i = 0; i < 20; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.animationDelay = Math.random() * 20 + 's';
+      particle.style.animationDuration = (15 + Math.random() * 15) + 's';
+      particlesContainer.appendChild(particle);
+    }
+
+    // Scroll Animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.content-section').forEach((el, i) => {
+      el.style.transitionDelay = (i * 0.1) + 's';
+      observer.observe(el);
+    });
+  </script>
 </body>
 </html>
