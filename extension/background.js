@@ -234,8 +234,28 @@ async function sendTabList() {
 }
 
 // Listen for tab changes
-chrome.tabs.onActivated.addListener((activeInfo) => {
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
   console.log('ExodusXE: Tab activated:', activeInfo.tabId);
+
+  // Proactively inject content script into newly activated tab
+  try {
+    const tab = await chrome.tabs.get(activeInfo.tabId);
+    if (tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://')) {
+      try {
+        await chrome.scripting.executeScript({
+          target: { tabId: activeInfo.tabId },
+          files: ['content.js']
+        });
+        console.log('ExodusXE: Content script injected into tab', activeInfo.tabId);
+      } catch (e) {
+        // Already injected or can't inject, that's fine
+        console.log('ExodusXE: Script injection skipped:', e.message);
+      }
+    }
+  } catch (e) {
+    console.error('ExodusXE: Tab injection error:', e);
+  }
+
   sendActiveTabInfo();
   sendTabList();
 });
