@@ -109,6 +109,15 @@ wss.on('connection', (ws, req) => {
         });
       }
 
+      // Open new tab - relay to displays
+      if (msg.type === 'openTab') {
+        console.log('Opening tab:', msg.url);
+        const payload = JSON.stringify({ type: 'openTab', url: msg.url });
+        room.displays.forEach(d => {
+          if (d.readyState === 1) d.send(payload);
+        });
+      }
+
       // Get tabs request - relay to displays
       if (msg.type === 'getTabs') {
         room.displays.forEach(d => {

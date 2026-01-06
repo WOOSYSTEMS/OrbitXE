@@ -91,6 +91,19 @@ async function connectToServer() {
           }
           break;
 
+        case 'openTab':
+          console.log('ExodusXE: Opening new tab:', msg.url);
+          try {
+            await chrome.tabs.create({ url: msg.url, active: true });
+            setTimeout(() => {
+              sendTabList();
+              sendActiveTabInfo();
+            }, 500);
+          } catch (e) {
+            console.error('ExodusXE: Failed to open tab:', e);
+          }
+          break;
+
         case 'getTabs':
           console.log('ExodusXE: Sending tab list');
           sendTabList();
