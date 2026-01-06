@@ -200,42 +200,26 @@ function performClick(x, y, button) {
 function handleScroll(deltaX, deltaY) {
   console.log('ExodusXE: Scrolling', deltaX, deltaY);
 
-  // Try to find a scrollable element
-  const scrollTargets = [
-    document.scrollingElement,
-    document.documentElement,
-    document.body,
-    document.querySelector('main'),
-    document.querySelector('[role="main"]'),
-    document.querySelector('#content'),
-    document.querySelector('.main-content'),
-    document.querySelector('ytd-app'), // YouTube
-    document.querySelector('#page-manager'), // YouTube
-  ].filter(Boolean);
+  // Method 1: Direct window scroll
+  window.scrollBy(deltaX, deltaY);
 
-  let scrolled = false;
-
-  for (const target of scrollTargets) {
-    if (target && target.scrollHeight > target.clientHeight) {
-      target.scrollBy({
-        left: deltaX,
-        top: deltaY,
-        behavior: 'smooth'
-      });
-      scrolled = true;
-      console.log('ExodusXE: Scrolled element:', target.tagName || target);
-      break;
-    }
+  // Method 2: Also try scrolling the document element
+  if (document.scrollingElement) {
+    document.scrollingElement.scrollTop += deltaY;
+    document.scrollingElement.scrollLeft += deltaX;
   }
 
-  // Fallback to window scroll
-  if (!scrolled) {
-    window.scrollBy({
-      left: deltaX,
-      top: deltaY,
-      behavior: 'smooth'
-    });
-  }
+  // Method 3: Dispatch wheel event for sites that listen to wheel
+  const wheelEvent = new WheelEvent('wheel', {
+    deltaX: deltaX,
+    deltaY: deltaY,
+    deltaMode: 0,
+    bubbles: true,
+    cancelable: true
+  });
+  (document.activeElement || document.body).dispatchEvent(wheelEvent);
+
+  console.log('ExodusXE: Scroll executed');
 }
 
 // Handle action (site-specific or universal)
