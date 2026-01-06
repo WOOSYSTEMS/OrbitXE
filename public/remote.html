@@ -446,10 +446,15 @@
 
       ws.onmessage = (e) => {
         const msg = JSON.parse(e.data);
+        console.log('ExodusXE Phone: Received:', msg.type, msg);
 
         if (msg.type === 'joined' || msg.type === 'status') {
           connected = msg.displays > 0;
           updateStatus();
+          // Request tabs when status changes
+          if (connected) {
+            setTimeout(() => ws.send(JSON.stringify({ type: 'getTabs' })), 300);
+          }
         }
 
         if (msg.type === 'activeTab') {
@@ -460,7 +465,8 @@
         }
 
         if (msg.type === 'tabList') {
-          tabs = msg.tabs;
+          console.log('ExodusXE Phone: Got tabList with', msg.tabs?.length, 'tabs');
+          tabs = msg.tabs || [];
           renderTabs();
         }
       };
@@ -686,6 +692,13 @@
       keyboardInput.blur();
       keyboardInput.value = '';
     };
+
+    // Periodic tab refresh (backup in case push doesn't work)
+    setInterval(() => {
+      if (ws?.readyState === WebSocket.OPEN && connected) {
+        ws.send(JSON.stringify({ type: 'getTabs' }));
+      }
+    }, 5000);
 
     // Init
     updateContextControls();

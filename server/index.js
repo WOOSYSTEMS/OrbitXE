@@ -117,9 +117,16 @@ wss.on('connection', (ws, req) => {
 
       // Active tab info / tab list - relay to controllers
       if (['activeTab', 'tabList'].includes(msg.type)) {
+        console.log(`Relaying ${msg.type} to ${room.controllers.size} controllers`);
+        if (msg.type === 'tabList') {
+          console.log(`Tab count: ${msg.tabs?.length || 0}`);
+        }
         const payload = JSON.stringify(msg);
         room.controllers.forEach(c => {
-          if (c.readyState === 1) c.send(payload);
+          if (c.readyState === 1) {
+            console.log('Sending to controller');
+            c.send(payload);
+          }
         });
       }
 
