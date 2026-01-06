@@ -188,11 +188,43 @@ function performClick(x, y, button) {
 // Handle scroll
 function handleScroll(deltaX, deltaY) {
   console.log('ExodusXE: Scrolling', deltaX, deltaY);
-  window.scrollBy({
-    left: deltaX,
-    top: deltaY,
-    behavior: 'smooth'
-  });
+
+  // Try to find a scrollable element
+  const scrollTargets = [
+    document.scrollingElement,
+    document.documentElement,
+    document.body,
+    document.querySelector('main'),
+    document.querySelector('[role="main"]'),
+    document.querySelector('#content'),
+    document.querySelector('.main-content'),
+    document.querySelector('ytd-app'), // YouTube
+    document.querySelector('#page-manager'), // YouTube
+  ].filter(Boolean);
+
+  let scrolled = false;
+
+  for (const target of scrollTargets) {
+    if (target && target.scrollHeight > target.clientHeight) {
+      target.scrollBy({
+        left: deltaX,
+        top: deltaY,
+        behavior: 'smooth'
+      });
+      scrolled = true;
+      console.log('ExodusXE: Scrolled element:', target.tagName || target);
+      break;
+    }
+  }
+
+  // Fallback to window scroll
+  if (!scrolled) {
+    window.scrollBy({
+      left: deltaX,
+      top: deltaY,
+      behavior: 'smooth'
+    });
+  }
 }
 
 // Handle action (site-specific or universal)
