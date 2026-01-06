@@ -297,7 +297,7 @@
     /* Features */
     .features {
       padding: 100px 20px;
-      max-width: 1200px;
+      max-width: 1000px;
       margin: 0 auto;
     }
 
@@ -314,44 +314,58 @@
       font-size: 18px;
     }
 
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 24px;
+    .feature-row {
+      display: flex;
+      align-items: center;
+      gap: 60px;
+      margin-bottom: 80px;
+    }
+    .feature-row:nth-child(even) {
+      flex-direction: row-reverse;
+    }
+    .feature-row:last-child {
+      margin-bottom: 0;
     }
 
-    .feature-card {
+    .feature-content {
+      flex: 1;
+    }
+    .feature-content h3 {
+      font-size: 28px;
+      margin-bottom: 16px;
+    }
+    .feature-content p {
+      color: var(--text2);
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    .feature-visual {
+      flex: 1;
       background: var(--surface);
       border: 1px solid #222;
-      border-radius: 16px;
-      padding: 32px;
-      transition: all 0.3s;
-    }
-    .feature-card:hover {
-      border-color: var(--accent);
-      transform: translateY(-4px);
-    }
-
-    .feature-icon {
-      width: 48px;
-      height: 48px;
-      background: rgba(0, 255, 136, 0.1);
-      border-radius: 12px;
+      border-radius: 20px;
+      padding: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 20px;
+      min-height: 200px;
+    }
+    .feature-visual .icon {
+      font-size: 64px;
       color: var(--accent);
-      font-size: 24px;
     }
 
-    .feature-card h3 {
-      font-size: 20px;
-      margin-bottom: 12px;
-    }
-    .feature-card p {
-      color: var(--text2);
-      font-size: 15px;
+    @media (max-width: 768px) {
+      .feature-row, .feature-row:nth-child(even) {
+        flex-direction: column;
+        gap: 30px;
+        text-align: center;
+      }
+      .feature-visual {
+        width: 100%;
+        padding: 30px;
+      }
     }
 
     /* How it works */
@@ -563,36 +577,53 @@
       <p>A complete remote control solution for your browser</p>
     </div>
 
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon">⬚</div>
+    <div class="feature-row">
+      <div class="feature-content">
         <h3>Wireless Trackpad</h3>
-        <p>Use your phone screen as a trackpad. Swipe to move cursor, tap to click, hold for right-click.</p>
+        <p>Use your phone screen as a trackpad. Swipe to move the cursor anywhere on screen, tap to click, and hold for right-click. It's like having a wireless mouse in your pocket.</p>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">⌨</div>
+      <div class="feature-visual">
+        <img src="/images/remote-universal.png" alt="Trackpad" style="height: 300px; border-radius: 16px;">
+      </div>
+    </div>
+
+    <div class="feature-row">
+      <div class="feature-content">
         <h3>Native Keyboard</h3>
-        <p>Type using your phone's keyboard with autocorrect, swipe typing, and all your familiar features.</p>
+        <p>Type using your phone's keyboard with autocorrect, swipe typing, and all your familiar features. No more squinting at tiny on-screen keyboards.</p>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">▶</div>
+      <div class="feature-visual">
+        <img src="/images/keyboard.png" alt="Keyboard" style="height: 300px; border-radius: 16px;">
+      </div>
+    </div>
+
+    <div class="feature-row">
+      <div class="feature-content">
         <h3>Smart Controls</h3>
-        <p>Auto-detects YouTube, Netflix, Zoom and shows relevant controls like play, pause, mute, fullscreen.</p>
+        <p>OrbitXE auto-detects YouTube, Netflix, Zoom and other sites, showing relevant controls like play, pause, mute, skip, and fullscreen automatically.</p>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">⬡</div>
+      <div class="feature-visual">
+        <img src="/images/remote-youtube.png" alt="YouTube Controls" style="height: 300px; border-radius: 16px;">
+      </div>
+    </div>
+
+    <div class="feature-row">
+      <div class="feature-content">
         <h3>Tab Management</h3>
-        <p>Switch between browser tabs, open new tabs, navigate to URLs - all from your phone.</p>
+        <p>Switch between browser tabs, open new tabs, and navigate to any URL - all from your phone. See all your open tabs and jump to any one instantly.</p>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">↕</div>
-        <h3>Easy Scrolling</h3>
-        <p>Two-finger scroll or use scroll buttons to navigate long pages smoothly.</p>
+      <div class="feature-visual">
+        <img src="/images/url-input.png" alt="Tab Management" style="height: 300px; border-radius: 16px;">
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">◉</div>
+    </div>
+
+    <div class="feature-row">
+      <div class="feature-content">
         <h3>No App Required</h3>
-        <p>Just scan a QR code with your phone camera. Works on any phone with a web browser.</p>
+        <p>Just scan a QR code with your phone camera and you're connected. Works on any phone with a web browser - iPhone, Android, anything.</p>
+      </div>
+      <div class="feature-visual">
+        <img src="/images/popup.png" alt="QR Code" style="height: 300px; border-radius: 16px;">
       </div>
     </div>
   </section>
