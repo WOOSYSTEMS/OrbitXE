@@ -183,6 +183,17 @@ function performClick(x, y, button) {
 
   // Focus if clickable
   if (element.focus) element.focus();
+
+  // Check if clicked on a text input - notify phone to show keyboard
+  const isTextInput = element.tagName === 'INPUT' ||
+                      element.tagName === 'TEXTAREA' ||
+                      element.isContentEditable ||
+                      element.closest('input, textarea, [contenteditable="true"]');
+
+  if (isTextInput) {
+    console.log('ExodusXE: Clicked on text input, sending showKeyboard');
+    chrome.runtime.sendMessage({ type: 'showKeyboard' });
+  }
 }
 
 // Handle scroll

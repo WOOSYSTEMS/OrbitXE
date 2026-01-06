@@ -116,6 +116,15 @@ wss.on('connection', (ws, req) => {
         });
       }
 
+      // showKeyboard - relay to controllers (phone)
+      if (msg.type === 'showKeyboard') {
+        console.log('Relaying showKeyboard to controllers');
+        const payload = JSON.stringify({ type: 'showKeyboard' });
+        room.controllers.forEach(c => {
+          if (c.readyState === 1) c.send(payload);
+        });
+      }
+
       // Active tab info / tab list - relay to controllers
       if (['activeTab', 'tabList'].includes(msg.type)) {
         console.log(`Relaying ${msg.type} to ${room.controllers.size} controllers`);

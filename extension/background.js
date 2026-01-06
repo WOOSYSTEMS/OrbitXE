@@ -296,6 +296,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 
+  // Forward showKeyboard from content script to phone
+  if (msg.type === 'showKeyboard') {
+    console.log('ExodusXE: Forwarding showKeyboard to phone');
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'showKeyboard' }));
+    }
+    sendResponse({ status: 'ok' });
+    return true;
+  }
+
   return true;
 });
 

@@ -481,6 +481,12 @@
           tabs = msg.tabs || [];
           renderTabs();
         }
+
+        if (msg.type === 'showKeyboard') {
+          console.log('ExodusXE Phone: Opening keyboard');
+          document.getElementById('keyboardOverlay').classList.add('active');
+          setTimeout(() => document.getElementById('keyboardInput').focus(), 100);
+        }
       };
 
       ws.onclose = () => {
