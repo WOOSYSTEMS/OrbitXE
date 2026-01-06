@@ -538,40 +538,52 @@
     // Context controls
     const contexts = {
       youtube: [
-        { icon: '⏯️', action: 'play', label: 'Play' },
-        { icon: '⏪', action: 'seekBack', label: '-10s' },
-        { icon: '⏩', action: 'seekForward', label: '+10s' },
-        { icon: '🔇', action: 'mute', label: 'Mute' },
-        { icon: '⛶', action: 'fullscreen', label: 'Full' },
-        { icon: '⏭️', action: 'next', label: 'Next' }
+        { action: 'play', label: 'Play/Pause' },
+        { action: 'seekBack', label: '-10s' },
+        { action: 'seekForward', label: '+10s' },
+        { action: 'mute', label: 'Mute' },
+        { action: 'fullscreen', label: 'Fullscreen' },
+        { action: 'next', label: 'Next' }
       ],
       netflix: [
-        { icon: '⏯️', action: 'play' }, { icon: '⏪', action: 'seekBack' },
-        { icon: '⏩', action: 'seekForward' }, { icon: '🔇', action: 'mute' }, { icon: '⛶', action: 'fullscreen' }
+        { action: 'play', label: 'Play/Pause' },
+        { action: 'seekBack', label: '-10s' },
+        { action: 'seekForward', label: '+10s' },
+        { action: 'mute', label: 'Mute' },
+        { action: 'fullscreen', label: 'Fullscreen' }
       ],
       slides: [
-        { icon: '◀️', action: 'prev', label: 'Prev' }, { icon: '▶️', action: 'next', label: 'Next' },
-        { icon: '▶️', action: 'play', label: 'Present' }, { icon: '✖️', action: 'exit', label: 'Exit' }
+        { action: 'prev', label: 'Prev' },
+        { action: 'next', label: 'Next' },
+        { action: 'play', label: 'Present' },
+        { action: 'exit', label: 'Exit' }
       ],
       zoom: [
-        { icon: '🎤', action: 'mute', label: 'Mute' }, { icon: '📹', action: 'video', label: 'Video' },
-        { icon: '💬', action: 'chat', label: 'Chat' }, { icon: '📴', action: 'leave', label: 'Leave' }
+        { action: 'mute', label: 'Mute' },
+        { action: 'video', label: 'Video' },
+        { action: 'chat', label: 'Chat' },
+        { action: 'leave', label: 'Leave' }
       ],
       meet: [
-        { icon: '🎤', action: 'mute', label: 'Mute' }, { icon: '📹', action: 'video', label: 'Video' },
-        { icon: '💬', action: 'chat', label: 'Chat' }, { icon: '📴', action: 'leave', label: 'Leave' }
+        { action: 'mute', label: 'Mute' },
+        { action: 'video', label: 'Video' },
+        { action: 'chat', label: 'Chat' },
+        { action: 'leave', label: 'Leave' }
       ],
       universal: [
-        { icon: '↑', action: 'up' }, { icon: '↓', action: 'down' },
-        { icon: '↵', action: 'enter' }, { icon: '⎋', action: 'escape' },
-        { icon: '␣', action: 'space' }, { icon: '⇥', action: 'tab' }
+        { action: 'up', label: 'Up' },
+        { action: 'down', label: 'Down' },
+        { action: 'enter', label: 'Enter' },
+        { action: 'escape', label: 'Esc' },
+        { action: 'space', label: 'Space' },
+        { action: 'tab', label: 'Tab' }
       ]
     };
 
     function updateContextControls() {
       const btns = contexts[siteType] || contexts.universal;
       document.getElementById('contextControls').innerHTML = btns.map(b =>
-        `<button class="ctx-btn" data-action="${b.action}">${b.icon}${b.label ? ' ' + b.label : ''}</button>`
+        `<button class="ctx-btn" data-action="${b.action}">${b.label}</button>`
       ).join('');
 
       document.querySelectorAll('.ctx-btn').forEach(el => {
