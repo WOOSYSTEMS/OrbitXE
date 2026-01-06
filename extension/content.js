@@ -304,8 +304,19 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       break;
 
     case 'keyboard':
+      console.log('ExodusXE: Keyboard message:', msg);
       if (msg.key === 'Backspace') {
         simulateKey('Backspace');
+      } else if (msg.key === 'Space') {
+        // Space can be typed as text or simulated as key
+        const target = document.activeElement;
+        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+          typeText(' ');
+        } else {
+          simulateKey('Space');
+        }
+      } else if (msg.key === 'Enter') {
+        simulateKey('Enter');
       } else if (msg.text) {
         typeText(msg.text);
       } else if (msg.key) {

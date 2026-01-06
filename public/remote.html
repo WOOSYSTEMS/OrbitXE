@@ -683,15 +683,26 @@
     ).join('');
 
     document.querySelectorAll('#keyboardGrid .key').forEach(key => {
-      key.onclick = () => {
+      key.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Key clicked:', key.dataset.key || key.dataset.char);
+
         if (key.dataset.key) {
+          console.log('Sending key:', key.dataset.key);
           send({ type: 'keyboard', key: key.dataset.key });
-          if (key.dataset.key === 'Backspace') keyboardInput.value = keyboardInput.value.slice(0, -1);
+          if (key.dataset.key === 'Backspace') {
+            keyboardInput.value = keyboardInput.value.slice(0, -1);
+          } else if (key.dataset.key === 'Space') {
+            keyboardInput.value += ' ';
+          }
         } else if (key.dataset.char) {
+          console.log('Sending char:', key.dataset.char);
           send({ type: 'keyboard', text: key.dataset.char });
           keyboardInput.value += key.dataset.char;
         }
-      };
+        vibrate();
+      });
     });
 
     keyboardInput.addEventListener('input', (e) => {
