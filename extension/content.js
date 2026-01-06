@@ -115,25 +115,43 @@ function typeText(text) {
   const target = document.activeElement;
   if (!target) return;
 
-  // Try input event for form fields
-  if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-    // Insert text at cursor position
+  console.log('ExodusXE: Typing to', target.tagName, 'isContentEditable:', target.isContentEditable);
+
+  // For standard input/textarea
+  if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
     const start = target.selectionStart || 0;
     const end = target.selectionEnd || 0;
-    const currentValue = target.value || target.textContent || '';
+    target.value = target.value.slice(0, start) + text + target.value.slice(end);
+    target.selectionStart = target.selectionEnd = start + text.length;
+    target.dispatchEvent(new Event('input', { bubbles: true }));
+    return;
+  }
 
-    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-      target.value = currentValue.slice(0, start) + text + currentValue.slice(end);
-      target.selectionStart = target.selectionEnd = start + text.length;
-      target.dispatchEvent(new Event('input', { bubbles: true }));
-    } else {
-      document.execCommand('insertText', false, text);
-    }
-  } else {
-    // Simulate key presses for non-input elements
-    for (const char of text) {
-      simulateKey(char);
-    }
+  // For contentEditable (Google Docs, etc.) - try execCommand first
+  if (document.execCommand('insertText', false, text)) {
+    console.log('ExodusXE: Used execCommand');
+    return;
+  }
+
+  // Fallback: dispatch keyboard events for each character
+  console.log('ExodusXE: Using keyboard events fallback');
+  for (const char of text) {
+    const keyCode = char.charCodeAt(0);
+    const eventProps = {
+      key: char,
+      code: `Key${char.toUpperCase()}`,
+      keyCode: keyCode,
+      which: keyCode,
+      charCode: keyCode,
+      bubbles: true,
+      cancelable: true
+    };
+
+    target.dispatchEvent(new KeyboardEvent('keydown', eventProps));
+    target.dispatchEvent(new KeyboardEvent('keypress', eventProps));
+    target.dispatchEvent(new InputEvent('beforeinput', { data: char, inputType: 'insertText', bubbles: true }));
+    target.dispatchEvent(new InputEvent('input', { data: char, inputType: 'insertText', bubbles: true }));
+    target.dispatchEvent(new KeyboardEvent('keyup', eventProps));
   }
 }
 
