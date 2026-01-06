@@ -7,21 +7,21 @@ let serverUrl = 'https://exodusxe-production.up.railway.app';
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 10;
 
-console.log('ExodusXE: Background script loaded');
+console.log('OrbitXE: Background script loaded');
 
 // Connect to server
 async function connectToServer() {
-  console.log('ExodusXE: connectToServer called, ws state:', ws?.readyState);
+  console.log('OrbitXE: connectToServer called, ws state:', ws?.readyState);
 
   if (ws && ws.readyState === WebSocket.OPEN) {
-    console.log('ExodusXE: Already connected');
+    console.log('OrbitXE: Already connected');
     return;
   }
 
   try {
     // Create room if needed
     if (!roomId) {
-      console.log('ExodusXE: Creating new room...');
+      console.log('OrbitXE: Creating new room...');
       const res = await fetch(`${serverUrl}/api/rooms`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -29,7 +29,7 @@ async function connectToServer() {
       });
       const data = await res.json();
       roomId = data.roomId;
-      console.log('ExodusXE: Room created:', roomId);
+      console.log('OrbitXE: Room created:', roomId);
 
       // Store for popup
       await chrome.storage.local.set({
@@ -41,11 +41,11 @@ async function connectToServer() {
 
     // Connect WebSocket
     const wsUrl = `${serverUrl.replace('https', 'wss')}/ws/${roomId}`;
-    console.log('ExodusXE: Connecting to', wsUrl);
+    console.log('OrbitXE: Connecting to', wsUrl);
     ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
-      console.log('ExodusXE: WebSocket connected!');
+      console.log('OrbitXE: WebSocket connected!');
       reconnectAttempts = 0;
       ws.send(JSON.stringify({ type: 'join', roomId, role: 'display' }));
 
@@ -58,41 +58,41 @@ async function connectToServer() {
 
     ws.onmessage = async (e) => {
       const msg = JSON.parse(e.data);
-      console.log('ExodusXE: Received message:', msg.type, msg);
+      console.log('OrbitXE: Received message:', msg.type, msg);
 
       switch (msg.type) {
         case 'action':
-          console.log('ExodusXE: Sending action to tab:', msg.action);
+          console.log('OrbitXE: Sending action to tab:', msg.action);
           await sendToActiveTab({ type: 'action', action: msg.action, value: msg.value });
           break;
 
         case 'mouse':
-          console.log('ExodusXE: Sending mouse to tab:', msg);
+          console.log('OrbitXE: Sending mouse to tab:', msg);
           await sendToActiveTab({ type: 'mouse', x: msg.x, y: msg.y, action: msg.action });
           break;
 
         case 'keyboard':
-          console.log('ExodusXE: Sending keyboard to tab:', msg);
+          console.log('OrbitXE: Sending keyboard to tab:', msg);
           await sendToActiveTab({ type: 'keyboard', key: msg.key, text: msg.text });
           break;
 
         case 'scroll':
-          console.log('ExodusXE: Sending scroll to tab:', msg);
+          console.log('OrbitXE: Sending scroll to tab:', msg);
           await sendToActiveTab({ type: 'scroll', deltaX: msg.deltaX || 0, deltaY: msg.deltaY || 0 });
           break;
 
         case 'switchTab':
-          console.log('ExodusXE: Switching to tab:', msg.tabId);
+          console.log('OrbitXE: Switching to tab:', msg.tabId);
           try {
             await chrome.tabs.update(msg.tabId, { active: true });
             setTimeout(sendActiveTabInfo, 200);
           } catch (e) {
-            console.error('ExodusXE: Failed to switch tab:', e);
+            console.error('OrbitXE: Failed to switch tab:', e);
           }
           break;
 
         case 'openTab':
-          console.log('ExodusXE: Opening new tab:', msg.url);
+          console.log('OrbitXE: Opening new tab:', msg.url);
           try {
             await chrome.tabs.create({ url: msg.url, active: true });
             setTimeout(() => {
@@ -100,18 +100,18 @@ async function connectToServer() {
               sendActiveTabInfo();
             }, 500);
           } catch (e) {
-            console.error('ExodusXE: Failed to open tab:', e);
+            console.error('OrbitXE: Failed to open tab:', e);
           }
           break;
 
         case 'getTabs':
-          console.log('ExodusXE: Sending tab list');
+          console.log('OrbitXE: Sending tab list');
           sendTabList();
           break;
 
         case 'status':
         case 'joined':
-          console.log('ExodusXE: Status update, controllers:', msg.controllers);
+          console.log('OrbitXE: Status update, controllers:', msg.controllers);
           chrome.storage.local.set({ controllers: msg.controllers || 0 });
           break;
 
@@ -122,24 +122,24 @@ async function connectToServer() {
     };
 
     ws.onclose = () => {
-      console.log('ExodusXE: WebSocket disconnected');
+      console.log('OrbitXE: WebSocket disconnected');
       ws = null;
 
       // Reconnect with backoff
       if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
         reconnectAttempts++;
         const delay = Math.min(1000 * reconnectAttempts, 10000);
-        console.log('ExodusXE: Reconnecting in', delay, 'ms');
+        console.log('OrbitXE: Reconnecting in', delay, 'ms');
         setTimeout(connectToServer, delay);
       }
     };
 
     ws.onerror = (e) => {
-      console.error('ExodusXE: WebSocket error', e);
+      console.error('OrbitXE: WebSocket error', e);
     };
 
   } catch (e) {
-    console.error('ExodusXE: Connection failed', e);
+    console.error('OrbitXE: Connection failed', e);
     // Retry
     setTimeout(connectToServer, 3000);
   }
@@ -149,14 +149,14 @@ async function connectToServer() {
 async function sendToActiveTab(message) {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    console.log('ExodusXE: Active tab:', tab?.id, tab?.url);
+    console.log('OrbitXE: Active tab:', tab?.id, tab?.url);
 
     if (tab?.id && tab.url && !tab.url.startsWith('chrome://')) {
       try {
         const response = await chrome.tabs.sendMessage(tab.id, message);
-        console.log('ExodusXE: Tab response:', response);
+        console.log('OrbitXE: Tab response:', response);
       } catch (e) {
-        console.log('ExodusXE: Content script not ready, injecting...');
+        console.log('OrbitXE: Content script not ready, injecting...');
         // Try to inject content script
         try {
           await chrome.scripting.executeScript({
@@ -168,23 +168,23 @@ async function sendToActiveTab(message) {
             try {
               await chrome.tabs.sendMessage(tab.id, message);
             } catch (e) {
-              console.error('ExodusXE: Still failed after injection:', e);
+              console.error('OrbitXE: Still failed after injection:', e);
             }
           }, 100);
         } catch (injectError) {
-          console.error('ExodusXE: Could not inject:', injectError);
+          console.error('OrbitXE: Could not inject:', injectError);
         }
       }
     }
   } catch (e) {
-    console.error('ExodusXE: Failed to send to tab', e);
+    console.error('OrbitXE: Failed to send to tab', e);
   }
 }
 
 // Send active tab info to phone
 async function sendActiveTabInfo() {
   if (!ws || ws.readyState !== WebSocket.OPEN) {
-    console.log('ExodusXE: Cannot send tab info, ws not ready');
+    console.log('OrbitXE: Cannot send tab info, ws not ready');
     return;
   }
 
@@ -208,7 +208,7 @@ async function sendActiveTabInfo() {
         }
       }
 
-      console.log('ExodusXE: Sending active tab info:', tab.title, siteType);
+      console.log('OrbitXE: Sending active tab info:', tab.title, siteType);
       ws.send(JSON.stringify({
         type: 'activeTab',
         tab: {
@@ -221,7 +221,7 @@ async function sendActiveTabInfo() {
       }));
     }
   } catch (e) {
-    console.error('ExodusXE: Failed to get active tab', e);
+    console.error('OrbitXE: Failed to get active tab', e);
   }
 }
 
@@ -239,16 +239,16 @@ async function sendTabList() {
       active: t.active
     }));
 
-    console.log('ExodusXE: Sending tab list, count:', tabList.length);
+    console.log('OrbitXE: Sending tab list, count:', tabList.length);
     ws.send(JSON.stringify({ type: 'tabList', tabs: tabList }));
   } catch (e) {
-    console.error('ExodusXE: Failed to get tabs', e);
+    console.error('OrbitXE: Failed to get tabs', e);
   }
 }
 
 // Listen for tab changes
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
-  console.log('ExodusXE: Tab activated:', activeInfo.tabId);
+  console.log('OrbitXE: Tab activated:', activeInfo.tabId);
 
   // Proactively inject content script into newly activated tab
   try {
@@ -259,14 +259,14 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
           target: { tabId: activeInfo.tabId },
           files: ['content.js']
         });
-        console.log('ExodusXE: Content script injected into tab', activeInfo.tabId);
+        console.log('OrbitXE: Content script injected into tab', activeInfo.tabId);
       } catch (e) {
         // Already injected or can't inject, that's fine
-        console.log('ExodusXE: Script injection skipped:', e.message);
+        console.log('OrbitXE: Script injection skipped:', e.message);
       }
     }
   } catch (e) {
-    console.error('ExodusXE: Tab injection error:', e);
+    console.error('OrbitXE: Tab injection error:', e);
   }
 
   sendActiveTabInfo();
@@ -275,13 +275,13 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.active) {
-    console.log('ExodusXE: Tab updated:', tabId);
+    console.log('OrbitXE: Tab updated:', tabId);
     sendActiveTabInfo();
   }
 });
 
 chrome.tabs.onCreated.addListener((tab) => {
-  console.log('ExodusXE: New tab created:', tab.id);
+  console.log('OrbitXE: New tab created:', tab.id);
   // Wait for tab to be ready
   setTimeout(() => {
     sendTabList();
@@ -290,17 +290,17 @@ chrome.tabs.onCreated.addListener((tab) => {
 });
 
 chrome.tabs.onRemoved.addListener(() => {
-  console.log('ExodusXE: Tab removed');
+  console.log('OrbitXE: Tab removed');
   sendTabList();
 });
 
 // Listen for messages from popup
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  console.log('ExodusXE: Message from popup:', msg.type);
+  console.log('OrbitXE: Message from popup:', msg.type);
 
   if (msg.type === 'getSession') {
     chrome.storage.local.get(['roomId', 'serverUrl', 'controllerUrl', 'controllers'], (data) => {
-      console.log('ExodusXE: Returning session data:', data);
+      console.log('OrbitXE: Returning session data:', data);
       sendResponse(data);
     });
     return true;
@@ -313,7 +313,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
 
   if (msg.type === 'newSession') {
-    console.log('ExodusXE: Creating new session');
+    console.log('OrbitXE: Creating new session');
     roomId = null;
     if (ws) ws.close();
     chrome.storage.local.remove(['roomId', 'controllerUrl', 'controllers']);
@@ -331,7 +331,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
   // Forward showKeyboard from content script to phone
   if (msg.type === 'showKeyboard') {
-    console.log('ExodusXE: Forwarding showKeyboard to phone');
+    console.log('OrbitXE: Forwarding showKeyboard to phone');
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'showKeyboard' }));
     }
@@ -344,14 +344,14 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
 // Auto-connect on install
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('ExodusXE: Extension installed/updated');
+  console.log('OrbitXE: Extension installed/updated');
   chrome.storage.local.clear();
   // Don't auto-connect, wait for popup
 });
 
 // Auto-connect on browser startup if we had a session
 chrome.runtime.onStartup.addListener(() => {
-  console.log('ExodusXE: Browser startup');
+  console.log('OrbitXE: Browser startup');
   chrome.storage.local.get(['roomId'], (data) => {
     if (data.roomId) {
       roomId = data.roomId;
@@ -374,7 +374,7 @@ setInterval(() => {
 chrome.alarms?.create('keepAlive', { periodInMinutes: 0.4 });
 chrome.alarms?.onAlarm.addListener((alarm) => {
   if (alarm.name === 'keepAlive') {
-    console.log('ExodusXE: Keep-alive ping');
+    console.log('OrbitXE: Keep-alive ping');
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'ping' }));
     }

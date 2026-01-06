@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#000000">
-  <title>ExodusXE Remote</title>
+  <title>OrbitXE Remote</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -381,7 +381,7 @@
 
   <div class="app">
     <header class="header">
-      <div class="logo">EXODUS<span>XE</span></div>
+      <div class="logo">ORBIT<span>XE</span></div>
       <div class="status">
         <span id="statusText">Waiting</span>
         <div class="status-dot" id="statusDot"></div>
@@ -479,7 +479,7 @@
 
       ws.onmessage = (e) => {
         const msg = JSON.parse(e.data);
-        console.log('ExodusXE Phone: Received:', msg.type, msg);
+        console.log('OrbitXE Phone: Received:', msg.type, msg);
 
         if (msg.type === 'joined' || msg.type === 'status') {
           connected = msg.displays > 0;
@@ -498,13 +498,13 @@
         }
 
         if (msg.type === 'tabList') {
-          console.log('ExodusXE Phone: Got tabList with', msg.tabs?.length, 'tabs');
+          console.log('OrbitXE Phone: Got tabList with', msg.tabs?.length, 'tabs');
           tabs = msg.tabs || [];
           renderTabs();
         }
 
         if (msg.type === 'showKeyboard') {
-          console.log('ExodusXE Phone: Opening keyboard');
+          console.log('OrbitXE Phone: Opening keyboard');
           document.getElementById('keyboardOverlay').classList.add('active');
           setTimeout(() => document.getElementById('keyboardInput').focus(), 100);
         }

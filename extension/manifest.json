@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "ExodusXE - Universal Web Remote",
+  "name": "OrbitXE - Universal Web Remote",
   "version": "1.0.0",
   "description": "Control any website from your phone. No apps needed.",
   "permissions": ["storage", "activeTab", "scripting", "tabs", "alarms"],

@@ -115,7 +115,7 @@ function typeText(text) {
   const target = document.activeElement;
   if (!target) return;
 
-  console.log('ExodusXE: Typing to', target.tagName, 'isContentEditable:', target.isContentEditable);
+  console.log('OrbitXE: Typing to', target.tagName, 'isContentEditable:', target.isContentEditable);
 
   // For standard input/textarea
   if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
@@ -129,12 +129,12 @@ function typeText(text) {
 
   // For contentEditable (Google Docs, etc.) - try execCommand first
   if (document.execCommand('insertText', false, text)) {
-    console.log('ExodusXE: Used execCommand');
+    console.log('OrbitXE: Used execCommand');
     return;
   }
 
   // Fallback: dispatch keyboard events for each character
-  console.log('ExodusXE: Using keyboard events fallback');
+  console.log('OrbitXE: Using keyboard events fallback');
   for (const char of text) {
     const keyCode = char.charCodeAt(0);
     const eventProps = {
@@ -209,14 +209,14 @@ function performClick(x, y, button) {
                       element.closest('input, textarea, [contenteditable="true"]');
 
   if (isTextInput) {
-    console.log('ExodusXE: Clicked on text input, sending showKeyboard');
+    console.log('OrbitXE: Clicked on text input, sending showKeyboard');
     chrome.runtime.sendMessage({ type: 'showKeyboard' });
   }
 }
 
 // Handle scroll
 function handleScroll(deltaX, deltaY) {
-  console.log('ExodusXE: Scrolling', deltaX, deltaY);
+  console.log('OrbitXE: Scrolling', deltaX, deltaY);
 
   // Method 1: Direct window scroll
   window.scrollBy(deltaX, deltaY);
@@ -237,7 +237,7 @@ function handleScroll(deltaX, deltaY) {
   });
   (document.activeElement || document.body).dispatchEvent(wheelEvent);
 
-  console.log('ExodusXE: Scroll executed');
+  console.log('OrbitXE: Scroll executed');
 }
 
 // Handle action (site-specific or universal)
@@ -267,7 +267,7 @@ function handleAction(action, value) {
     case 'scrollUp': handleScroll(0, -300); break;
     case 'scrollDown': handleScroll(0, 300); break;
     default:
-      console.log('ExodusXE: Unknown action', action);
+      console.log('OrbitXE: Unknown action', action);
   }
 
   showFeedback(action);
@@ -350,36 +350,36 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       break;
 
     case 'keyboard':
-      console.log('ExodusXE: Keyboard message:', msg);
+      console.log('OrbitXE: Keyboard message:', msg);
       if (msg.key === 'Backspace') {
         // Actually delete character from input fields
         const target = document.activeElement;
-        console.log('ExodusXE: Backspace - activeElement:', target?.tagName, 'value:', target?.value, 'contentEditable:', target?.isContentEditable);
+        console.log('OrbitXE: Backspace - activeElement:', target?.tagName, 'value:', target?.value, 'contentEditable:', target?.isContentEditable);
 
         if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
           const start = target.selectionStart || 0;
           const end = target.selectionEnd || 0;
-          console.log('ExodusXE: Backspace - cursor at', start, end, 'value length:', target.value?.length);
+          console.log('OrbitXE: Backspace - cursor at', start, end, 'value length:', target.value?.length);
 
           if (start === end && start > 0) {
             // No selection, delete char before cursor
             target.value = target.value.slice(0, start - 1) + target.value.slice(end);
             target.selectionStart = target.selectionEnd = start - 1;
-            console.log('ExodusXE: Deleted char, new value:', target.value);
+            console.log('OrbitXE: Deleted char, new value:', target.value);
           } else if (start !== end) {
             // Selection exists, delete selection
             target.value = target.value.slice(0, start) + target.value.slice(end);
             target.selectionStart = target.selectionEnd = start;
-            console.log('ExodusXE: Deleted selection, new value:', target.value);
+            console.log('OrbitXE: Deleted selection, new value:', target.value);
           } else {
-            console.log('ExodusXE: Nothing to delete (cursor at start)');
+            console.log('OrbitXE: Nothing to delete (cursor at start)');
           }
           target.dispatchEvent(new Event('input', { bubbles: true }));
         } else if (target && target.isContentEditable) {
-          console.log('ExodusXE: Using execCommand for contentEditable');
+          console.log('OrbitXE: Using execCommand for contentEditable');
           document.execCommand('delete', false);
         } else {
-          console.log('ExodusXE: No input focused, simulating key');
+          console.log('OrbitXE: No input focused, simulating key');
           simulateKey('Backspace');
         }
       } else if (msg.key === 'Space') {
@@ -425,4 +425,4 @@ document.addEventListener('mousemove', () => {
   }, 5000);
 });
 
-console.log('ExodusXE: Content script loaded -', getSiteType());
+console.log('OrbitXE: Content script loaded -', getSiteType());
