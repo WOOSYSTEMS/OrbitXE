@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OrbitXE - Control Any Website From Your Phone</title>
+  <meta name="description" content="Universal web remote control. Use your phone as a trackpad, keyboard, and smart controller for any website. No app download required.">
+  <link rel="icon" type="image/png" href="/icons/icon48.png">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --accent: #00ff88;
+      --bg: #0a0a0a;
+      --surface: #111;
+      --surface2: #1a1a1a;
+      --text: #fff;
+      --text2: #888;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(10, 10, 10, 0.9);
+      backdrop-filter: blur(20px);
+      z-index: 100;
+      border-bottom: 1px solid #222;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+    .logo span { color: var(--accent); }
+
+    .nav-links {
+      display: flex;
+      gap: 30px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--text2);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--accent); }
+
+    .nav-cta {
+      background: var(--accent);
+      color: #000;
+      padding: 10px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .nav-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+    }
+
+    /* Hero */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 120px 20px 80px;
+      background: radial-gradient(ellipse at top, #0f1a0f 0%, var(--bg) 60%);
+    }
+
+    .hero-badge {
+      background: var(--surface2);
+      border: 1px solid #333;
+      padding: 8px 16px;
+      border-radius: 50px;
+      font-size: 13px;
+      color: var(--text2);
+      margin-bottom: 30px;
+    }
+    .hero-badge span { color: var(--accent); }
+
+    .hero h1 {
+      font-size: clamp(40px, 8vw, 72px);
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 24px;
+      max-width: 800px;
+    }
+    .hero h1 span { color: var(--accent); }
+
+    .hero p {
+      font-size: 18px;
+      color: var(--text2);
+      max-width: 500px;
+      margin-bottom: 40px;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #000;
+      padding: 16px 32px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 40px rgba(0, 255, 136, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      padding: 16px 32px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 16px;
+      border: 1px solid #333;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Demo visual */
+    .hero-demo {
+      margin-top: 60px;
+      display: flex;
+      gap: 40px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .demo-browser {
+      background: var(--surface);
+      border-radius: 12px;
+      border: 1px solid #333;
+      width: 400px;
+      overflow: hidden;
+    }
+    .demo-browser-bar {
+      background: var(--surface2);
+      padding: 12px 16px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .demo-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #333;
+    }
+    .demo-dot.red { background: #ff5f57; }
+    .demo-dot.yellow { background: #febc2e; }
+    .demo-dot.green { background: #28c840; }
+    .demo-browser-content {
+      padding: 40px;
+      text-align: center;
+      color: var(--text2);
+    }
+
+    .demo-phone {
+      background: var(--surface);
+      border-radius: 24px;
+      border: 3px solid #333;
+      width: 180px;
+      padding: 20px 12px;
+    }
+    .demo-phone-screen {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 16px 8px;
+      text-align: center;
+    }
+    .demo-phone-logo {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .demo-phone-logo span { color: var(--accent); }
+    .demo-trackpad {
+      background: var(--surface2);
+      border-radius: 8px;
+      height: 80px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+      font-size: 10px;
+    }
+    .demo-buttons {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+    }
+    .demo-btn {
+      width: 36px;
+      height: 28px;
+      background: var(--surface2);
+      border-radius: 6px;
+    }
+    .demo-btn.accent { background: var(--accent); }
+
+    .demo-arrow {
+      color: var(--accent);
+      font-size: 32px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; transform: translateX(0); }
+      50% { opacity: 1; transform: translateX(10px); }
+    }
+
+    /* Features */
+    .features {
+      padding: 100px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+    .section-title h2 {
+      font-size: 36px;
+      margin-bottom: 16px;
+    }
+    .section-title p {
+      color: var(--text2);
+      font-size: 18px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid #222;
+      border-radius: 16px;
+      padding: 32px;
+      transition: all 0.3s;
+    }
+    .feature-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(0, 255, 136, 0.1);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      color: var(--accent);
+      font-size: 24px;
+    }
+
+    .feature-card h3 {
+      font-size: 20px;
+      margin-bottom: 12px;
+    }
+    .feature-card p {
+      color: var(--text2);
+      font-size: 15px;
+    }
+
+    /* How it works */
+    .how-it-works {
+      padding: 100px 20px;
+      background: var(--surface);
+    }
+
+    .steps {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    .step {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+
+    .step-number {
+      width: 48px;
+      height: 48px;
+      background: var(--accent);
+      color: #000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .step-content h3 {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+    .step-content p {
+      color: var(--text2);
+    }
+
+    /* Use cases */
+    .use-cases {
+      padding: 100px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .use-cases-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .use-case {
+      background: var(--surface);
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+    }
+    .use-case-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+    .use-case h3 {
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+    .use-case p {
+      color: var(--text2);
+      font-size: 14px;
+    }
+
+    /* CTA */
+    .cta {
+      padding: 100px 20px;
+      text-align: center;
+      background: radial-gradient(ellipse at bottom, #0f1a0f 0%, var(--bg) 60%);
+    }
+
+    .cta h2 {
+      font-size: 36px;
+      margin-bottom: 16px;
+    }
+    .cta p {
+      color: var(--text2);
+      margin-bottom: 32px;
+      font-size: 18px;
+    }
+
+    /* Footer */
+    footer {
+      padding: 40px 20px;
+      border-top: 1px solid #222;
+      text-align: center;
+      color: var(--text2);
+      font-size: 14px;
+    }
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      nav { padding: 16px 20px; }
+      .nav-links { display: none; }
+      .hero { padding: 100px 20px 60px; }
+      .hero-demo { flex-direction: column; }
+      .demo-arrow { transform: rotate(90deg); }
+      .demo-browser { width: 100%; max-width: 350px; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">ORBIT<span>XE</span></div>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how-it-works">How it Works</a></li>
+      <li><a href="#use-cases">Use Cases</a></li>
+    </ul>
+    <a href="#download" class="nav-cta">Get Extension</a>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-badge"><span>NEW</span> Universal Web Remote for Chrome</div>
+    <h1>Control Any Website<br>From Your <span>Phone</span></h1>
+    <p>Turn your phone into a wireless trackpad, keyboard, and smart remote. No app download required.</p>
+    <div class="hero-buttons">
+      <a href="#download" class="btn-primary">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C8.21 0 5.831 1.757 4.632 4.501c-1.01 2.312-1.055 4.756-.021 7.084 1.026 2.31 2.946 4.097 5.389 5.015v3.4l-2.293-2.293-1.414 1.414L12 24.828l5.707-5.707-1.414-1.414L14 19.999V16.6c2.443-.918 4.363-2.705 5.389-5.015 1.034-2.328.989-4.772-.021-7.084C18.169 1.757 15.79 0 12 0zm0 2c2.857 0 4.723 1.243 5.628 3.318.831 1.902.869 3.876.053 5.713-.816 1.837-2.396 3.268-4.431 4.003L12 15.401V9h3l-5-6v6H7l5 6z"/></svg>
+        Add to Chrome
+      </a>
+      <a href="#how-it-works" class="btn-secondary">See How It Works</a>
+    </div>
+
+    <div class="hero-demo">
+      <div class="demo-phone">
+        <div class="demo-phone-screen">
+          <div class="demo-phone-logo">ORBIT<span>XE</span></div>
+          <div class="demo-trackpad">Trackpad</div>
+          <div class="demo-buttons">
+            <div class="demo-btn"></div>
+            <div class="demo-btn accent"></div>
+            <div class="demo-btn"></div>
+          </div>
+        </div>
+      </div>
+      <div class="demo-arrow">→</div>
+      <div class="demo-browser">
+        <div class="demo-browser-bar">
+          <div class="demo-dot red"></div>
+          <div class="demo-dot yellow"></div>
+          <div class="demo-dot green"></div>
+        </div>
+        <div class="demo-browser-content">
+          <p>Your cursor moves here</p>
+          <p style="font-size: 48px; margin: 20px 0;">↖</p>
+          <p style="color: var(--accent);">Controlled by your phone</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features" id="features">
+    <div class="section-title">
+      <h2>Everything You Need</h2>
+      <p>A complete remote control solution for your browser</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">⬚</div>
+        <h3>Wireless Trackpad</h3>
+        <p>Use your phone screen as a trackpad. Swipe to move cursor, tap to click, hold for right-click.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⌨</div>
+        <h3>Native Keyboard</h3>
+        <p>Type using your phone's keyboard with autocorrect, swipe typing, and all your familiar features.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">▶</div>
+        <h3>Smart Controls</h3>
+        <p>Auto-detects YouTube, Netflix, Zoom and shows relevant controls like play, pause, mute, fullscreen.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⬡</div>
+        <h3>Tab Management</h3>
+        <p>Switch between browser tabs, open new tabs, navigate to URLs - all from your phone.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">↕</div>
+        <h3>Easy Scrolling</h3>
+        <p>Two-finger scroll or use scroll buttons to navigate long pages smoothly.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">◉</div>
+        <h3>No App Required</h3>
+        <p>Just scan a QR code with your phone camera. Works on any phone with a web browser.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="how-it-works" id="how-it-works">
+    <div class="section-title">
+      <h2>How It Works</h2>
+      <p>Get started in under 30 seconds</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h3>Install the Chrome Extension</h3>
+          <p>Add OrbitXE to your Chrome browser with one click. It's lightweight and runs in the background.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h3>Scan the QR Code</h3>
+          <p>Click the extension icon to reveal a QR code. Scan it with your phone's camera.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h3>Start Controlling</h3>
+          <p>Your phone is now a remote! Use the trackpad to move cursor, type with your keyboard, and more.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="use-cases" id="use-cases">
+    <div class="section-title">
+      <h2>Perfect For</h2>
+      <p>Use OrbitXE in any scenario</p>
+    </div>
+
+    <div class="use-cases-grid">
+      <div class="use-case">
+        <div class="use-case-icon">🎬</div>
+        <h3>Movie Nights</h3>
+        <p>Control Netflix from the couch</p>
+      </div>
+      <div class="use-case">
+        <div class="use-case-icon">📊</div>
+        <h3>Presentations</h3>
+        <p>Navigate slides wirelessly</p>
+      </div>
+      <div class="use-case">
+        <div class="use-case-icon">🎵</div>
+        <h3>Music Control</h3>
+        <p>Play/pause YouTube, Spotify</p>
+      </div>
+      <div class="use-case">
+        <div class="use-case-icon">🖥️</div>
+        <h3>TV Setup</h3>
+        <p>Browser on TV, control from phone</p>
+      </div>
+      <div class="use-case">
+        <div class="use-case-icon">📹</div>
+        <h3>Video Calls</h3>
+        <p>Mute/unmute Zoom from anywhere</p>
+      </div>
+      <div class="use-case">
+        <div class="use-case-icon">🛋️</div>
+        <h3>Lazy Browsing</h3>
+        <p>Browse from bed, phone as remote</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta" id="download">
+    <h2>Ready to Take Control?</h2>
+    <p>Install OrbitXE and start controlling your browser from your phone today.</p>
+    <a href="#" class="btn-primary" style="display: inline-flex;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C8.21 0 5.831 1.757 4.632 4.501c-1.01 2.312-1.055 4.756-.021 7.084 1.026 2.31 2.946 4.097 5.389 5.015v3.4l-2.293-2.293-1.414 1.414L12 24.828l5.707-5.707-1.414-1.414L14 19.999V16.6c2.443-.918 4.363-2.705 5.389-5.015 1.034-2.328.989-4.772-.021-7.084C18.169 1.757 15.79 0 12 0zm0 2c2.857 0 4.723 1.243 5.628 3.318.831 1.902.869 3.876.053 5.713-.816 1.837-2.396 3.268-4.431 4.003L12 15.401V9h3l-5-6v6H7l5 6z"/></svg>
+      Add to Chrome - It's Free
+    </a>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 WOOSYSTEMS. All rights reserved. | <a href="/privacy">Privacy Policy</a></p>
+  </footer>
+</body>
+</html>
