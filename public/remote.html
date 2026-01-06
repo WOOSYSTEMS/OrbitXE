@@ -265,14 +265,24 @@
     }
 
     .keyboard-grid {
-      display: grid;
-      grid-template-columns: repeat(10, 1fr);
+      display: flex;
+      flex-wrap: wrap;
       gap: 4px;
       padding: 8px;
+      justify-content: center;
+    }
+
+    .keyboard-row {
+      display: flex;
+      gap: 4px;
+      width: 100%;
+      justify-content: center;
     }
 
     .key {
-      aspect-ratio: 1;
+      min-width: 28px;
+      height: 42px;
+      padding: 0 8px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -283,10 +293,12 @@
       font-size: 16px;
       cursor: pointer;
       transition: all 0.1s;
+      flex: 1;
+      max-width: 36px;
     }
     .key:active { background: var(--accent); color: #000; }
-    .key.wide { grid-column: span 2; font-size: 14px; }
-    .key.space { grid-column: span 6; font-size: 12px; }
+    .key.wide { flex: 1.5; max-width: 50px; font-size: 14px; }
+    .key.space { flex: 4; max-width: 200px; font-size: 12px; }
 
     /* Scroll buttons in trackpad */
     .scroll-btns {
@@ -652,13 +664,23 @@
     // Keyboard
     const keyboardOverlay = document.getElementById('keyboardOverlay');
     const keyboardInput = document.getElementById('keyboardInput');
-    const keys = '1234567890qwertyuiopasdfghjkl⌫zxcvbnm,.↵'.split('');
 
-    document.getElementById('keyboardGrid').innerHTML = keys.map(k => {
-      if (k === '⌫') return `<button class="key wide" data-key="Backspace">⌫</button>`;
-      if (k === '↵') return `<button class="key wide" data-key="Enter">↵</button>`;
-      return `<button class="key" data-char="${k}">${k}</button>`;
-    }).join('') + `<button class="key space" data-key="Space">space</button>`;
+    const keyboardRows = [
+      ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'],
+      ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+      ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', '⌫'],
+      ['z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '↵'],
+      ['space']
+    ];
+
+    document.getElementById('keyboardGrid').innerHTML = keyboardRows.map(row =>
+      `<div class="keyboard-row">${row.map(k => {
+        if (k === '⌫') return `<button class="key wide" data-key="Backspace">⌫</button>`;
+        if (k === '↵') return `<button class="key wide" data-key="Enter">↵</button>`;
+        if (k === 'space') return `<button class="key space" data-key="Space">space</button>`;
+        return `<button class="key" data-char="${k}">${k}</button>`;
+      }).join('')}</div>`
+    ).join('');
 
     document.querySelectorAll('#keyboardGrid .key').forEach(key => {
       key.onclick = () => {
