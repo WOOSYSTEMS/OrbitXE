@@ -3,7 +3,7 @@
   "name": "ExodusXE - Universal Web Remote",
   "version": "1.0.0",
   "description": "Control any website from your phone. No apps needed.",
-  "permissions": ["storage", "activeTab", "scripting"],
+  "permissions": ["storage", "activeTab", "scripting", "tabs", "alarms"],
   "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "popup.html",
