@@ -250,6 +250,50 @@
       50% { opacity: 1; transform: translateX(10px); }
     }
 
+    /* Showcase */
+    .showcase {
+      padding: 100px 20px;
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    .showcase-scroll {
+      display: flex;
+      gap: 24px;
+      overflow-x: auto;
+      padding: 20px 0;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .showcase-scroll::-webkit-scrollbar { display: none; }
+
+    .showcase-item {
+      flex-shrink: 0;
+      scroll-snap-align: center;
+      text-align: center;
+    }
+    .showcase-item:first-child { margin-left: calc(50vw - 140px); }
+    .showcase-item:last-child { margin-right: calc(50vw - 140px); }
+
+    .showcase-item img {
+      width: 280px;
+      height: auto;
+      border-radius: 24px;
+      border: 3px solid #333;
+      transition: transform 0.3s, border-color 0.3s;
+    }
+    .showcase-item img:hover {
+      transform: scale(1.02);
+      border-color: var(--accent);
+    }
+
+    .showcase-item p {
+      margin-top: 16px;
+      color: var(--text2);
+      font-size: 14px;
+    }
+
     /* Features */
     .features {
       padding: 100px 20px;
@@ -480,6 +524,31 @@
           <p style="font-size: 48px; margin: 20px 0;">↖</p>
           <p style="color: var(--accent);">Controlled by your phone</p>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="showcase" id="showcase">
+    <div class="section-title">
+      <h2>See It In Action</h2>
+      <p>Swipe to explore the interface</p>
+    </div>
+    <div class="showcase-scroll">
+      <div class="showcase-item">
+        <img src="/images/remote-universal.png" alt="Universal remote mode with trackpad">
+        <p>Universal trackpad and controls</p>
+      </div>
+      <div class="showcase-item">
+        <img src="/images/remote-youtube.png" alt="YouTube mode with media controls">
+        <p>Smart YouTube controls</p>
+      </div>
+      <div class="showcase-item">
+        <img src="/images/url-input.png" alt="Open new tab with URL input">
+        <p>Open tabs from your phone</p>
+      </div>
+      <div class="showcase-item">
+        <img src="/images/keyboard.png" alt="Native keyboard typing">
+        <p>Type with your phone keyboard</p>
       </div>
     </div>
   </section>
