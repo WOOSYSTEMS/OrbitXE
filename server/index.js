@@ -94,6 +94,7 @@ wss.on('connection', (ws, req) => {
 
       // Actions, mouse, keyboard, scroll - relay to displays
       if (['action', 'mouse', 'keyboard', 'scroll', 'showCursor'].includes(msg.type)) {
+        console.log(`Relaying ${msg.type} to ${room.displays.size} displays:`, msg);
         const payload = JSON.stringify(msg);
         room.displays.forEach(d => {
           if (d.readyState === 1) d.send(payload);

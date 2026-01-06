@@ -341,22 +341,32 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       if (msg.key === 'Backspace') {
         // Actually delete character from input fields
         const target = document.activeElement;
+        console.log('ExodusXE: Backspace - activeElement:', target?.tagName, 'value:', target?.value, 'contentEditable:', target?.isContentEditable);
+
         if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
           const start = target.selectionStart || 0;
           const end = target.selectionEnd || 0;
+          console.log('ExodusXE: Backspace - cursor at', start, end, 'value length:', target.value?.length);
+
           if (start === end && start > 0) {
             // No selection, delete char before cursor
             target.value = target.value.slice(0, start - 1) + target.value.slice(end);
             target.selectionStart = target.selectionEnd = start - 1;
+            console.log('ExodusXE: Deleted char, new value:', target.value);
           } else if (start !== end) {
             // Selection exists, delete selection
             target.value = target.value.slice(0, start) + target.value.slice(end);
             target.selectionStart = target.selectionEnd = start;
+            console.log('ExodusXE: Deleted selection, new value:', target.value);
+          } else {
+            console.log('ExodusXE: Nothing to delete (cursor at start)');
           }
           target.dispatchEvent(new Event('input', { bubbles: true }));
         } else if (target && target.isContentEditable) {
+          console.log('ExodusXE: Using execCommand for contentEditable');
           document.execCommand('delete', false);
         } else {
+          console.log('ExodusXE: No input focused, simulating key');
           simulateKey('Backspace');
         }
       } else if (msg.key === 'Space') {
