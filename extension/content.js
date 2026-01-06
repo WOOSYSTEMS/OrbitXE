@@ -339,7 +339,26 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     case 'keyboard':
       console.log('ExodusXE: Keyboard message:', msg);
       if (msg.key === 'Backspace') {
-        simulateKey('Backspace');
+        // Actually delete character from input fields
+        const target = document.activeElement;
+        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+          const start = target.selectionStart || 0;
+          const end = target.selectionEnd || 0;
+          if (start === end && start > 0) {
+            // No selection, delete char before cursor
+            target.value = target.value.slice(0, start - 1) + target.value.slice(end);
+            target.selectionStart = target.selectionEnd = start - 1;
+          } else if (start !== end) {
+            // Selection exists, delete selection
+            target.value = target.value.slice(0, start) + target.value.slice(end);
+            target.selectionStart = target.selectionEnd = start;
+          }
+          target.dispatchEvent(new Event('input', { bubbles: true }));
+        } else if (target && target.isContentEditable) {
+          document.execCommand('delete', false);
+        } else {
+          simulateKey('Backspace');
+        }
       } else if (msg.key === 'Space') {
         // Space can be typed as text or simulated as key
         const target = document.activeElement;
