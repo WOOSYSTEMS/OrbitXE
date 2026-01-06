@@ -476,55 +476,130 @@
       transform: translateY(0);
     }
 
-    /* Showcase */
+    /* Showcase - 3D Rotating Carousel */
     .showcase {
       padding: 120px 20px;
       background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 50%, var(--bg) 100%);
+      overflow: hidden;
     }
 
-    .showcase-scroll {
+    .carousel-container {
+      perspective: 2000px;
+      height: 650px;
       display: flex;
-      gap: 30px;
-      overflow-x: auto;
-      padding: 30px 0;
-      scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
+      align-items: center;
+      justify-content: center;
     }
-    .showcase-scroll::-webkit-scrollbar { display: none; }
 
-    .showcase-item {
-      flex-shrink: 0;
-      scroll-snap-align: center;
-      text-align: center;
-      transition: transform 0.5s;
+    .carousel {
+      position: relative;
+      width: 280px;
+      height: 580px;
+      transform-style: preserve-3d;
+      animation: rotate 25s linear infinite;
     }
-    .showcase-item:first-child { margin-left: calc(50vw - 150px); }
-    .showcase-item:last-child { margin-right: calc(50vw - 150px); }
 
-    .showcase-item img {
-      width: 300px;
+    .carousel:hover {
+      animation-play-state: paused;
+    }
+
+    @keyframes rotate {
+      from { transform: rotateY(0deg); }
+      to { transform: rotateY(360deg); }
+    }
+
+    .carousel-item {
+      position: absolute;
+      width: 280px;
+      height: 580px;
+      left: 0;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      backface-visibility: visible;
+    }
+
+    .carousel-item img {
+      width: 260px;
       height: auto;
+      max-height: 540px;
+      object-fit: contain;
       border-radius: 30px;
       border: 3px solid #222;
       transition: all 0.5s;
-      filter: brightness(0.8);
-    }
-    .showcase-item:hover img {
-      transform: scale(1.05) translateY(-10px);
-      border-color: var(--accent);
-      filter: brightness(1);
-      box-shadow: 0 30px 60px rgba(0, 255, 136, 0.2);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     }
 
-    .showcase-item p {
-      margin-top: 20px;
+    .carousel-item:hover img {
+      border-color: var(--accent);
+      box-shadow: 0 30px 80px rgba(0, 255, 136, 0.3);
+    }
+
+    .carousel-item p {
+      margin-top: 15px;
       color: var(--text2);
       font-size: 14px;
-      transition: color 0.3s;
+      text-align: center;
+      background: rgba(0,0,0,0.8);
+      padding: 8px 16px;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
     }
-    .showcase-item:hover p {
+
+    /* Position each item around the carousel */
+    .carousel-item:nth-child(1) { transform: rotateY(0deg) translateZ(400px); }
+    .carousel-item:nth-child(2) { transform: rotateY(72deg) translateZ(400px); }
+    .carousel-item:nth-child(3) { transform: rotateY(144deg) translateZ(400px); }
+    .carousel-item:nth-child(4) { transform: rotateY(216deg) translateZ(400px); }
+    .carousel-item:nth-child(5) { transform: rotateY(288deg) translateZ(400px); }
+
+    .carousel-controls {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 40px;
+    }
+
+    .carousel-btn {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 2px solid #333;
+      background: transparent;
+      color: var(--text);
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .carousel-btn:hover {
+      border-color: var(--accent);
       color: var(--accent);
+      background: rgba(0, 255, 136, 0.1);
+    }
+
+    .carousel-indicator {
+      color: var(--accent);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    @media (max-width: 768px) {
+      .carousel-container { height: 500px; }
+      .carousel { width: 200px; height: 420px; }
+      .carousel-item { width: 200px; height: 420px; }
+      .carousel-item img { width: 180px; max-height: 380px; }
+      .carousel-item:nth-child(1) { transform: rotateY(0deg) translateZ(280px); }
+      .carousel-item:nth-child(2) { transform: rotateY(72deg) translateZ(280px); }
+      .carousel-item:nth-child(3) { transform: rotateY(144deg) translateZ(280px); }
+      .carousel-item:nth-child(4) { transform: rotateY(216deg) translateZ(280px); }
+      .carousel-item:nth-child(5) { transform: rotateY(288deg) translateZ(280px); }
     }
 
     /* Features */
@@ -906,29 +981,38 @@
   <section class="showcase" id="showcase">
     <div class="section-title">
       <h2>See It In Action</h2>
-      <p>Swipe to explore the interface</p>
+      <p>Hover to pause, drag to rotate</p>
     </div>
-    <div class="showcase-scroll">
-      <div class="showcase-item">
-        <img src="/images/popup.png" alt="OrbitXE extension popup with QR code">
-        <p>Scan QR code to connect</p>
+    <div class="carousel-container">
+      <div class="carousel" id="carousel">
+        <div class="carousel-item">
+          <img src="/images/popup.png" alt="OrbitXE extension popup with QR code">
+          <p>Scan QR code to connect</p>
+        </div>
+        <div class="carousel-item">
+          <img src="/images/remote-universal.png" alt="Universal remote mode with trackpad">
+          <p>Universal trackpad</p>
+        </div>
+        <div class="carousel-item">
+          <img src="/images/remote-youtube.png" alt="YouTube mode with media controls">
+          <p>Smart YouTube controls</p>
+        </div>
+        <div class="carousel-item">
+          <img src="/images/url-input.png" alt="Open new tab with URL input">
+          <p>Open new tabs</p>
+        </div>
+        <div class="carousel-item">
+          <img src="/images/keyboard.png" alt="Native keyboard typing">
+          <p>Type with keyboard</p>
+        </div>
       </div>
-      <div class="showcase-item">
-        <img src="/images/remote-universal.png" alt="Universal remote mode with trackpad">
-        <p>Universal trackpad and controls</p>
+    </div>
+    <div class="carousel-controls">
+      <button class="carousel-btn" onclick="rotateCarousel(-1)">&#8592;</button>
+      <div class="carousel-indicator">
+        <span>Drag or use arrows</span>
       </div>
-      <div class="showcase-item">
-        <img src="/images/remote-youtube.png" alt="YouTube mode with media controls">
-        <p>Smart YouTube controls</p>
-      </div>
-      <div class="showcase-item">
-        <img src="/images/url-input.png" alt="Open new tab with URL input">
-        <p>Open tabs from your phone</p>
-      </div>
-      <div class="showcase-item">
-        <img src="/images/keyboard.png" alt="Native keyboard typing">
-        <p>Type with your phone keyboard</p>
-      </div>
+      <button class="carousel-btn" onclick="rotateCarousel(1)">&#8594;</button>
     </div>
   </section>
 
@@ -1205,6 +1289,100 @@
       lastScroll = currentScroll;
     });
     nav.style.transition = 'transform 0.3s';
+
+    // 3D Carousel Controls
+    const carousel = document.getElementById('carousel');
+    let carouselRotation = 0;
+    let isAutoRotating = true;
+    let isDragging = false;
+    let startX = 0;
+    let currentX = 0;
+
+    function rotateCarousel(direction) {
+      isAutoRotating = false;
+      carousel.style.animation = 'none';
+      carouselRotation += direction * 72;
+      carousel.style.transform = `rotateY(${carouselRotation}deg)`;
+      carousel.style.transition = 'transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+
+      // Resume auto-rotation after 5 seconds
+      setTimeout(() => {
+        if (!isDragging) {
+          isAutoRotating = true;
+          carousel.style.animation = 'rotate 25s linear infinite';
+          carousel.style.transform = '';
+        }
+      }, 5000);
+    }
+
+    // Drag to rotate
+    carousel.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      startX = e.clientX;
+      isAutoRotating = false;
+      carousel.style.animation = 'none';
+      carousel.style.cursor = 'grabbing';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      currentX = e.clientX;
+      const diff = (currentX - startX) * 0.5;
+      carousel.style.transform = `rotateY(${carouselRotation + diff}deg)`;
+      carousel.style.transition = 'none';
+    });
+
+    document.addEventListener('mouseup', (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+      carousel.style.cursor = 'grab';
+      const diff = (currentX - startX) * 0.5;
+      carouselRotation += diff;
+      carousel.style.transition = 'transform 0.5s ease-out';
+
+      // Resume auto-rotation after 5 seconds
+      setTimeout(() => {
+        if (!isDragging) {
+          isAutoRotating = true;
+          carousel.style.animation = 'rotate 25s linear infinite';
+          carousel.style.transform = '';
+        }
+      }, 5000);
+    });
+
+    // Touch support for mobile
+    carousel.addEventListener('touchstart', (e) => {
+      isDragging = true;
+      startX = e.touches[0].clientX;
+      isAutoRotating = false;
+      carousel.style.animation = 'none';
+    });
+
+    document.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      currentX = e.touches[0].clientX;
+      const diff = (currentX - startX) * 0.5;
+      carousel.style.transform = `rotateY(${carouselRotation + diff}deg)`;
+      carousel.style.transition = 'none';
+    });
+
+    document.addEventListener('touchend', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      const diff = (currentX - startX) * 0.5;
+      carouselRotation += diff;
+      carousel.style.transition = 'transform 0.5s ease-out';
+
+      setTimeout(() => {
+        if (!isDragging) {
+          isAutoRotating = true;
+          carousel.style.animation = 'rotate 25s linear infinite';
+          carousel.style.transform = '';
+        }
+      }, 5000);
+    });
+
+    carousel.style.cursor = 'grab';
   </script>
 </body>
 </html>
