@@ -54,12 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('newSessionBtn').addEventListener('click', newSession);
   init();
 
-  // Auto-close popup after 5 seconds once connected
+  // Auto-close popup after 5 seconds
   setTimeout(() => {
-    chrome.storage.local.get(['controllers'], (data) => {
-      if (data.controllers > 0) {
-        window.close();
-      }
-    });
+    window.close();
   }, 5000);
 });
