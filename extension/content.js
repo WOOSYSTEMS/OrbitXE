@@ -187,6 +187,7 @@ function performClick(x, y, button) {
 
 // Handle scroll
 function handleScroll(deltaX, deltaY) {
+  console.log('ExodusXE: Scrolling', deltaX, deltaY);
   window.scrollBy({
     left: deltaX,
     top: deltaY,

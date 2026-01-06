@@ -650,7 +650,13 @@
 
     // Scroll buttons
     document.querySelectorAll('[data-scroll]').forEach(btn => {
-      btn.onclick = () => send({ type: 'scroll', deltaY: btn.dataset.scroll === 'up' ? -300 : 300 });
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const deltaY = btn.dataset.scroll === 'up' ? -300 : 300;
+        console.log('Scroll button clicked:', btn.dataset.scroll, 'deltaY:', deltaY);
+        send({ type: 'scroll', deltaY });
+        vibrate();
+      });
     });
 
     // Bottom buttons
