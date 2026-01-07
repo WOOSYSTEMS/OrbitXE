@@ -3,8 +3,12 @@
   "name": "OrbitXE - Universal Web Remote",
   "version": "1.0.0",
   "description": "Control any website from your phone. No apps needed.",
-  "permissions": ["storage", "activeTab", "scripting", "tabs", "alarms"],
+  "permissions": ["storage", "activeTab", "scripting", "tabs", "alarms", "identity"],
   "host_permissions": ["<all_urls>"],
+  "oauth2": {
+    "client_id": "150883201550-hj784psrplgfihdj4et6jvcu88g84m8t.apps.googleusercontent.com",
+    "scopes": ["openid", "email", "profile"]
+  },
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -26,6 +30,7 @@
     }
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   }
 }

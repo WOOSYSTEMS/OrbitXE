@@ -371,6 +371,164 @@
     @keyframes ripple {
       to { transform: translate(-50%, -50%) scale(1); opacity: 0; }
     }
+
+    /* License banner */
+    .license-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 152, 0, 0.15));
+      border-bottom: 1px solid rgba(255, 193, 7, 0.3);
+      font-size: 11px;
+    }
+    .license-banner.free {
+      background: linear-gradient(135deg, rgba(108, 117, 125, 0.15), rgba(100, 100, 100, 0.15));
+      border-color: rgba(108, 117, 125, 0.3);
+    }
+    .license-banner.pro, .license-banner.lifetime {
+      background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 200, 100, 0.1));
+      border-color: rgba(0, 255, 136, 0.3);
+    }
+    .license-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tier-badge {
+      font-size: 9px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .tier-badge.trial { background: rgba(255, 193, 7, 0.3); color: #ffc107; }
+    .tier-badge.free { background: rgba(108, 117, 125, 0.3); color: #888; }
+    .tier-badge.pro { background: rgba(0, 255, 136, 0.3); color: #00ff88; }
+    .tier-badge.lifetime { background: linear-gradient(135deg, rgba(147, 51, 234, 0.4), rgba(236, 72, 153, 0.4)); color: #d946ef; }
+    .license-text { color: var(--text2); }
+    .license-text strong { color: var(--text); }
+    .upgrade-link {
+      color: var(--accent);
+      font-weight: 500;
+      text-decoration: none;
+      padding: 4px 10px;
+      background: rgba(0, 255, 136, 0.15);
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .upgrade-link:hover { background: rgba(0, 255, 136, 0.25); }
+    .hidden { display: none !important; }
+
+    /* Pro badge on features */
+    .pro-badge {
+      font-size: 8px;
+      font-weight: 700;
+      padding: 2px 4px;
+      background: rgba(0, 255, 136, 0.3);
+      color: var(--accent);
+      border-radius: 3px;
+      margin-left: 4px;
+      text-transform: uppercase;
+    }
+
+    /* Locked feature styling */
+    .action-btn.locked, .ctx-btn.locked, .tab-item.locked {
+      opacity: 0.4;
+      position: relative;
+    }
+    .action-btn.locked::after, .ctx-btn.locked::after {
+      content: 'PRO';
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      font-size: 7px;
+      font-weight: 700;
+      padding: 1px 3px;
+      background: var(--accent);
+      color: #000;
+      border-radius: 2px;
+    }
+
+    /* Upgrade modal */
+    .upgrade-modal {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 300;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .upgrade-modal.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .upgrade-content {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 300px;
+      text-align: center;
+      border: 1px solid #333;
+    }
+    .upgrade-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px;
+      background: rgba(0, 255, 136, 0.15);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .upgrade-icon svg {
+      width: 24px;
+      height: 24px;
+      color: var(--accent);
+    }
+    .upgrade-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .upgrade-desc {
+      font-size: 13px;
+      color: var(--text2);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .upgrade-feature {
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .upgrade-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      color: #000;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    .upgrade-btn:active { transform: scale(0.98); }
+    .upgrade-close {
+      width: 100%;
+      padding: 12px;
+      background: transparent;
+      border: 1px solid #333;
+      border-radius: 10px;
+      color: var(--text2);
+      font-size: 13px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -379,7 +537,34 @@
     <p>Connecting to browser...</p>
   </div>
 
+  <!-- Upgrade modal -->
+  <div class="upgrade-modal" id="upgradeModal">
+    <div class="upgrade-content">
+      <div class="upgrade-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+      </div>
+      <div class="upgrade-title">Pro Feature</div>
+      <div class="upgrade-desc">
+        <span class="upgrade-feature" id="blockedFeature">This feature</span> requires OrbitXE Pro.<br>
+        Unlock all features for just $3.99/mo or $19.99 lifetime.
+      </div>
+      <button class="upgrade-btn" id="upgradeBtn">Upgrade to Pro</button>
+      <button class="upgrade-close" id="upgradeClose">Maybe Later</button>
+    </div>
+  </div>
+
   <div class="app">
+    <!-- License banner -->
+    <div class="license-banner hidden" id="licenseBanner">
+      <div class="license-info">
+        <span class="tier-badge" id="tierBadge">TRIAL</span>
+        <span class="license-text" id="licenseText"><strong>7 days</strong> left in trial</span>
+      </div>
+      <a href="#" class="upgrade-link" id="upgradeLink">Upgrade</a>
+    </div>
+
     <header class="header">
       <div class="logo">ORBIT<span>XE</span></div>
       <div class="status">
@@ -457,9 +642,109 @@
     let activeTab = null;
     let siteType = 'universal';
     let tabs = [];
+    let license = null;
+    let upgradeUrl = `${location.origin}/upgrade`;
+
+    // Feature definitions (must match server)
+    const FREE_FEATURES = ['trackpad', 'scroll_buttons'];
+    const PRO_FEATURES = ['keyboard', 'tab_switch', 'open_tab', 'youtube', 'netflix', 'slides', 'zoom', 'meet', 'two_finger_scroll'];
 
     const roomId = window.location.pathname.split('/').pop();
     const wsUrl = `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws/${roomId}`;
+
+    // Check if user has feature
+    function hasFeature(feature) {
+      if (!license) return true; // Allow if no license info yet
+      return license.features?.includes(feature) ?? true;
+    }
+
+    // Update license UI
+    function updateLicenseUI() {
+      const banner = document.getElementById('licenseBanner');
+      const badge = document.getElementById('tierBadge');
+      const text = document.getElementById('licenseText');
+      const link = document.getElementById('upgradeLink');
+
+      if (!license) {
+        banner.classList.add('hidden');
+        return;
+      }
+
+      const tier = license.tier;
+      banner.classList.remove('hidden', 'trial', 'free', 'pro', 'lifetime');
+      banner.classList.add(tier);
+
+      badge.textContent = tier.toUpperCase();
+      badge.className = 'tier-badge ' + tier;
+
+      if (tier === 'trial') {
+        const days = license.daysRemaining || 7;
+        text.innerHTML = `<strong>${days} day${days !== 1 ? 's' : ''}</strong> left in trial`;
+        link.classList.remove('hidden');
+      } else if (tier === 'free') {
+        text.innerHTML = 'Limited features';
+        link.classList.remove('hidden');
+      } else if (tier === 'pro' || tier === 'lifetime') {
+        text.innerHTML = 'All features unlocked';
+        link.classList.add('hidden');
+      }
+
+      // Update locked states on buttons
+      updateLockedStates();
+    }
+
+    // Update locked states on buttons
+    function updateLockedStates() {
+      // Keyboard button
+      const kbBtn = document.getElementById('btnKeyboard');
+      kbBtn.classList.toggle('locked', !hasFeature('keyboard'));
+
+      // New tab button
+      const ntBtn = document.getElementById('btnNewTab');
+      ntBtn.classList.toggle('locked', !hasFeature('open_tab'));
+
+      // Tab items
+      document.querySelectorAll('.tab-item').forEach(el => {
+        el.classList.toggle('locked', !hasFeature('tab_switch'));
+      });
+    }
+
+    // Show upgrade modal
+    function showUpgradeModal(feature) {
+      const featureNames = {
+        keyboard: 'Full Keyboard',
+        tab_switch: 'Tab Switching',
+        open_tab: 'Open New Tabs',
+        youtube: 'YouTube Controls',
+        netflix: 'Netflix Controls',
+        slides: 'Google Slides Controls',
+        zoom: 'Zoom Controls',
+        meet: 'Google Meet Controls',
+        two_finger_scroll: 'Two-Finger Scroll'
+      };
+
+      document.getElementById('blockedFeature').textContent = featureNames[feature] || feature;
+      document.getElementById('upgradeModal').classList.add('active');
+    }
+
+    // Close upgrade modal
+    function closeUpgradeModal() {
+      document.getElementById('upgradeModal').classList.remove('active');
+    }
+
+    // Setup upgrade modal handlers
+    document.getElementById('upgradeBtn').onclick = () => {
+      window.open(upgradeUrl, '_blank');
+      closeUpgradeModal();
+    };
+    document.getElementById('upgradeClose').onclick = closeUpgradeModal;
+    document.getElementById('upgradeLink').onclick = (e) => {
+      e.preventDefault();
+      window.open(upgradeUrl, '_blank');
+    };
+    document.getElementById('upgradeModal').onclick = (e) => {
+      if (e.target.id === 'upgradeModal') closeUpgradeModal();
+    };
 
     // Connect
     function connect() {
@@ -484,17 +769,36 @@
         if (msg.type === 'joined' || msg.type === 'status') {
           connected = msg.displays > 0;
           updateStatus();
-          // Request tabs when status changes
+          // Request tabs and license when status changes
           if (connected) {
-            setTimeout(() => ws.send(JSON.stringify({ type: 'getTabs' })), 300);
+            setTimeout(() => {
+              ws.send(JSON.stringify({ type: 'getTabs' }));
+              ws.send(JSON.stringify({ type: 'getLicense' }));
+            }, 300);
           }
         }
 
         if (msg.type === 'activeTab') {
           activeTab = msg.tab;
           siteType = msg.siteType || 'universal';
+          // Update license from activeTab message
+          if (msg.license) {
+            license = msg.license;
+            updateLicenseUI();
+          }
           updateActiveTab();
           updateContextControls();
+        }
+
+        if (msg.type === 'license') {
+          license = msg.license;
+          updateLicenseUI();
+        }
+
+        if (msg.type === 'featureBlocked') {
+          console.log('OrbitXE Phone: Feature blocked:', msg.feature);
+          if (msg.upgradeUrl) upgradeUrl = msg.upgradeUrl;
+          showUpgradeModal(msg.feature);
         }
 
         if (msg.type === 'tabList') {
@@ -550,15 +854,22 @@
     // Tabs
     function renderTabs() {
       const bar = document.getElementById('tabBar');
+      const canSwitchTabs = hasFeature('tab_switch');
       bar.innerHTML = tabs.slice(0, 8).map(t => `
-        <div class="tab-item ${t.active ? 'active' : ''}" data-id="${t.id}">
+        <div class="tab-item ${t.active ? 'active' : ''} ${!canSwitchTabs && !t.active ? 'locked' : ''}" data-id="${t.id}">
           <img src="${t.favIconUrl || ''}" onerror="this.style.display='none'">
           <span>${t.title?.slice(0, 15) || 'Tab'}</span>
         </div>
       `).join('');
 
       bar.querySelectorAll('.tab-item').forEach(el => {
-        el.onclick = () => send({ type: 'switchTab', tabId: parseInt(el.dataset.id) });
+        el.onclick = () => {
+          if (!hasFeature('tab_switch')) {
+            showUpgradeModal('tab_switch');
+            return;
+          }
+          send({ type: 'switchTab', tabId: parseInt(el.dataset.id) });
+        };
       });
     }
 
@@ -609,12 +920,22 @@
 
     function updateContextControls() {
       const btns = contexts[siteType] || contexts.universal;
+      const siteFeature = ['youtube', 'netflix', 'slides', 'zoom', 'meet'].includes(siteType) ? siteType : null;
+      const canUseSiteControls = siteFeature ? hasFeature(siteFeature) : true;
+
       document.getElementById('contextControls').innerHTML = btns.map(b =>
-        `<button class="ctx-btn" data-action="${b.action}">${b.label}</button>`
+        `<button class="ctx-btn ${siteFeature && !canUseSiteControls ? 'locked' : ''}" data-action="${b.action}" data-site="${siteFeature || ''}">${b.label}</button>`
       ).join('');
 
       document.querySelectorAll('.ctx-btn').forEach(el => {
-        el.onclick = () => send({ type: 'action', action: el.dataset.action });
+        el.onclick = () => {
+          const site = el.dataset.site;
+          if (site && !hasFeature(site)) {
+            showUpgradeModal(site);
+            return;
+          }
+          send({ type: 'action', action: el.dataset.action });
+        };
       });
     }
 
@@ -711,6 +1032,10 @@
     const urlInput = document.getElementById('urlInput');
 
     document.getElementById('btnNewTab').onclick = () => {
+      if (!hasFeature('open_tab')) {
+        showUpgradeModal('open_tab');
+        return;
+      }
       urlOverlay.classList.add('active');
       urlInput.value = '';
       setTimeout(() => urlInput.focus(), 100);
@@ -775,6 +1100,10 @@
     });
 
     document.getElementById('btnKeyboard').onclick = () => {
+      if (!hasFeature('keyboard')) {
+        showUpgradeModal('keyboard');
+        return;
+      }
       keyboardOverlay.classList.add('active');
       keyboardInput.value = '';
       lastInputValue = '';

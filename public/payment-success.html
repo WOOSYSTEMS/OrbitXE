@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Successful - OrbitXE</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --accent: #00ff88;
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --text: #ffffff;
+      --text2: #888888;
+    }
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      text-align: center;
+      padding: 40px 20px;
+      max-width: 500px;
+    }
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      background: rgba(0, 255, 136, 0.15);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .success-icon svg {
+      width: 40px;
+      height: 40px;
+      color: var(--accent);
+    }
+    h1 {
+      font-size: 32px;
+      margin-bottom: 16px;
+    }
+    .highlight { color: var(--accent); }
+    p {
+      color: var(--text2);
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+    .features {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 32px;
+      text-align: left;
+    }
+    .features h3 {
+      font-size: 14px;
+      color: var(--text2);
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+    }
+    .feature-check {
+      color: var(--accent);
+      font-size: 18px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 16px 32px;
+      background: var(--accent);
+      color: #000;
+      text-decoration: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
+    }
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      background: var(--accent);
+      animation: fall linear forwards;
+      pointer-events: none;
+    }
+    @keyframes fall {
+      0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="success-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+    </div>
+    <h1>Welcome to <span class="highlight">Pro</span>!</h1>
+    <p>Your payment was successful. You now have full access to all OrbitXE Pro features.</p>
+
+    <div class="features">
+      <h3>You've unlocked</h3>
+      <div class="feature"><span class="feature-check">✓</span> Full Keyboard</div>
+      <div class="feature"><span class="feature-check">✓</span> Tab Switching</div>
+      <div class="feature"><span class="feature-check">✓</span> Open New Tabs</div>
+      <div class="feature"><span class="feature-check">✓</span> YouTube Controls</div>
+      <div class="feature"><span class="feature-check">✓</span> Netflix Controls</div>
+      <div class="feature"><span class="feature-check">✓</span> Google Slides</div>
+      <div class="feature"><span class="feature-check">✓</span> Zoom & Meet</div>
+      <div class="feature"><span class="feature-check">✓</span> Two-Finger Scroll</div>
+    </div>
+
+    <a href="/" class="btn">Start Using OrbitXE Pro</a>
+  </div>
+
+  <script>
+    // Confetti effect
+    const colors = ['#00ff88', '#00cc6e', '#00ff9f', '#66ffb3'];
+    for (let i = 0; i < 50; i++) {
+      setTimeout(() => {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+        document.body.appendChild(confetti);
+        setTimeout(() => confetti.remove(), 4000);
+      }, i * 50);
+    }
+  </script>
+</body>
+</html>

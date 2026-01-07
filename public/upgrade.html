@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upgrade to OrbitXE Pro</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --accent: #00ff88;
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --surface2: #1e1e1e;
+      --text: #ffffff;
+      --text2: #888888;
+    }
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .logo {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+    .logo span { color: var(--accent); }
+    .tagline {
+      font-size: 18px;
+      color: var(--text2);
+    }
+    .pricing {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+    .plan {
+      background: var(--surface);
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 32px;
+      position: relative;
+      transition: all 0.3s;
+    }
+    .plan:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+    }
+    .plan.popular {
+      border-color: var(--accent);
+    }
+    .plan.popular::before {
+      content: 'BEST VALUE';
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: #000;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 4px;
+      letter-spacing: 1px;
+    }
+    .plan-name {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .plan-desc {
+      font-size: 14px;
+      color: var(--text2);
+      margin-bottom: 24px;
+    }
+    .plan-price {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .plan-price span {
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--text2);
+    }
+    .plan-period {
+      font-size: 14px;
+      color: var(--text2);
+      margin-bottom: 24px;
+    }
+    .plan-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--surface2);
+      border: 1px solid #444;
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .plan-btn:hover {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
+    .plan.popular .plan-btn {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
+    .plan.popular .plan-btn:hover {
+      background: #00cc6e;
+    }
+    .features {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 48px;
+    }
+    .features-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--surface2);
+      border-radius: 8px;
+    }
+    .feature-icon {
+      width: 32px;
+      height: 32px;
+      background: rgba(0, 255, 136, 0.1);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .feature-icon svg {
+      width: 18px;
+      height: 18px;
+      color: var(--accent);
+    }
+    .feature-text {
+      font-size: 14px;
+    }
+    .feature-text small {
+      display: block;
+      color: var(--text2);
+      font-size: 11px;
+      margin-top: 2px;
+    }
+    .comparison {
+      margin-bottom: 48px;
+    }
+    .comparison-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .comparison-table {
+      width: 100%;
+      background: var(--surface);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .comparison-table th,
+    .comparison-table td {
+      padding: 16px;
+      text-align: left;
+      border-bottom: 1px solid #222;
+    }
+    .comparison-table th {
+      background: var(--surface2);
+      font-weight: 600;
+    }
+    .comparison-table th:not(:first-child),
+    .comparison-table td:not(:first-child) {
+      text-align: center;
+    }
+    .check { color: var(--accent); font-size: 18px; }
+    .cross { color: #666; font-size: 18px; }
+    .signin-section {
+      text-align: center;
+      padding: 32px;
+      background: var(--surface);
+      border-radius: 16px;
+      margin-bottom: 32px;
+    }
+    .signin-section h3 {
+      margin-bottom: 16px;
+    }
+    .btn-google {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 28px;
+      background: #fff;
+      border: none;
+      border-radius: 8px;
+      color: #333;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-google:hover {
+      background: #f5f5f5;
+      transform: translateY(-2px);
+    }
+    .btn-google svg {
+      width: 20px;
+      height: 20px;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 16px;
+      background: var(--surface2);
+      border-radius: 8px;
+    }
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #333;
+    }
+    .user-name {
+      font-weight: 500;
+    }
+    .user-email {
+      font-size: 12px;
+      color: var(--text2);
+    }
+    .hidden { display: none !important; }
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--text2);
+    }
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #333;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text2);
+      text-decoration: none;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .back-link:hover { color: var(--accent); }
+    .footer {
+      text-align: center;
+      padding: 24px;
+      color: var(--text2);
+      font-size: 12px;
+    }
+    .footer a {
+      color: var(--text2);
+      text-decoration: none;
+    }
+    .footer a:hover {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back to home
+    </a>
+
+    <header class="header">
+      <div class="logo">ORBIT<span>XE</span> Pro</div>
+      <p class="tagline">Unlock the full power of your web remote</p>
+    </header>
+
+    <!-- Sign in section -->
+    <div class="signin-section" id="signinSection">
+      <h3>Sign in to continue</h3>
+      <button class="btn-google" id="googleSignInBtn">
+        <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Sign in with Google
+      </button>
+    </div>
+
+    <!-- User info (shown when signed in) -->
+    <div class="signin-section hidden" id="userSection">
+      <div class="user-info">
+        <img class="user-avatar" id="userAvatar" src="" alt="">
+        <div>
+          <div class="user-name" id="userName">User</div>
+          <div class="user-email" id="userEmail">email@example.com</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pricing cards -->
+    <div class="pricing" id="pricingSection">
+      <div class="plan">
+        <div class="plan-name">Monthly</div>
+        <div class="plan-desc">Perfect for trying out Pro</div>
+        <div class="plan-price">$3.99<span>/mo</span></div>
+        <div class="plan-period">Cancel anytime</div>
+        <button class="plan-btn" data-plan="monthly">Subscribe Monthly</button>
+      </div>
+      <div class="plan popular">
+        <div class="plan-name">Lifetime</div>
+        <div class="plan-desc">One-time payment, forever yours</div>
+        <div class="plan-price">$19.99</div>
+        <div class="plan-period">Pay once, use forever</div>
+        <button class="plan-btn" data-plan="lifetime">Get Lifetime Access</button>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="features">
+      <h2 class="features-title">Everything in Pro</h2>
+      <div class="features-grid">
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M8 16h8"/></svg>
+          </div>
+          <div class="feature-text">Full Keyboard<small>Type from your phone</small></div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/></svg>
+          </div>
+          <div class="feature-text">Tab Switching<small>Navigate between tabs</small></div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          </div>
+          <div class="feature-text">Open New Tabs<small>Launch any URL</small></div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
+          </div>
+          <div class="feature-text">YouTube Controls<small>Play, seek, fullscreen</small></div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></svg>
+          </div>
+          <div class="feature-text">Netflix Controls<small>Full media control</small></div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <div class="feature-text">Google Slides<small>Present from your phone</small></div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          </div>
+          <div class="feature-text">Zoom & Meet<small>Mute, video, leave</small></div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          </div>
+          <div class="feature-text">Two-Finger Scroll<small>Natural scrolling</small></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparison table -->
+    <div class="comparison">
+      <h2 class="comparison-title">Free vs Pro</h2>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Free</th>
+            <th>Pro</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Trackpad Control</td><td class="check">✓</td><td class="check">✓</td></tr>
+          <tr><td>Scroll Buttons</td><td class="check">✓</td><td class="check">✓</td></tr>
+          <tr><td>Full Keyboard</td><td class="cross">✗</td><td class="check">✓</td></tr>
+          <tr><td>Tab Switching</td><td class="cross">✗</td><td class="check">✓</td></tr>
+          <tr><td>Open New Tabs</td><td class="cross">✗</td><td class="check">✓</td></tr>
+          <tr><td>YouTube Controls</td><td class="cross">✗</td><td class="check">✓</td></tr>
+          <tr><td>Netflix Controls</td><td class="cross">✗</td><td class="check">✓</td></tr>
+          <tr><td>Google Slides</td><td class="cross">✗</td><td class="check">✓</td></tr>
+          <tr><td>Zoom & Meet</td><td class="cross">✗</td><td class="check">✓</td></tr>
+          <tr><td>Two-Finger Scroll</td><td class="cross">✗</td><td class="check">✓</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="footer">
+      <p>By purchasing, you agree to our <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>.</p>
+      <p style="margin-top: 8px;">Questions? Contact support@orbitxe.com</p>
+    </footer>
+  </div>
+
+  <script>
+    let authToken = null;
+    let currentUser = null;
+
+    // Check for existing auth in URL (from extension)
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenFromUrl = urlParams.get('token');
+    if (tokenFromUrl) {
+      authToken = tokenFromUrl;
+      validateToken();
+    }
+
+    // Validate token with server
+    async function validateToken() {
+      try {
+        const response = await fetch('/api/auth/validate', {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          currentUser = data.user;
+          showUserInfo();
+        }
+      } catch (error) {
+        console.error('Token validation failed:', error);
+      }
+    }
+
+    // Show user info
+    function showUserInfo() {
+      document.getElementById('signinSection').classList.add('hidden');
+      document.getElementById('userSection').classList.remove('hidden');
+      document.getElementById('userName').textContent = currentUser.name || 'User';
+      document.getElementById('userEmail').textContent = currentUser.email;
+      if (currentUser.picture) {
+        document.getElementById('userAvatar').src = currentUser.picture;
+      }
+    }
+
+    // Google Sign In (web flow - for users not coming from extension)
+    document.getElementById('googleSignInBtn').onclick = async () => {
+      // For web users, we'll redirect to Google OAuth
+      // This is a simplified version - in production, implement full OAuth2 flow
+      alert('Please install the OrbitXE Chrome extension and sign in from there, then return to this page.');
+    };
+
+    // Handle plan selection
+    document.querySelectorAll('[data-plan]').forEach(btn => {
+      btn.onclick = async () => {
+        const planType = btn.dataset.plan;
+
+        if (!authToken) {
+          alert('Please sign in first to purchase a subscription.');
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<div class="loading"><div class="spinner"></div> Processing...</div>';
+
+        try {
+          const response = await fetch('/api/payment/create-checkout', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ planType })
+          });
+
+          const data = await response.json();
+
+          if (data.checkoutUrl) {
+            window.location.href = data.checkoutUrl;
+          } else {
+            throw new Error(data.error || 'Failed to create checkout session');
+          }
+        } catch (error) {
+          console.error('Checkout error:', error);
+          alert('Failed to start checkout. Please try again.');
+          btn.disabled = false;
+          btn.textContent = planType === 'monthly' ? 'Subscribe Monthly' : 'Get Lifetime Access';
+        }
+      };
+    });
+  </script>
+</body>
+</html>

@@ -1,9 +1,29 @@
+import 'dotenv/config';
 import express from 'express';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import { nanoid } from 'nanoid';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+
+// Import new modules
+import {
+  getUserById,
+  getLicenseForUser,
+  updateUserSubscription,
+  createSubscription,
+  updateSubscriptionStatus,
+  getUserByStripeCustomerId,
+  FEATURES
+} from './db.js';
+import { authenticateWithGoogle, verifyToken, authMiddleware } from './auth.js';
+import {
+  createCheckoutSession,
+  createPortalSession,
+  getCheckoutSession,
+  constructWebhookEvent,
+  stripe
+} from './stripe.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -12,18 +32,201 @@ const app = express();
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
 
+// Stripe webhook needs raw body
+app.post('/api/webhook/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+  const signature = req.headers['stripe-signature'];
+
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    console.log('Stripe webhook received (no secret configured, accepting all)');
+    // In development without webhook secret, just accept
+    return res.json({ received: true });
+  }
+
+  try {
+    const event = constructWebhookEvent(req.body, signature);
+
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object;
+        const userId = session.metadata?.userId || session.client_reference_id;
+        const planType = session.metadata?.planType;
+
+        console.log('Checkout completed:', { userId, planType });
+
+        if (userId) {
+          const tier = planType === 'lifetime' ? 'lifetime' : 'pro';
+          updateUserSubscription(userId, tier, session.customer);
+
+          if (planType === 'monthly' && session.subscription) {
+            const subscription = await stripe.subscriptions.retrieve(session.subscription);
+            createSubscription({
+              userId,
+              stripeSubscriptionId: subscription.id,
+              planType: 'monthly',
+              status: 'active',
+              periodStart: new Date(subscription.current_period_start * 1000).toISOString(),
+              periodEnd: new Date(subscription.current_period_end * 1000).toISOString()
+            });
+          } else if (planType === 'lifetime') {
+            createSubscription({
+              userId,
+              stripeSubscriptionId: null,
+              planType: 'lifetime',
+              status: 'active',
+              periodStart: new Date().toISOString(),
+              periodEnd: null
+            });
+          }
+        }
+        break;
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object;
+        if (invoice.subscription) {
+          updateSubscriptionStatus(invoice.subscription, 'past_due');
+        }
+        break;
+      }
+
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object;
+        updateSubscriptionStatus(subscription.id, 'canceled', new Date().toISOString());
+
+        // Downgrade user to free
+        const user = getUserByStripeCustomerId(subscription.customer);
+        if (user) {
+          updateUserSubscription(user.id, 'free');
+        }
+        break;
+      }
+
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object;
+        if (subscription.status === 'active') {
+          updateSubscriptionStatus(subscription.id, 'active');
+        }
+        break;
+      }
+    }
+
+    res.json({ received: true });
+  } catch (err) {
+    console.error('Webhook error:', err.message);
+    res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+});
+
 app.use(express.json());
 app.use(express.static(join(__dirname, '../public')));
 
 // Rooms: { roomId: { displays: Set, controllers: Set } }
 const rooms = new Map();
 
+// Helper to get base URL
+function getBaseUrl(req) {
+  return process.env.RAILWAY_PUBLIC_DOMAIN
+    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+    : process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+}
+
+// ==================== AUTH ENDPOINTS ====================
+
+// Google authentication
+app.post('/api/auth/google', async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ error: 'Token required' });
+    }
+
+    const result = await authenticateWithGoogle(token);
+    res.json(result);
+  } catch (error) {
+    console.error('Auth error:', error);
+    res.status(401).json({ error: error.message });
+  }
+});
+
+// Validate token and get license
+app.get('/api/auth/validate', authMiddleware, (req, res) => {
+  try {
+    const user = getUserById(req.userId);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const license = getLicenseForUser(user);
+
+    res.json({
+      valid: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        picture: user.picture_url
+      },
+      license
+    });
+  } catch (error) {
+    console.error('Validate error:', error);
+    res.status(500).json({ error: 'Validation failed' });
+  }
+});
+
+// ==================== PAYMENT ENDPOINTS ====================
+
+// Create checkout session
+app.post('/api/payment/create-checkout', authMiddleware, async (req, res) => {
+  try {
+    const { planType } = req.body;
+
+    if (!['monthly', 'lifetime'].includes(planType)) {
+      return res.status(400).json({ error: 'Invalid plan type' });
+    }
+
+    const user = getUserById(req.userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const baseUrl = getBaseUrl(req);
+    const session = await createCheckoutSession(user, planType, baseUrl);
+
+    res.json({ checkoutUrl: session.url });
+  } catch (error) {
+    console.error('Checkout error:', error);
+    res.status(500).json({ error: 'Failed to create checkout session' });
+  }
+});
+
+// Get customer portal
+app.get('/api/payment/portal', authMiddleware, async (req, res) => {
+  try {
+    const user = getUserById(req.userId);
+
+    if (!user || !user.stripe_customer_id) {
+      return res.status(400).json({ error: 'No subscription found' });
+    }
+
+    const baseUrl = getBaseUrl(req);
+    const session = await createPortalSession(user.stripe_customer_id, `${baseUrl}/account`);
+
+    res.json({ portalUrl: session.url });
+  } catch (error) {
+    console.error('Portal error:', error);
+    res.status(500).json({ error: 'Failed to create portal session' });
+  }
+});
+
+// ==================== EXISTING ROUTES ====================
+
 // Create room
 app.post('/api/rooms', (req, res) => {
   const roomId = nanoid(6).toUpperCase();
-  const baseUrl = process.env.RAILWAY_PUBLIC_DOMAIN
-    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
-    : process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+  const baseUrl = getBaseUrl(req);
 
   rooms.set(roomId, {
     displays: new Set(),
@@ -54,12 +257,27 @@ app.get('/terms', (req, res) => {
   res.sendFile(join(__dirname, '../public/terms.html'));
 });
 
+// Upgrade page
+app.get('/upgrade', (req, res) => {
+  res.sendFile(join(__dirname, '../public/upgrade.html'));
+});
+
+// Payment success/cancel pages
+app.get('/payment/success', (req, res) => {
+  res.sendFile(join(__dirname, '../public/payment-success.html'));
+});
+
+app.get('/payment/cancel', (req, res) => {
+  res.sendFile(join(__dirname, '../public/payment-cancel.html'));
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', rooms: rooms.size });
 });
 
-// WebSocket handling
+// ==================== WEBSOCKET ====================
+
 wss.on('connection', (ws, req) => {
   const pathParts = req.url.split('/');
   const roomId = pathParts[pathParts.length - 1];
@@ -210,7 +428,7 @@ server.listen(PORT, () => {
 ║   ╚██████╔╝██║  ██║██████╔╝██║   ██║   ██╔╝ ██╗███████╗       ║
 ║    ╚═════╝ ╚═╝  ╚═╝╚═════╝ ╚═╝   ╚═╝   ╚═╝  ╚═╝╚══════╝       ║
 ║                                                               ║
-║   Universal Web Remote v2.0                                   ║
+║   Universal Web Remote v2.0 + Pro Features                    ║
 ║   Server running on port ${PORT}                                 ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝

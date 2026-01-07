@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Cancelled - OrbitXE</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --accent: #00ff88;
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --text: #ffffff;
+      --text2: #888888;
+    }
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      text-align: center;
+      padding: 40px 20px;
+      max-width: 500px;
+    }
+    .cancel-icon {
+      width: 80px;
+      height: 80px;
+      background: rgba(255, 193, 7, 0.15);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+    }
+    .cancel-icon svg {
+      width: 40px;
+      height: 40px;
+      color: #ffc107;
+    }
+    h1 {
+      font-size: 32px;
+      margin-bottom: 16px;
+    }
+    p {
+      color: var(--text2);
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+    }
+    .btn {
+      display: inline-block;
+      padding: 16px 32px;
+      background: var(--accent);
+      color: #000;
+      text-decoration: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.2s;
+      min-width: 200px;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
+    }
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid #333;
+    }
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      box-shadow: none;
+    }
+    .help {
+      margin-top: 48px;
+      padding: 24px;
+      background: var(--surface);
+      border-radius: 12px;
+    }
+    .help h3 {
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+    .help p {
+      margin-bottom: 0;
+      font-size: 14px;
+    }
+    .help a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="cancel-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 8v4M12 16h.01"/>
+      </svg>
+    </div>
+    <h1>Payment Cancelled</h1>
+    <p>No worries! Your payment was not processed. You can continue using OrbitXE with the free features, or try upgrading again when you're ready.</p>
+
+    <div class="buttons">
+      <a href="/upgrade" class="btn">Try Again</a>
+      <a href="/" class="btn btn-secondary">Continue with Free</a>
+    </div>
+
+    <div class="help">
+      <h3>Need help?</h3>
+      <p>If you experienced any issues during checkout, please contact us at <a href="mailto:support@orbitxe.com">support@orbitxe.com</a></p>
+    </div>
+  </div>
+</body>
+</html>

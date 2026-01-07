@@ -1,13 +1,24 @@
 // ExodusXE Background Service Worker - Central Hub
 // Single WebSocket connection, controls active tab
 
+import { getLicense, isActionAllowed, signInWithGoogle, signOut, getCurrentUser, getUpgradeUrl } from './license.js';
+
 let ws = null;
 let roomId = null;
 let serverUrl = 'https://exodusxe-production.up.railway.app';
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 10;
+let cachedLicense = null;
 
 console.log('OrbitXE: Background script loaded');
+
+// Cache license on startup
+async function refreshLicense() {
+  cachedLicense = await getLicense();
+  console.log('OrbitXE: License refreshed:', cachedLicense?.tier);
+  return cachedLicense;
+}
+refreshLicense();
 
 // Connect to server
 async function connectToServer() {
@@ -60,10 +71,27 @@ async function connectToServer() {
       const msg = JSON.parse(e.data);
       console.log('OrbitXE: Received message:', msg.type, msg);
 
+      // Feature gating helper
+      async function checkFeatureAndSend(msgType, action, callback) {
+        const check = await isActionAllowed(msgType, action);
+        if (!check.allowed) {
+          console.log('OrbitXE: Feature blocked:', check.requiredFeature);
+          ws.send(JSON.stringify({
+            type: 'featureBlocked',
+            feature: check.requiredFeature,
+            upgradeUrl: getUpgradeUrl()
+          }));
+          return;
+        }
+        await callback();
+      }
+
       switch (msg.type) {
         case 'action':
-          console.log('OrbitXE: Sending action to tab:', msg.action);
-          await sendToActiveTab({ type: 'action', action: msg.action, value: msg.value });
+          await checkFeatureAndSend('action', msg.action, async () => {
+            console.log('OrbitXE: Sending action to tab:', msg.action);
+            await sendToActiveTab({ type: 'action', action: msg.action, value: msg.value });
+          });
           break;
 
         case 'mouse':
@@ -72,8 +100,10 @@ async function connectToServer() {
           break;
 
         case 'keyboard':
-          console.log('OrbitXE: Sending keyboard to tab:', msg);
-          await sendToActiveTab({ type: 'keyboard', key: msg.key, text: msg.text });
+          await checkFeatureAndSend('keyboard', null, async () => {
+            console.log('OrbitXE: Sending keyboard to tab:', msg);
+            await sendToActiveTab({ type: 'keyboard', key: msg.key, text: msg.text });
+          });
           break;
 
         case 'scroll':
@@ -82,31 +112,41 @@ async function connectToServer() {
           break;
 
         case 'switchTab':
-          console.log('OrbitXE: Switching to tab:', msg.tabId);
-          try {
-            await chrome.tabs.update(msg.tabId, { active: true });
-            setTimeout(sendActiveTabInfo, 200);
-          } catch (e) {
-            console.error('OrbitXE: Failed to switch tab:', e);
-          }
+          await checkFeatureAndSend('switchTab', null, async () => {
+            console.log('OrbitXE: Switching to tab:', msg.tabId);
+            try {
+              await chrome.tabs.update(msg.tabId, { active: true });
+              setTimeout(sendActiveTabInfo, 200);
+            } catch (e) {
+              console.error('OrbitXE: Failed to switch tab:', e);
+            }
+          });
           break;
 
         case 'openTab':
-          console.log('OrbitXE: Opening new tab:', msg.url);
-          try {
-            await chrome.tabs.create({ url: msg.url, active: true });
-            setTimeout(() => {
-              sendTabList();
-              sendActiveTabInfo();
-            }, 500);
-          } catch (e) {
-            console.error('OrbitXE: Failed to open tab:', e);
-          }
+          await checkFeatureAndSend('openTab', null, async () => {
+            console.log('OrbitXE: Opening new tab:', msg.url);
+            try {
+              await chrome.tabs.create({ url: msg.url, active: true });
+              setTimeout(() => {
+                sendTabList();
+                sendActiveTabInfo();
+              }, 500);
+            } catch (e) {
+              console.error('OrbitXE: Failed to open tab:', e);
+            }
+          });
           break;
 
         case 'getTabs':
           console.log('OrbitXE: Sending tab list');
           sendTabList();
+          break;
+
+        case 'getLicense':
+          console.log('OrbitXE: Sending license info');
+          const license = await refreshLicense();
+          ws.send(JSON.stringify({ type: 'license', license }));
           break;
 
         case 'status':
@@ -209,6 +249,8 @@ async function sendActiveTabInfo() {
       }
 
       console.log('OrbitXE: Sending active tab info:', tab.title, siteType);
+      // Include license info with tab updates
+      const license = cachedLicense || await refreshLicense();
       ws.send(JSON.stringify({
         type: 'activeTab',
         tab: {
@@ -217,7 +259,8 @@ async function sendActiveTabInfo() {
           url: tab.url,
           favIconUrl: tab.favIconUrl
         },
-        siteType
+        siteType,
+        license
       }));
     }
   } catch (e) {
@@ -336,6 +379,52 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       ws.send(JSON.stringify({ type: 'showKeyboard' }));
     }
     sendResponse({ status: 'ok' });
+    return true;
+  }
+
+  // Auth: Get license info
+  if (msg.type === 'getLicense') {
+    refreshLicense().then(license => {
+      sendResponse({ license });
+    });
+    return true;
+  }
+
+  // Auth: Get current user
+  if (msg.type === 'getUser') {
+    getCurrentUser().then(user => {
+      sendResponse({ user });
+    });
+    return true;
+  }
+
+  // Auth: Sign in with Google
+  if (msg.type === 'signIn') {
+    signInWithGoogle().then(data => {
+      refreshLicense();
+      sendResponse({ success: true, ...data });
+    }).catch(error => {
+      sendResponse({ success: false, error: error.message });
+    });
+    return true;
+  }
+
+  // Auth: Sign out
+  if (msg.type === 'signOut') {
+    signOut().then(() => {
+      refreshLicense();
+      sendResponse({ success: true });
+    }).catch(error => {
+      sendResponse({ success: false, error: error.message });
+    });
+    return true;
+  }
+
+  // Auth: Get upgrade URL
+  if (msg.type === 'getUpgradeUrl') {
+    getUpgradeUrl().then(url => {
+      sendResponse({ url });
+    });
     return true;
   }
 

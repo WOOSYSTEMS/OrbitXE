@@ -5,7 +5,7 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      width: 280px;
+      width: 300px;
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
       background: #0a0a0a;
       color: #fff;
@@ -104,6 +104,164 @@
       font-size: 11px;
       color: #666;
     }
+
+    /* Account Section */
+    .account-section {
+      background: #111;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+    .account-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .account-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #222;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .account-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .account-avatar-placeholder {
+      font-size: 18px;
+      color: #444;
+    }
+    .account-info {
+      flex: 1;
+      text-align: left;
+    }
+    .account-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+    .account-email {
+      font-size: 10px;
+      color: #666;
+    }
+    .tier-badge {
+      font-size: 9px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .tier-badge.trial {
+      background: rgba(255, 193, 7, 0.2);
+      color: #ffc107;
+    }
+    .tier-badge.free {
+      background: rgba(108, 117, 125, 0.2);
+      color: #888;
+    }
+    .tier-badge.pro {
+      background: rgba(0, 255, 136, 0.2);
+      color: #00ff88;
+    }
+    .tier-badge.lifetime {
+      background: linear-gradient(135deg, rgba(147, 51, 234, 0.3), rgba(236, 72, 153, 0.3));
+      color: #d946ef;
+    }
+
+    /* Trial Banner */
+    .trial-banner {
+      background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 152, 0, 0.1));
+      border: 1px solid rgba(255, 193, 7, 0.3);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+    .trial-text {
+      font-size: 11px;
+      color: #ffc107;
+      margin-bottom: 6px;
+    }
+    .trial-progress {
+      height: 4px;
+      background: #222;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .trial-progress-bar {
+      height: 100%;
+      background: #ffc107;
+      transition: width 0.3s;
+    }
+
+    /* Upgrade Banner */
+    .upgrade-banner {
+      background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 200, 100, 0.1));
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .upgrade-banner:hover {
+      border-color: #00ff88;
+      background: rgba(0, 255, 136, 0.15);
+    }
+    .upgrade-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #00ff88;
+      margin-bottom: 4px;
+    }
+    .upgrade-subtitle {
+      font-size: 10px;
+      color: #666;
+    }
+
+    /* Sign In */
+    .signin-section {
+      background: #111;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .signin-title {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 12px;
+    }
+    .btn-google {
+      width: 100%;
+      padding: 10px 16px;
+      background: #fff;
+      border: none;
+      border-radius: 6px;
+      color: #333;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-google:hover {
+      background: #f5f5f5;
+    }
+    .btn-google svg {
+      width: 16px;
+      height: 16px;
+    }
+
     .info-box {
       background: #111;
       border-radius: 8px;
@@ -124,6 +282,7 @@
       line-height: 1.6;
     }
     .info-list span { color: #00ff88; }
+
     .btn {
       width: 100%;
       padding: 12px;
@@ -136,12 +295,27 @@
       letter-spacing: 1px;
       cursor: pointer;
       transition: all 0.2s;
+      margin-bottom: 8px;
     }
     .btn:hover {
       background: #222;
       border-color: #00ff88;
       color: #00ff88;
     }
+    .btn:last-child {
+      margin-bottom: 0;
+    }
+    .btn-signout {
+      background: transparent;
+      border-color: #333;
+      color: #666;
+    }
+    .btn-signout:hover {
+      border-color: #f44;
+      color: #f44;
+    }
+
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
@@ -157,6 +331,44 @@
     </div>
 
     <div id="main" style="display:none;">
+      <!-- Account Section (signed in) -->
+      <div id="accountSection" class="account-section hidden">
+        <div class="account-header">
+          <div class="account-avatar">
+            <img id="accountAvatar" src="" alt="">
+            <span id="accountAvatarPlaceholder" class="account-avatar-placeholder">?</span>
+          </div>
+          <div class="account-info">
+            <div id="accountName" class="account-name">User</div>
+            <div id="accountEmail" class="account-email">email@example.com</div>
+          </div>
+          <span id="tierBadge" class="tier-badge">FREE</span>
+        </div>
+      </div>
+
+      <!-- Sign In Section (not signed in) -->
+      <div id="signinSection" class="signin-section hidden">
+        <div class="signin-title">Sign in to sync across devices</div>
+        <button id="googleSignInBtn" class="btn-google">
+          <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Sign in with Google
+        </button>
+      </div>
+
+      <!-- Trial Banner -->
+      <div id="trialBanner" class="trial-banner hidden">
+        <div class="trial-text"><span id="trialDays">7</span> days left in your trial</div>
+        <div class="trial-progress">
+          <div id="trialProgressBar" class="trial-progress-bar" style="width: 100%"></div>
+        </div>
+      </div>
+
+      <!-- Upgrade Banner (for free users) -->
+      <div id="upgradeBanner" class="upgrade-banner hidden">
+        <div class="upgrade-title">Upgrade to Pro</div>
+        <div class="upgrade-subtitle">Unlock keyboard, tabs, and site controls</div>
+      </div>
+
       <div class="qr-container">
         <img id="qrCode" src="" alt="QR Code">
       </div>
@@ -178,6 +390,7 @@
       </div>
 
       <button id="newSessionBtn" class="btn">NEW SESSION</button>
+      <button id="signOutBtn" class="btn btn-signout hidden">SIGN OUT</button>
     </div>
   </div>
 
