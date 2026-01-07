@@ -2,7 +2,7 @@
 // Handles authentication, trial tracking, and feature gating
 
 // Production URL
-const SERVER_URL = 'https://exodusxe-production.up.railway.app';
+const SERVER_URL = 'https://orbitxe.com';
 const TRIAL_DURATION_DAYS = 7;
 
 // Feature definitions (must match server/db.js)

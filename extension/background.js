@@ -5,7 +5,7 @@ import { getLicense, isActionAllowed, signInWithGoogle, signOut, getCurrentUser,
 
 let ws = null;
 let roomId = null;
-let serverUrl = 'https://exodusxe-production.up.railway.app';
+let serverUrl = 'https://orbitxe.com';
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 10;
 let cachedLicense = null;
