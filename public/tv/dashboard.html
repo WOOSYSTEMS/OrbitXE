@@ -553,13 +553,13 @@
 
       currentApp = app;
 
-      // Open in new window/tab (most streaming services block iframes)
-      window.open(app.url, '_blank');
-
-      // Notify phone remote
+      // Notify phone remote before navigating
       if (ws && ws.readyState === 1) {
         ws.send(JSON.stringify({ type: 'tvState', currentApp: app.id, view: 'app' }));
       }
+
+      // Navigate in same window (avoids popup blockers)
+      window.location.href = app.url;
     }
 
     // Close app
@@ -590,7 +590,7 @@
       // After final result, search on YouTube
       setTimeout(() => {
         hideSearch();
-        window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`, '_blank');
+        window.location.href = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
       }, 1000);
     }
 
