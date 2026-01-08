@@ -474,12 +474,18 @@ wss.on('connection', (ws, req) => {
         });
       }
 
-      // D-pad navigation - relay to TV displays
+      // D-pad navigation - relay to TV displays AND browser extension
       if (msg.type === 'dpad') {
         console.log('D-pad:', msg.direction);
         const payload = JSON.stringify(msg);
+        // Send to TV displays
         room.displays.forEach(d => {
           if (d.readyState === 1 && d.subtype === 'tv') d.send(payload);
+        });
+        // Also send as action to browser extension (non-TV displays)
+        const actionPayload = JSON.stringify({ type: 'action', action: msg.direction });
+        room.displays.forEach(d => {
+          if (d.readyState === 1 && !d.subtype) d.send(actionPayload);
         });
       }
 
