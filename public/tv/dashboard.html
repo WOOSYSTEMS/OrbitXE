@@ -553,13 +553,18 @@
 
       currentApp = app;
 
-      // Notify phone remote before navigating
+      // Notify phone remote
       if (ws && ws.readyState === 1) {
         ws.send(JSON.stringify({ type: 'tvState', currentApp: app.id, view: 'app' }));
       }
 
-      // Navigate in same window (avoids popup blockers)
-      window.location.href = app.url;
+      // Show fullscreen overlay with iframe
+      const fullscreen = document.getElementById('appFullscreen');
+      const frame = document.getElementById('appFrame');
+
+      // Set iframe src and show overlay
+      frame.src = app.url;
+      fullscreen.classList.add('active');
     }
 
     // Close app
@@ -587,10 +592,14 @@
     function handleVoiceSearch(query) {
       document.getElementById('searchQuery').textContent = query;
 
-      // After final result, search on YouTube
+      // After final result, search on YouTube via iframe
       setTimeout(() => {
         hideSearch();
-        window.location.href = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+        const fullscreen = document.getElementById('appFullscreen');
+        const frame = document.getElementById('appFrame');
+        frame.src = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+        fullscreen.classList.add('active');
+        currentApp = { id: 'youtube-search', name: 'YouTube Search' };
       }, 1000);
     }
 
