@@ -558,13 +558,8 @@
         ws.send(JSON.stringify({ type: 'tvState', currentApp: app.id, view: 'app' }));
       }
 
-      // Show fullscreen overlay with iframe
-      const fullscreen = document.getElementById('appFullscreen');
-      const frame = document.getElementById('appFrame');
-
-      // Set iframe src and show overlay
-      frame.src = app.url;
-      fullscreen.classList.add('active');
+      // Open in new tab (user must allow popups in Safari)
+      window.open(app.url, '_blank');
     }
 
     // Close app
@@ -592,14 +587,10 @@
     function handleVoiceSearch(query) {
       document.getElementById('searchQuery').textContent = query;
 
-      // After final result, search on YouTube via iframe
+      // After final result, search on YouTube in new tab
       setTimeout(() => {
         hideSearch();
-        const fullscreen = document.getElementById('appFullscreen');
-        const frame = document.getElementById('appFrame');
-        frame.src = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
-        fullscreen.classList.add('active');
-        currentApp = { id: 'youtube-search', name: 'YouTube Search' };
+        window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`, '_blank');
       }, 1000);
     }
 
