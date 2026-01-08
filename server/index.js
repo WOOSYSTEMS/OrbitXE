@@ -380,6 +380,11 @@ wss.on('connection', (ws, req) => {
           room.displays.add(ws);
         } else {
           room.controllers.add(ws);
+          // If TV is already connected, notify this controller
+          const hasTv = [...room.displays].some(d => d.subtype === 'tv');
+          if (hasTv) {
+            ws.send(JSON.stringify({ type: 'tvConnected', roomId }));
+          }
         }
 
         // Send status to all
