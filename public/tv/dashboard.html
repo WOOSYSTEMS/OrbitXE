@@ -604,11 +604,13 @@
         // Render IP selector if multiple IPs
         renderIPSelector();
 
-        // Default to local if available, otherwise cloud
-        if (networkInfo.localUrl) {
-          setNetworkMode('local');
-        } else if (networkInfo.cloudUrl) {
+        // Default to cloud if on Railway, otherwise local
+        if (!networkInfo.isLocal && networkInfo.cloudUrl) {
+          // On Railway/cloud deployment - use cloud mode
           setNetworkMode('cloud');
+        } else if (networkInfo.localUrl) {
+          // Running locally - use local mode
+          setNetworkMode('local');
         } else {
           // Fallback to current origin
           generateQR(window.location.origin);
