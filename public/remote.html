@@ -451,6 +451,161 @@
       border-radius: 2px;
     }
 
+    /* TV Mode Styles */
+    .tv-controls {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .tv-controls.active { display: flex; }
+    .trackpad.tv-hidden { display: none; }
+    .scroll-btns.tv-hidden { display: none; }
+    .context-controls.tv-hidden { display: none; }
+
+    .dpad-container {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      margin-bottom: 20px;
+    }
+
+    .dpad-btn {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      background: var(--surface2);
+      border: 1px solid #333;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .dpad-btn:active {
+      transform: scale(0.95);
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
+    .dpad-btn svg { width: 28px; height: 28px; }
+
+    .dpad-up { top: 0; left: 50%; transform: translateX(-50%); }
+    .dpad-down { bottom: 0; left: 50%; transform: translateX(-50%); }
+    .dpad-left { left: 0; top: 50%; transform: translateY(-50%); }
+    .dpad-right { right: 0; top: 50%; transform: translateY(-50%); }
+    .dpad-center {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #000;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .dpad-center:active {
+      transform: translate(-50%, -50%) scale(0.95);
+      background: #00cc6a;
+    }
+
+    .tv-nav-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .tv-nav-btn {
+      width: 56px;
+      height: 56px;
+      background: var(--surface2);
+      border: 1px solid #333;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tv-nav-btn:active {
+      transform: scale(0.95);
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
+    .tv-nav-btn svg { width: 24px; height: 24px; }
+    .tv-nav-btn.home-btn {
+      background: rgba(0, 255, 136, 0.15);
+      border-color: rgba(0, 255, 136, 0.3);
+    }
+
+    .tv-volume-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .volume-btn {
+      width: 50px;
+      height: 44px;
+      background: var(--surface2);
+      border: 1px solid #333;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .volume-btn:active {
+      transform: scale(0.95);
+      background: var(--accent);
+      color: #000;
+    }
+    .volume-label {
+      color: var(--text2);
+      font-size: 12px;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    .tv-mode-toggle {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 10px;
+      padding: 4px 8px;
+      background: var(--surface2);
+      border: 1px solid #333;
+      border-radius: 6px;
+      color: var(--text2);
+      cursor: pointer;
+    }
+    .tv-mode-toggle:active {
+      background: var(--accent);
+      color: #000;
+    }
+
+    .tv-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(138, 43, 226, 0.2);
+      border: 1px solid rgba(138, 43, 226, 0.4);
+      border-radius: 6px;
+      font-size: 11px;
+      color: #a855f7;
+      margin-bottom: 16px;
+    }
+    .tv-badge svg { width: 16px; height: 16px; }
+
     /* Upgrade modal */
     .upgrade-modal {
       position: fixed;
@@ -567,9 +722,12 @@
 
     <header class="header">
       <div class="logo">ORBIT<span>XE</span></div>
-      <div class="status">
-        <span id="statusText">Waiting</span>
-        <div class="status-dot" id="statusDot"></div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <button id="tvModeHeaderBtn" style="font-size: 10px; padding: 4px 8px; background: var(--surface2); border: 1px solid #333; border-radius: 6px; color: var(--text2); cursor: pointer;">TV</button>
+        <div class="status">
+          <span id="statusText">Waiting</span>
+          <div class="status-dot" id="statusDot"></div>
+        </div>
       </div>
     </header>
 
@@ -580,6 +738,7 @@
     </div>
 
     <div class="main">
+      <!-- Browser Mode Controls -->
       <div class="trackpad" id="trackpad">
         <div class="trackpad-hint">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -589,10 +748,9 @@
           <div class="title">Swipe to move cursor</div>
           <div class="sub">Tap to click · Hold for right-click</div>
         </div>
-
       </div>
 
-      <div class="scroll-btns">
+      <div class="scroll-btns" id="scrollBtns">
         <button class="scroll-btn" data-scroll="up">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
         </button>
@@ -602,6 +760,59 @@
       </div>
 
       <div class="context-controls" id="contextControls"></div>
+
+      <!-- TV Mode Controls -->
+      <div class="tv-controls" id="tvControls">
+        <button class="tv-mode-toggle" id="tvModeToggle">Browser Mode</button>
+
+        <div class="tv-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="7" width="20" height="15" rx="2"/>
+            <path d="M17 2l-5 5-5-5"/>
+          </svg>
+          TV Remote
+        </div>
+
+        <!-- D-Pad -->
+        <div class="dpad-container">
+          <button class="dpad-btn dpad-up" data-dpad="up">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
+          </button>
+          <button class="dpad-btn dpad-down" data-dpad="down">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <button class="dpad-btn dpad-left" data-dpad="left">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <button class="dpad-btn dpad-right" data-dpad="right">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+          <button class="dpad-btn dpad-center" data-dpad="enter">OK</button>
+        </div>
+
+        <!-- Navigation Row -->
+        <div class="tv-nav-row">
+          <button class="tv-nav-btn" data-dpad="back" title="Back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </button>
+          <button class="tv-nav-btn home-btn" id="tvHomeBtn" title="Home">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </button>
+          <button class="tv-nav-btn" id="tvVoiceBtn" title="Voice Search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </button>
+        </div>
+
+        <!-- Volume Row -->
+        <div class="tv-volume-row">
+          <button class="volume-btn" data-volume="down">-</button>
+          <span class="volume-label">VOL</span>
+          <button class="volume-btn" data-volume="up">+</button>
+          <button class="volume-btn" data-volume="mute" style="margin-left: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+          </button>
+        </div>
+      </div>
     </div>
 
     <div class="bottom-bar">
@@ -644,6 +855,8 @@
     let tabs = [];
     let license = null;
     let upgradeUrl = `${location.origin}/upgrade`;
+    let isTvMode = false;
+    let tvConnected = false;
 
     // Feature definitions (must match server)
     const FREE_FEATURES = ['trackpad', 'scroll_buttons'];
@@ -708,6 +921,79 @@
         el.classList.toggle('locked', !hasFeature('tab_switch'));
       });
     }
+
+    // TV Mode Functions
+    function setTvMode(enabled) {
+      isTvMode = enabled;
+      const trackpad = document.getElementById('trackpad');
+      const scrollBtns = document.getElementById('scrollBtns');
+      const contextControls = document.getElementById('contextControls');
+      const tvControls = document.getElementById('tvControls');
+      const tabBar = document.getElementById('tabBar');
+      const activeTabEl = document.getElementById('activeTab');
+
+      if (enabled) {
+        trackpad.classList.add('tv-hidden');
+        scrollBtns.classList.add('tv-hidden');
+        contextControls.classList.add('tv-hidden');
+        tvControls.classList.add('active');
+        tabBar.style.display = 'none';
+        activeTabEl.innerHTML = '<strong>TV Mode</strong> · D-pad navigation';
+      } else {
+        trackpad.classList.remove('tv-hidden');
+        scrollBtns.classList.remove('tv-hidden');
+        contextControls.classList.remove('tv-hidden');
+        tvControls.classList.remove('active');
+        tabBar.style.display = '';
+        updateActiveTab();
+      }
+    }
+
+    // Setup TV mode toggle
+    document.getElementById('tvModeToggle').onclick = () => {
+      setTvMode(false);
+    };
+
+    // D-pad buttons
+    document.querySelectorAll('[data-dpad]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const direction = btn.dataset.dpad;
+        console.log('D-pad:', direction);
+        send({ type: 'dpad', direction });
+        vibrate();
+      });
+    });
+
+    // Volume controls
+    document.querySelectorAll('[data-volume]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const action = btn.dataset.volume;
+        console.log('Volume:', action);
+        send({ type: 'volume', action });
+        vibrate();
+      });
+    });
+
+    // Home button
+    document.getElementById('tvHomeBtn').onclick = () => {
+      console.log('TV Home');
+      send({ type: 'home' });
+      vibrate();
+    };
+
+    // Voice search button
+    document.getElementById('tvVoiceBtn').onclick = () => {
+      const query = prompt('Voice search:');
+      if (query) {
+        console.log('Voice search:', query);
+        send({ type: 'voice', query });
+      }
+    };
+
+    // TV mode header button - toggle TV mode
+    document.getElementById('tvModeHeaderBtn').onclick = () => {
+      setTvMode(!isTvMode);
+    };
 
     // Show upgrade modal
     function showUpgradeModal(feature) {
@@ -811,6 +1097,23 @@
           console.log('OrbitXE Phone: Opening keyboard');
           document.getElementById('keyboardOverlay').classList.add('active');
           setTimeout(() => document.getElementById('keyboardInput').focus(), 100);
+        }
+
+        // TV connected - auto-switch to TV mode
+        if (msg.type === 'tvConnected') {
+          console.log('OrbitXE Phone: TV connected!');
+          tvConnected = true;
+          setTvMode(true);
+        }
+
+        // TV state updates
+        if (msg.type === 'tvState') {
+          console.log('OrbitXE Phone: TV state:', msg);
+        }
+
+        // Now playing info
+        if (msg.type === 'nowPlaying') {
+          console.log('OrbitXE Phone: Now playing:', msg.title);
         }
       };
 

@@ -5,6 +5,7 @@ import { WebSocketServer } from 'ws';
 import { nanoid } from 'nanoid';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import os from 'os';
 
 // Import new modules
 import {
@@ -271,9 +272,85 @@ app.get('/payment/cancel', (req, res) => {
   res.sendFile(join(__dirname, '../public/payment-cancel.html'));
 });
 
+// ==================== TV DASHBOARD ====================
+
+// TV Dashboard - auto create room
+app.get('/tv', (req, res) => {
+  const roomId = nanoid(6).toUpperCase();
+  const baseUrl = getBaseUrl(req);
+
+  rooms.set(roomId, {
+    displays: new Set(),
+    controllers: new Set(),
+    tvDisplays: new Set(),
+    activeTab: null,
+    activeApp: null,
+    createdAt: Date.now()
+  });
+
+  res.redirect(`/tv/${roomId}`);
+});
+
+// TV Dashboard with room ID
+app.get('/tv/:roomId', (req, res) => {
+  res.sendFile(join(__dirname, '../public/tv/dashboard.html'));
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', rooms: rooms.size });
+});
+
+// Get local network info for local sync
+function getLocalIPs() {
+  const interfaces = os.networkInterfaces();
+  const ips = [];
+
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      // Skip internal/loopback and non-IPv4
+      if (iface.internal || iface.family !== 'IPv4') continue;
+      ips.push({
+        name,
+        address: iface.address
+      });
+    }
+  }
+  return ips;
+}
+
+// Local network info endpoint
+app.get('/api/network', (req, res) => {
+  const ips = getLocalIPs();
+  const port = process.env.PORT || 3000;
+  const isLocal = !process.env.RAILWAY_PUBLIC_DOMAIN;
+
+  // Prefer common interfaces: en0 (WiFi), en1, bridge (hotspot)
+  const preferredOrder = ['en0', 'en1', 'bridge100', 'bridge0'];
+  const sortedIPs = [...ips].sort((a, b) => {
+    const aIdx = preferredOrder.indexOf(a.name);
+    const bIdx = preferredOrder.indexOf(b.name);
+    if (aIdx === -1 && bIdx === -1) return 0;
+    if (aIdx === -1) return 1;
+    if (bIdx === -1) return -1;
+    return aIdx - bIdx;
+  });
+
+  res.json({
+    isLocal,
+    port,
+    localIPs: sortedIPs,
+    // All available URLs
+    localUrls: sortedIPs.map(ip => ({
+      name: ip.name,
+      url: `http://${ip.address}:${port}`
+    })),
+    // Primary local URL
+    localUrl: sortedIPs.length > 0 ? `http://${sortedIPs[0].address}:${port}` : null,
+    cloudUrl: process.env.RAILWAY_PUBLIC_DOMAIN
+      ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+      : null
+  });
 });
 
 // ==================== WEBSOCKET ====================
@@ -374,6 +451,76 @@ wss.on('connection', (ws, req) => {
             console.log('Sending to controller');
             c.send(payload);
           }
+        });
+      }
+
+      // ==================== TV DASHBOARD MESSAGES ====================
+
+      // TV display joined - notify controllers
+      if (msg.type === 'join' && msg.subtype === 'tv') {
+        ws.subtype = 'tv';
+        if (room.tvDisplays) {
+          room.tvDisplays.add(ws);
+        }
+        // Notify controllers that TV is connected
+        const tvNotify = JSON.stringify({ type: 'tvConnected', roomId });
+        room.controllers.forEach(c => {
+          if (c.readyState === 1) c.send(tvNotify);
+        });
+      }
+
+      // D-pad navigation - relay to TV displays
+      if (msg.type === 'dpad') {
+        console.log('D-pad:', msg.direction);
+        const payload = JSON.stringify(msg);
+        room.displays.forEach(d => {
+          if (d.readyState === 1 && d.subtype === 'tv') d.send(payload);
+        });
+      }
+
+      // Launch app - relay to TV displays
+      if (msg.type === 'launchApp') {
+        console.log('Launch app:', msg.appId);
+        room.activeApp = msg.appId;
+        const payload = JSON.stringify(msg);
+        room.displays.forEach(d => {
+          if (d.readyState === 1 && d.subtype === 'tv') d.send(payload);
+        });
+      }
+
+      // Volume control - relay to TV displays
+      if (msg.type === 'volume') {
+        console.log('Volume:', msg.action);
+        const payload = JSON.stringify(msg);
+        room.displays.forEach(d => {
+          if (d.readyState === 1 && d.subtype === 'tv') d.send(payload);
+        });
+      }
+
+      // Voice search - relay to TV displays
+      if (msg.type === 'voice') {
+        console.log('Voice search:', msg.query);
+        const payload = JSON.stringify(msg);
+        room.displays.forEach(d => {
+          if (d.readyState === 1 && d.subtype === 'tv') d.send(payload);
+        });
+      }
+
+      // Home button - relay to TV displays
+      if (msg.type === 'home') {
+        console.log('Home button pressed');
+        room.activeApp = null;
+        const payload = JSON.stringify(msg);
+        room.displays.forEach(d => {
+          if (d.readyState === 1 && d.subtype === 'tv') d.send(payload);
+        });
+      }
+
+      // TV state update - relay to controllers
+      if (['tvState', 'nowPlaying'].includes(msg.type)) {
+        const payload = JSON.stringify(msg);
+        room.controllers.forEach(c => {
+          if (c.readyState === 1) c.send(payload);
         });
       }
 
