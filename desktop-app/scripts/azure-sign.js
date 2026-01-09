@@ -28,15 +28,15 @@ exports.default = async function(configuration) {
   }
 
   try {
-    // Using AzureSignTool
+    // Using AzureSignTool with Trusted Signing (not Key Vault)
     const command = [
       'AzureSignTool sign',
-      `-kvu "${CONFIG.endpoint}"`,
-      `-kva "${CONFIG.account}"`,
       `-kvt "${CONFIG.tenantId}"`,
       `-kvi "${CONFIG.clientId}"`,
       `-kvs "${clientSecret}"`,
-      `-kvc "${CONFIG.certProfile}"`,
+      `-tse "${CONFIG.endpoint}"`,
+      `-tsa "${CONFIG.account}"`,
+      `-tscp "${CONFIG.certProfile}"`,
       '-tr http://timestamp.digicert.com',
       '-td sha256',
       `"${filePath}"`
