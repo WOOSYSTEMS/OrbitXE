@@ -105,7 +105,16 @@ app.post('/api/webhook/stripe', express.raw({ type: 'application/json' }), async
 
       case 'customer.subscription.updated': {
         const subscription = event.data.object;
-        if (subscription.status === 'active') {
+
+        // If user cancels (even during trial), revoke access immediately
+        if (subscription.cancel_at_period_end) {
+          console.log('Subscription canceled, revoking access immediately');
+          updateSubscriptionStatus(subscription.id, 'canceled', new Date().toISOString());
+          const user = getUserByStripeCustomerId(subscription.customer);
+          if (user) {
+            updateUserSubscription(user.id, 'free');
+          }
+        } else if (subscription.status === 'active') {
           updateSubscriptionStatus(subscription.id, 'active');
         }
         break;
