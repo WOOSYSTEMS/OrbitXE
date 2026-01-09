@@ -10,6 +10,7 @@
     "build": "electron-builder --mac",
     "build:mac": "electron-builder --mac",
     "build:win": "electron-builder --win",
+    "build:win-signed": "electron-builder --win --config.win.sign=./scripts/azure-sign.js",
     "build:dmg": "electron-builder --mac dmg",
     "build:zip": "electron-builder --mac zip"
   },

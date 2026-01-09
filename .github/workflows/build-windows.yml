@@ -1,0 +1,46 @@
+name: Build Windows (Signed)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'desktop-app/**'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup .NET (for AzureSignTool)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install AzureSignTool
+        run: dotnet tool install --global AzureSignTool
+
+      - name: Install dependencies
+        working-directory: desktop-app
+        run: npm install
+
+      - name: Build Windows app
+        working-directory: desktop-app
+        env:
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        run: npm run build:win-signed
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: OrbitXE-Windows
+          path: |
+            desktop-app/dist/*.exe
+            desktop-app/dist/*.msi
