@@ -26,9 +26,12 @@ export async function createCheckoutSession(user, planType, baseUrl) {
     }
   };
 
-  // For subscriptions, allow promotion codes
+  // For subscriptions, add 7-day free trial and allow promotion codes
   if (isSubscription) {
     sessionConfig.allow_promotion_codes = true;
+    sessionConfig.subscription_data = {
+      trial_period_days: 7
+    };
   }
 
   const session = await stripe.checkout.sessions.create(sessionConfig);
