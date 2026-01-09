@@ -21,7 +21,7 @@
       font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif;
     }
     .container {
-      max-width: 900px;
+      max-width: 1000px;
       margin: 0 auto;
       padding: 40px 20px;
     }
@@ -50,29 +50,38 @@
       font-size: 20px;
       color: var(--text2);
     }
-    .pricing {
+
+    /* Pricing Grid */
+    .pricing-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 32px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
       margin-bottom: 60px;
     }
+    @media (max-width: 800px) {
+      .pricing-grid { grid-template-columns: 1fr; }
+    }
+
     .plan {
       background: var(--surface);
       border: 1px solid #333;
       border-radius: 20px;
-      padding: 40px 32px;
+      padding: 32px 24px;
       position: relative;
       transition: all 0.3s;
     }
     .plan:hover {
-      border-color: var(--accent);
+      border-color: #555;
       transform: translateY(-4px);
     }
     .plan.featured {
       border-color: var(--accent);
+      transform: scale(1.02);
     }
-    .plan.featured::before {
-      content: 'AVAILABLE NOW';
+    .plan.featured:hover {
+      transform: scale(1.02) translateY(-4px);
+    }
+    .badge {
       position: absolute;
       top: -12px;
       left: 50%;
@@ -85,101 +94,67 @@
       border-radius: 20px;
       letter-spacing: 1px;
     }
-    .plan.coming-soon {
-      opacity: 0.6;
-    }
-    .plan.coming-soon::before {
-      content: 'COMING SOON';
-      position: absolute;
-      top: -12px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #444;
-      color: #fff;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 6px 16px;
-      border-radius: 20px;
-      letter-spacing: 1px;
-    }
-    .plan-icon {
-      width: 64px;
-      height: 64px;
-      background: rgba(0, 255, 136, 0.1);
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 24px;
-    }
-    .plan-icon svg {
-      width: 32px;
-      height: 32px;
-      color: var(--accent);
-    }
-    .plan.coming-soon .plan-icon {
-      background: rgba(255, 255, 255, 0.05);
-    }
-    .plan.coming-soon .plan-icon svg {
-      color: #666;
-    }
     .plan-name {
-      font-size: 28px;
+      font-size: 24px;
       font-weight: 600;
       margin-bottom: 8px;
     }
     .plan-desc {
-      font-size: 15px;
+      font-size: 14px;
       color: var(--text2);
-      margin-bottom: 24px;
-      line-height: 1.5;
+      margin-bottom: 20px;
+      min-height: 40px;
     }
     .plan-price {
-      font-size: 48px;
+      font-size: 42px;
       font-weight: 700;
       margin-bottom: 4px;
     }
-    .plan-price.free {
-      color: var(--accent);
-    }
+    .plan-price.free { color: var(--accent); }
     .plan-price span {
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 400;
       color: var(--text2);
     }
     .plan-period {
-      font-size: 14px;
+      font-size: 13px;
       color: var(--text2);
-      margin-bottom: 32px;
+      margin-bottom: 24px;
     }
     .plan-features {
       list-style: none;
-      margin-bottom: 32px;
+      margin-bottom: 24px;
+      min-height: 200px;
     }
     .plan-features li {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 10px 0;
-      font-size: 15px;
-      color: var(--text2);
+      gap: 10px;
+      padding: 8px 0;
+      font-size: 14px;
     }
-    .plan-features li::before {
+    .plan-features li.included::before {
       content: '✓';
       color: var(--accent);
       font-weight: bold;
     }
-    .plan.coming-soon .plan-features li::before {
+    .plan-features li.excluded {
+      color: var(--text2);
+      text-decoration: line-through;
+      opacity: 0.5;
+    }
+    .plan-features li.excluded::before {
+      content: '✗';
       color: #666;
     }
     .plan-btn {
       width: 100%;
-      padding: 18px;
-      background: var(--accent);
-      border: none;
+      padding: 16px;
+      background: var(--surface2);
+      border: 1px solid #444;
       border-radius: 12px;
-      color: #000;
-      font-size: 16px;
+      color: var(--text);
+      font-size: 15px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
@@ -188,17 +163,45 @@
       text-align: center;
     }
     .plan-btn:hover {
+      background: #2a2a2a;
+      border-color: #666;
+    }
+    .plan.featured .plan-btn {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
+    .plan.featured .plan-btn:hover {
       background: #00cc6e;
-      transform: translateY(-2px);
     }
-    .plan.coming-soon .plan-btn {
+
+    /* Coming Soon */
+    .coming-soon-section {
+      background: var(--surface);
+      border: 1px solid #333;
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .coming-soon-section h3 {
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+    .coming-soon-section p {
+      color: var(--text2);
+      margin-bottom: 20px;
+    }
+    .coming-soon-badge {
+      display: inline-block;
       background: #333;
-      color: #666;
-      cursor: not-allowed;
+      color: #888;
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
     }
-    .plan.coming-soon .plan-btn:hover {
-      transform: none;
-    }
+
     .footer {
       text-align: center;
       padding: 40px 20px;
@@ -209,9 +212,7 @@
       color: var(--text2);
       text-decoration: none;
     }
-    .footer a:hover {
-      color: var(--accent);
-    }
+    .footer a:hover { color: var(--accent); }
   </style>
 </head>
 <body>
@@ -222,50 +223,69 @@
     </a>
 
     <header class="header">
-      <div class="logo">ORBIT<span>XE</span></div>
-      <p class="tagline">Control your devices from your phone</p>
+      <div class="logo">ORBIT<span>XE</span> Desktop</div>
+      <p class="tagline">Control your Mac from your phone</p>
     </header>
 
-    <div class="pricing">
-      <!-- Desktop App -->
-      <div class="plan featured">
-        <div class="plan-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-        </div>
-        <div class="plan-name">Desktop App</div>
-        <div class="plan-desc">Control your entire Mac from your phone. Trackpad, keyboard, media controls, and laser pointer.</div>
-        <div class="plan-price free">Free</div>
-        <div class="plan-period">All features included</div>
+    <div class="pricing-grid">
+      <!-- Free -->
+      <div class="plan">
+        <div class="plan-name">Free</div>
+        <div class="plan-desc">Essential controls for everyone</div>
+        <div class="plan-price free">$0</div>
+        <div class="plan-period">Forever free</div>
         <ul class="plan-features">
-          <li>Wireless trackpad control</li>
-          <li>Full keyboard input</li>
-          <li>Media controls (Spotify, Music)</li>
-          <li>Gyroscope laser pointer</li>
-          <li>Multi-display support</li>
-          <li>Secure local connection</li>
+          <li class="included">Wireless trackpad</li>
+          <li class="included">Full keyboard</li>
+          <li class="included">Laser pointer</li>
+          <li class="included">Click & scroll</li>
+          <li class="excluded">Media controls</li>
+          <li class="excluded">Multi-display</li>
         </ul>
-        <a href="https://github.com/WOOSYSTEMS/OrbitXE/releases/download/v1.0.0/OrbitXE-1.0.0-arm64.dmg" class="plan-btn">Download for Mac</a>
+        <a href="https://github.com/WOOSYSTEMS/OrbitXE/releases/download/v1.0.0/OrbitXE-1.0.0-arm64.dmg" class="plan-btn">Download Free</a>
       </div>
 
-      <!-- Chrome Extension -->
-      <div class="plan coming-soon">
-        <div class="plan-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="M21.17 8H12M3.95 6.06L8.54 14M10.88 21.94L15.46 14"/></svg>
-        </div>
-        <div class="plan-name">Chrome Extension</div>
-        <div class="plan-desc">Control any website from your phone. Tab switching, streaming controls, and cloud sync.</div>
-        <div class="plan-price">TBD</div>
-        <div class="plan-period">Pricing coming soon</div>
+      <!-- Pro Monthly -->
+      <div class="plan featured">
+        <div class="badge">MOST POPULAR</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-desc">Full power for professionals</div>
+        <div class="plan-price">$2.99<span>/mo</span></div>
+        <div class="plan-period">7-day free trial</div>
         <ul class="plan-features">
-          <li>Control any browser tab</li>
-          <li>YouTube & Netflix controls</li>
-          <li>Tab switching</li>
-          <li>Cloud sync across devices</li>
-          <li>Google Slides presenter</li>
-          <li>Zoom & Meet controls</li>
+          <li class="included">Everything in Free</li>
+          <li class="included">Media controls</li>
+          <li class="included">Multi-display support</li>
+          <li class="included">File sharing</li>
+          <li class="included">Custom shortcuts</li>
+          <li class="included">Cancel anytime</li>
         </ul>
-        <span class="plan-btn">Coming Soon</span>
+        <a href="https://github.com/WOOSYSTEMS/OrbitXE/releases/download/v1.0.0/OrbitXE-1.0.0-arm64.dmg" class="plan-btn">Start Free Trial</a>
       </div>
+
+      <!-- Lifetime -->
+      <div class="plan">
+        <div class="plan-name">Lifetime</div>
+        <div class="plan-desc">One-time purchase, forever yours</div>
+        <div class="plan-price">$19.99</div>
+        <div class="plan-period">Pay once, own forever</div>
+        <ul class="plan-features">
+          <li class="included">Everything in Pro</li>
+          <li class="included">Lifetime updates</li>
+          <li class="included">No recurring fees</li>
+          <li class="included">Priority support</li>
+          <li class="included">All future features</li>
+          <li class="included">Best value</li>
+        </ul>
+        <a href="https://github.com/WOOSYSTEMS/OrbitXE/releases/download/v1.0.0/OrbitXE-1.0.0-arm64.dmg" class="plan-btn">Get Lifetime</a>
+      </div>
+    </div>
+
+    <!-- Chrome Extension Coming Soon -->
+    <div class="coming-soon-section">
+      <h3>Chrome Extension</h3>
+      <p>Control any website from your phone. Tab switching, streaming controls, and cloud sync.</p>
+      <span class="coming-soon-badge">COMING SOON</span>
     </div>
   </div>
 
