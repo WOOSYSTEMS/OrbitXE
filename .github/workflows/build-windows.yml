@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'desktop-app/**'
+      - '.github/workflows/build-windows.yml'
   workflow_dispatch:
 
 jobs:
@@ -19,23 +20,28 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Setup .NET (for AzureSignTool)
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
-
-      - name: Install AzureSignTool
-        run: dotnet tool install --global AzureSignTool --version 6.0.0
-
       - name: Install dependencies
         working-directory: desktop-app
         run: npm install
 
-      - name: Build Windows app
+      - name: Build Windows app (unsigned)
         working-directory: desktop-app
-        env:
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-        run: npm run build:win-signed
+        run: npm run build:win
+
+      - name: Sign with Azure Trusted Signing
+        uses: azure/trusted-signing-action@v0
+        with:
+          azure-tenant-id: ba14e2de-4ced-4baf-aa2b-c78d53a57ea2
+          azure-client-id: cf00dd85-f5fa-417c-90a2-964c523a4927
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: https://eus.codesigning.azure.net
+          trusted-signing-account-name: orbitxe
+          certificate-profile-name: orbitxe-signing
+          files-folder: desktop-app/dist
+          files-folder-filter: exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
