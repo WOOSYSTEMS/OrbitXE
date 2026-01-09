@@ -323,36 +323,80 @@ const robotKeyMap = {
   'home': 'home', 'end': 'end', 'pageup': 'pageup', 'pagedown': 'pagedown'
 };
 
-// Simulate key press
+// Simulate key press using nut-js (cross-platform)
 function simulateKey(key) {
-  if (isMac) {
+  if (nutKeyboard) {
+    const { Key } = require('@nut-tree-fork/nut-js');
+    const nutKeyMap = {
+      'up': Key.Up, 'down': Key.Down, 'left': Key.Left, 'right': Key.Right,
+      'enter': Key.Enter, 'return': Key.Enter, 'space': Key.Space, 'escape': Key.Escape,
+      'tab': Key.Tab, 'backspace': Key.Backspace, 'delete': Key.Delete,
+      'f1': Key.F1, 'f2': Key.F2, 'f3': Key.F3, 'f4': Key.F4, 'f5': Key.F5, 'f6': Key.F6,
+      'f7': Key.F7, 'f8': Key.F8, 'f9': Key.F9, 'f10': Key.F10, 'f11': Key.F11, 'f12': Key.F12,
+      'home': Key.Home, 'end': Key.End, 'pageup': Key.PageUp, 'pagedown': Key.PageDown
+    };
+    const nutKey = nutKeyMap[key?.toLowerCase()];
+    if (nutKey) {
+      nutKeyboard.pressKey(nutKey).then(() => nutKeyboard.releaseKey(nutKey)).catch(e => {
+        console.error('nut-js key error:', e.message);
+      });
+    }
+  } else if (isMac) {
     const keyCode = keyCodeMap[key?.toLowerCase()];
     if (keyCode !== undefined) {
       exec(`osascript -e 'tell application "System Events" to key code ${keyCode}'`, (err) => {
         if (err) console.error('Key error:', err.message);
       });
     }
-  } else if (isWindows) {
-    const keyMap = {
-      'up': '{UP}', 'down': '{DOWN}', 'left': '{LEFT}', 'right': '{RIGHT}',
-      'enter': '{ENTER}', 'return': '{ENTER}', 'space': ' ', 'escape': '{ESC}',
-      'tab': '{TAB}', 'backspace': '{BACKSPACE}', 'delete': '{DELETE}',
-      'f1': '{F1}', 'f2': '{F2}', 'f3': '{F3}', 'f4': '{F4}', 'f5': '{F5}', 'f6': '{F6}',
-      'f7': '{F7}', 'f8': '{F8}', 'f9': '{F9}', 'f10': '{F10}', 'f11': '{F11}', 'f12': '{F12}',
-      'home': '{HOME}', 'end': '{END}', 'pageup': '{PGUP}', 'pagedown': '{PGDN}'
-    };
-    const sendKey = keyMap[key?.toLowerCase()];
-    if (sendKey) {
-      exec(`powershell -command "(New-Object -ComObject WScript.Shell).SendKeys('${sendKey}')"`, (err) => {
-        if (err) console.error('Windows key error:', err.message);
-      });
-    }
   }
 }
 
-// Simulate keystroke (text character or key with modifiers)
+// Simulate keystroke (text character or key with modifiers) using nut-js
 function simulateKeystroke(char, modifiers = []) {
-  if (isMac) {
+  if (nutKeyboard) {
+    const { Key } = require('@nut-tree-fork/nut-js');
+    const nutKeyMap = {
+      'up': Key.Up, 'down': Key.Down, 'left': Key.Left, 'right': Key.Right,
+      'enter': Key.Enter, 'return': Key.Enter, 'space': Key.Space, 'escape': Key.Escape,
+      'tab': Key.Tab, 'backspace': Key.Backspace, 'delete': Key.Delete,
+      'f1': Key.F1, 'f2': Key.F2, 'f3': Key.F3, 'f4': Key.F4, 'f5': Key.F5, 'f6': Key.F6,
+      'f7': Key.F7, 'f8': Key.F8, 'f9': Key.F9, 'f10': Key.F10, 'f11': Key.F11, 'f12': Key.F12,
+      'home': Key.Home, 'end': Key.End, 'pageup': Key.PageUp, 'pagedown': Key.PageDown,
+      'a': Key.A, 'b': Key.B, 'c': Key.C, 'd': Key.D, 'e': Key.E, 'f': Key.F, 'g': Key.G,
+      'h': Key.H, 'i': Key.I, 'j': Key.J, 'k': Key.K, 'l': Key.L, 'm': Key.M, 'n': Key.N,
+      'o': Key.O, 'p': Key.P, 'q': Key.Q, 'r': Key.R, 's': Key.S, 't': Key.T, 'u': Key.U,
+      'v': Key.V, 'w': Key.W, 'x': Key.X, 'y': Key.Y, 'z': Key.Z,
+      '=': Key.Equal, '-': Key.Minus, '[': Key.LeftBracket, ']': Key.RightBracket,
+      '\\': Key.Backslash, ';': Key.Semicolon, "'": Key.Quote, ',': Key.Comma,
+      '.': Key.Period, '/': Key.Slash, '`': Key.Grave
+    };
+
+    const nutModMap = {
+      'command': isMac ? Key.LeftSuper : Key.LeftControl,
+      'control': Key.LeftControl,
+      'option': Key.LeftAlt,
+      'shift': Key.LeftShift
+    };
+
+    const nutKey = nutKeyMap[char?.toLowerCase()];
+    const nutMods = modifiers.map(m => nutModMap[m]).filter(Boolean);
+
+    (async () => {
+      try {
+        // Press modifiers
+        for (const mod of nutMods) await nutKeyboard.pressKey(mod);
+        // Press and release key
+        if (nutKey) {
+          await nutKeyboard.pressKey(nutKey);
+          await nutKeyboard.releaseKey(nutKey);
+        }
+        // Release modifiers
+        for (const mod of nutMods.reverse()) await nutKeyboard.releaseKey(mod);
+      } catch (e) {
+        console.error('nut-js keystroke error:', e.message);
+      }
+    })();
+  } else if (isMac) {
     let modStr = '';
     if (modifiers.length > 0) {
       modStr = ` using {${modifiers.map(m => m + ' down').join(', ')}}`;
@@ -369,29 +413,6 @@ function simulateKeystroke(char, modifiers = []) {
         if (err) console.error('Keystroke error:', err.message);
       });
     }
-  } else if (isWindows) {
-    // Windows SendKeys format
-    const keyMap = {
-      'up': '{UP}', 'down': '{DOWN}', 'left': '{LEFT}', 'right': '{RIGHT}',
-      'enter': '{ENTER}', 'return': '{ENTER}', 'space': ' ', 'escape': '{ESC}',
-      'tab': '{TAB}', 'backspace': '{BACKSPACE}', 'delete': '{DELETE}',
-      'f1': '{F1}', 'f2': '{F2}', 'f3': '{F3}', 'f4': '{F4}', 'f5': '{F5}', 'f6': '{F6}',
-      'f7': '{F7}', 'f8': '{F8}', 'f9': '{F9}', 'f10': '{F10}', 'f11': '{F11}', 'f12': '{F12}',
-      'home': '{HOME}', 'end': '{END}', 'pageup': '{PGUP}', 'pagedown': '{PGDN}'
-    };
-
-    let sendKey = keyMap[char?.toLowerCase()] || char;
-    let prefix = '';
-
-    // Add modifier prefixes for SendKeys
-    if (modifiers.includes('control') || modifiers.includes('command')) prefix += '^';
-    if (modifiers.includes('option')) prefix += '%';
-    if (modifiers.includes('shift')) prefix += '+';
-
-    const escaped = (prefix + sendKey).replace(/'/g, "''");
-    exec(`powershell -command "(New-Object -ComObject WScript.Shell).SendKeys('${escaped}')"`, (err) => {
-      if (err) console.error('Windows keystroke error:', err.message);
-    });
   }
 }
 
@@ -881,17 +902,14 @@ function handleCommand(msg, deviceId = 'unknown') {
 
     case 'text':
       if (msg.text) {
-        if (isMac) {
+        if (nutKeyboard) {
+          // Use nut-js for cross-platform text input
+          nutKeyboard.type(msg.text).catch(e => {
+            console.error('nut-js text error:', e.message);
+          });
+        } else if (isMac) {
           const escaped = msg.text.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
           exec(`osascript -e 'tell application "System Events" to keystroke "${escaped}"'`);
-        } else if (isWindows) {
-          // Escape special SendKeys characters: + ^ % ~ { } [ ] ( )
-          const escaped = msg.text
-            .replace(/([+^%~{}[\]()])/g, '{$1}')
-            .replace(/'/g, "''");
-          exec(`powershell -command "(New-Object -ComObject WScript.Shell).SendKeys('${escaped}')"`, (err) => {
-            if (err) console.error('Windows text error:', err.message);
-          });
         }
       }
       break;
