@@ -335,6 +335,16 @@
       <p>Control any website from your phone. Tab switching, streaming controls, and cloud sync.</p>
       <span class="coming-soon-badge">COMING SOON</span>
     </div>
+
+    <!-- Manage Subscription (shown for Pro users) -->
+    <div id="manageSection" class="coming-soon-section" style="display:none; border-color: var(--accent);">
+      <h3>Manage Your Subscription</h3>
+      <p id="subscriptionStatus">You're subscribed to OrbitXE Pro</p>
+      <button onclick="openBillingPortal()" class="plan-btn" style="max-width: 300px; margin: 0 auto; background: var(--accent); color: #000; border-color: var(--accent);">
+        Manage Subscription
+      </button>
+      <p style="margin-top: 12px; font-size: 12px; color: var(--text2);">Update payment method, view invoices, or cancel</p>
+    </div>
   </div>
 
   <!-- Sign In Modal -->
@@ -470,8 +480,57 @@
       }
     }
 
+    // Check subscription status and show manage section
+    async function checkSubscriptionStatus() {
+      if (!authToken) return;
+      try {
+        const res = await fetch('/api/license/check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: currentUser?.email })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.tier === 'pro' || data.tier === 'lifetime') {
+            document.getElementById('manageSection').style.display = 'block';
+            const statusText = data.tier === 'lifetime'
+              ? "You have OrbitXE Lifetime"
+              : "You're subscribed to OrbitXE Pro";
+            document.getElementById('subscriptionStatus').textContent = statusText;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to check subscription:', e);
+      }
+    }
+
+    // Open Stripe billing portal
+    async function openBillingPortal() {
+      try {
+        const btn = event.target;
+        btn.textContent = 'Loading...';
+        btn.style.pointerEvents = 'none';
+
+        const res = await fetch('/api/payment/portal', {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        if (!res.ok) throw new Error('Failed to open portal');
+
+        const data = await res.json();
+        window.location.href = data.portalUrl;
+      } catch (e) {
+        alert('Could not open billing portal: ' + e.message);
+        location.reload();
+      }
+    }
+
     // Initialize on load
-    checkAuth();
+    checkAuth().then(() => {
+      if (currentUser) {
+        checkSubscriptionStatus();
+      }
+    });
     initGoogleSignIn();
 
     // Close modal on background click
