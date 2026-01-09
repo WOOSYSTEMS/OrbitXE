@@ -4,5 +4,7 @@ node_modules/
 .env
 orbitxe.db
 
-.env
-orbitxe.db
+# Desktop app builds (large binaries)
+desktop-app/
+desktop-remote/
+public/download/*.dmg

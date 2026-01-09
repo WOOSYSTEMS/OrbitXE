@@ -181,6 +181,99 @@
       left: 0;
     }
 
+    /* Product Switcher */
+    .product-switcher {
+      display: flex;
+      gap: 8px;
+      background: rgba(20, 20, 20, 0.8);
+      padding: 6px;
+      border-radius: 50px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+    }
+    .product-tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 50px;
+      background: transparent;
+      color: var(--text2);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .product-tab:hover {
+      color: var(--text);
+    }
+    .product-tab.active {
+      background: var(--accent);
+      color: #000;
+    }
+    .product-tab svg {
+      opacity: 0.7;
+      transition: opacity 0.3s;
+    }
+    .product-tab.active svg {
+      opacity: 1;
+    }
+    .product-content {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      animation: fadeInUp 0.5s ease;
+    }
+    .product-content.active {
+      display: flex;
+    }
+    .product-demo {
+      display: none;
+    }
+    .product-demo.active {
+      display: flex;
+    }
+    .demo-app-indicator {
+      background: linear-gradient(145deg, #1a1a1a, #111);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 15px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid #222;
+    }
+    .demo-desktop {
+      background: linear-gradient(145deg, #151515, #0a0a0a);
+      border-radius: 16px;
+      border: 2px solid #222;
+      width: 350px;
+      overflow: hidden;
+      transition: transform 0.3s;
+      transform-style: preserve-3d;
+    }
+    .demo-desktop:hover {
+      transform: rotateY(10deg) rotateX(-5deg) scale(1.02);
+      border-color: var(--accent);
+      box-shadow: 0 30px 60px rgba(0, 255, 136, 0.15);
+    }
+    .demo-btn {
+      font-size: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #666;
+    }
+    section.product-section {
+      display: none !important;
+    }
+    section.product-section.active {
+      display: block !important;
+    }
+
     /* Hero */
     .hero {
       min-height: 100vh;
@@ -287,6 +380,27 @@
       border-color: var(--accent);
       color: var(--accent);
       background: rgba(0, 255, 136, 0.05);
+    }
+
+    .download-alt {
+      margin-top: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: var(--text2);
+    }
+    .download-alt a {
+      color: var(--text2);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .download-alt a:hover {
+      color: var(--accent);
+    }
+    .download-alt span {
+      opacity: 0.4;
     }
 
     /* Hero Demo */
@@ -730,64 +844,255 @@
       z-index: -1;
     }
 
-    /* How it works */
+    /* How it works - Modern Timeline */
     .how-it-works {
       padding: 120px 20px;
       background: linear-gradient(180deg, var(--bg) 0%, var(--surface) 100%);
     }
 
-    .steps {
-      max-width: 900px;
+    .timeline-container {
+      max-width: 1000px;
       margin: 0 auto;
+      position: relative;
+    }
+
+    .timeline-track {
+      position: absolute;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      height: 4px;
+      background: #1a1a1a;
+      border-radius: 2px;
+      z-index: 0;
+    }
+
+    .timeline-progress {
+      height: 100%;
+      width: 33%;
+      background: linear-gradient(90deg, var(--accent), #00cc6a);
+      border-radius: 2px;
+      transition: width 0.5s ease;
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+    }
+
+    .timeline-steps {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      z-index: 1;
+    }
+
+    .timeline-step {
+      flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 60px;
-    }
-
-    .step {
-      display: flex;
-      gap: 40px;
       align-items: center;
-      padding: 40px;
-      background: linear-gradient(145deg, rgba(20,20,20,0.5), rgba(10,10,10,0.5));
-      border-radius: 24px;
-      border: 1px solid #1a1a1a;
-      opacity: 0;
-      transform: translateY(30px);
-      transition: all 0.6s, border-color 0.3s, box-shadow 0.3s;
-    }
-    .step.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    .step:hover {
-      border-color: var(--accent);
-      box-shadow: 0 20px 60px rgba(0, 255, 136, 0.1);
-      transform: translateY(-5px);
+      cursor: pointer;
+      padding: 0 10px;
     }
 
-    .step-number {
-      width: 70px;
-      height: 70px;
-      background: linear-gradient(145deg, var(--accent), #00cc6a);
-      color: #000;
-      border-radius: 20px;
+    .step-icon {
+      width: 50px;
+      height: 50px;
+      background: var(--surface2);
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 800;
-      font-size: 28px;
-      flex-shrink: 0;
-      box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+      margin-bottom: 15px;
+      transition: all 0.3s;
+      border: 2px solid #333;
+    }
+    .step-icon svg {
+      width: 24px;
+      height: 24px;
+      color: var(--text2);
+      transition: color 0.3s;
+    }
+    .timeline-step.active .step-icon,
+    .timeline-step:hover .step-icon {
+      background: var(--accent);
+      border-color: var(--accent);
+      transform: scale(1.1);
+      box-shadow: 0 0 30px rgba(0, 255, 136, 0.4);
+    }
+    .timeline-step.active .step-icon svg,
+    .timeline-step:hover .step-icon svg {
+      color: #000;
     }
 
-    .step-content h3 {
-      font-size: 24px;
-      margin-bottom: 10px;
-    }
-    .step-content p {
+    .step-marker {
+      width: 36px;
+      height: 36px;
+      background: var(--surface);
+      border: 3px solid #333;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
       color: var(--text2);
-      font-size: 16px;
+      margin-bottom: 20px;
+      transition: all 0.3s;
+    }
+    .timeline-step.active .step-marker {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #000;
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+    }
+
+    .step-card {
+      background: linear-gradient(145deg, rgba(20,20,20,0.8), rgba(10,10,10,0.9));
+      border: 1px solid #1a1a1a;
+      border-radius: 20px;
+      padding: 25px;
+      text-align: center;
+      width: 100%;
+      max-width: 280px;
+      opacity: 0.6;
+      transform: translateY(10px);
+      transition: all 0.4s;
+    }
+    .timeline-step.active .step-card,
+    .timeline-step:hover .step-card {
+      opacity: 1;
+      transform: translateY(0);
+      border-color: var(--accent);
+      box-shadow: 0 20px 50px rgba(0, 255, 136, 0.15);
+    }
+
+    .step-card h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    .step-card p {
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.5;
+      margin-bottom: 15px;
+    }
+
+    .step-visual {
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .step-visual img {
+      max-height: 100%;
+      max-width: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+
+    /* QR Animation */
+    .qr-animation {
+      width: 80px;
+      height: 80px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .qr-frame {
+      width: 60px;
+      height: 60px;
+      border: 3px solid var(--accent);
+      border-radius: 8px;
+      position: relative;
+    }
+    .qr-frame::before {
+      content: '';
+      position: absolute;
+      inset: 8px;
+      background: repeating-linear-gradient(
+        0deg,
+        var(--text2) 0px,
+        var(--text2) 4px,
+        transparent 4px,
+        transparent 8px
+      );
+      opacity: 0.3;
+    }
+    .qr-scan-line {
+      position: absolute;
+      width: 70px;
+      height: 2px;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+      animation: scanLine 2s ease-in-out infinite;
+    }
+    @keyframes scanLine {
+      0%, 100% { top: 10px; }
+      50% { top: 70px; }
+    }
+
+    /* Control Animation */
+    .control-animation {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .phone-icon, .laptop-icon {
+      font-size: 32px;
+    }
+    .signal-waves {
+      display: flex;
+      gap: 3px;
+      align-items: center;
+    }
+    .signal-waves span {
+      width: 4px;
+      height: 12px;
+      background: var(--accent);
+      border-radius: 2px;
+      animation: wave 1s ease-in-out infinite;
+    }
+    .signal-waves span:nth-child(1) { animation-delay: 0s; height: 8px; }
+    .signal-waves span:nth-child(2) { animation-delay: 0.2s; height: 16px; }
+    .signal-waves span:nth-child(3) { animation-delay: 0.4s; height: 12px; }
+    @keyframes wave {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    /* Apps Animation */
+    .apps-animation {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+    .app-badge {
+      padding: 6px 12px;
+      background: var(--surface2);
+      border-radius: 20px;
+      font-size: 11px;
+      color: var(--accent);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      animation: badgePop 2s ease-in-out infinite;
+    }
+    .app-badge:nth-child(1) { animation-delay: 0s; }
+    .app-badge:nth-child(2) { animation-delay: 0.3s; }
+    .app-badge:nth-child(3) { animation-delay: 0.6s; }
+    @keyframes badgePop {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    @media (max-width: 768px) {
+      .timeline-track { display: none; }
+      .timeline-steps { flex-direction: column; gap: 30px; }
+      .timeline-step { padding: 0; }
+      .step-card { max-width: 100%; }
     }
 
     /* Use cases - Bento Grid */
@@ -1079,6 +1384,10 @@
     .cta .btn-primary {
       position: relative;
     }
+    .cta .download-alt {
+      position: relative;
+      margin-top: 20px;
+    }
 
     /* Footer */
     footer {
@@ -1158,18 +1467,53 @@
   </nav>
 
   <section class="hero">
-    <div class="hero-badge">Universal Web Remote for Chrome</div>
-    <h1>Control Any Website<br>From Your <span>Phone</span></h1>
-    <p>Turn your phone into a wireless trackpad, keyboard, and smart remote. No app download required.</p>
-    <div class="hero-buttons">
-      <a href="https://chrome.google.com/webstore" target="_blank" class="btn-primary">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm-1 14.59l-3.29-3.3 1.41-1.41L11 13.76l4.88-4.88 1.41 1.41L11 16.59z"/></svg>
-        Add to Chrome
-      </a>
-      <a href="#how-it-works" class="btn-secondary">See How It Works</a>
+    <!-- Product Switcher -->
+    <div class="product-switcher">
+      <button class="product-tab active" data-product="extension">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        Browser Extension
+      </button>
+      <button class="product-tab" data-product="desktop">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7v2H8v2h8v-2h-2v-2h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H3V4h18v12z"/></svg>
+        Desktop App
+      </button>
     </div>
 
-    <div class="hero-demo">
+    <!-- Extension Content -->
+    <div class="hero-content product-content active" data-product="extension">
+      <div class="hero-badge">Universal Web Remote for Chrome</div>
+      <h1>Control Any Website<br>From Your <span>Phone</span></h1>
+      <p>Turn your phone into a wireless trackpad, keyboard, and smart remote. No app download required.</p>
+      <div class="hero-buttons">
+        <a href="https://chrome.google.com/webstore" target="_blank" class="btn-primary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm-1 14.59l-3.29-3.3 1.41-1.41L11 13.76l4.88-4.88 1.41 1.41L11 16.59z"/></svg>
+          Add to Chrome
+        </a>
+        <a href="#how-it-works" class="btn-secondary">See How It Works</a>
+      </div>
+    </div>
+
+    <!-- Desktop App Content -->
+    <div class="hero-content product-content" data-product="desktop">
+      <div class="hero-badge">Universal System Remote for macOS</div>
+      <h1>Control Your Entire <span>Mac</span><br>From Your Phone</h1>
+      <p>Turn your phone into a wireless trackpad, keyboard, and smart controller for any app. Presenter mode, media controls, and more.</p>
+      <div class="hero-buttons">
+        <a href="/download/orbitxe-desktop-arm64.dmg" class="btn-primary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          Download for Mac
+        </a>
+        <a href="#how-it-works-desktop" class="btn-secondary">See How It Works</a>
+      </div>
+      <div class="download-alt">
+        <a href="/download/orbitxe-desktop-arm64.dmg">Apple Silicon</a>
+        <span>•</span>
+        <a href="/download/orbitxe-desktop-intel.dmg">Intel</a>
+      </div>
+    </div>
+
+    <!-- Extension Demo -->
+    <div class="hero-demo product-demo active" data-product="extension">
       <div class="demo-phone">
         <div class="demo-phone-screen">
           <div class="demo-phone-logo">ORBIT<span>XE</span></div>
@@ -1201,9 +1545,45 @@
         </div>
       </div>
     </div>
+
+    <!-- Desktop Demo -->
+    <div class="hero-demo product-demo" data-product="desktop">
+      <div class="demo-phone">
+        <div class="demo-phone-screen">
+          <div class="demo-phone-logo">ORBIT<span>XE</span> Pro</div>
+          <div class="demo-app-indicator">PowerPoint</div>
+          <div class="demo-buttons">
+            <div class="demo-btn">Prev</div>
+            <div class="demo-btn accent">Next</div>
+            <div class="demo-btn">End</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-connection">
+        <div class="connection-line"></div>
+        <div class="connection-icon">~</div>
+        <div class="connection-line"></div>
+      </div>
+
+      <div class="demo-desktop">
+        <div class="demo-browser-bar">
+          <div class="demo-dot red"></div>
+          <div class="demo-dot yellow"></div>
+          <div class="demo-dot green"></div>
+          <span style="margin-left:10px;color:#666;font-size:11px">macOS</span>
+        </div>
+        <div class="demo-browser-content">
+          <p style="font-size:11px;margin-bottom:8px">Active App:</p>
+          <div style="font-size:18px;color:var(--accent);margin-bottom:10px">PowerPoint</div>
+          <p style="font-size:12px;color:#666">Smart controls adapt to any app</p>
+        </div>
+      </div>
+    </div>
   </section>
 
-  <section class="showcase" id="showcase">
+  <!-- Extension Showcase -->
+  <section class="showcase product-section active" id="showcase" data-product="extension">
     <div class="section-title">
       <h2>See It In Action</h2>
       <p>Hover to pause, drag to rotate</p>
@@ -1241,7 +1621,47 @@
     </div>
   </section>
 
-  <section class="features" id="features">
+  <!-- Desktop Showcase -->
+  <section class="showcase product-section" id="showcase-desktop" data-product="desktop">
+    <div class="section-title">
+      <h2>See It In Action</h2>
+      <p>Control any app on your Mac</p>
+    </div>
+    <div class="cube-container">
+      <div class="cube-wrapper" id="cube-desktop">
+        <div class="cube-face">
+          <img src="/images/desktop-qr.png" alt="OrbitXE Pro desktop app with QR code">
+          <p>SCAN TO CONNECT</p>
+        </div>
+        <div class="cube-face">
+          <img src="/images/desktop-trackpad.png" alt="Trackpad with app-specific controls">
+          <p>SMART CONTROLS</p>
+        </div>
+        <div class="cube-face">
+          <img src="/images/desktop-youtube.png" alt="YouTube controls with seek">
+          <p>YOUTUBE MODE</p>
+        </div>
+        <div class="cube-face">
+          <img src="/images/desktop-music.png" alt="Music app controls">
+          <p>MUSIC CONTROLS</p>
+        </div>
+        <div class="cube-face">
+          <img src="/images/desktop-keyboard.png" alt="Native keyboard with shortcuts">
+          <p>FULL KEYBOARD</p>
+        </div>
+      </div>
+    </div>
+    <div class="carousel-controls">
+      <button class="carousel-btn" onclick="rotateCubeDesktop(-1)">&#8592;</button>
+      <div class="carousel-indicator">
+        <span>Drag to spin</span>
+      </div>
+      <button class="carousel-btn" onclick="rotateCubeDesktop(1)">&#8594;</button>
+    </div>
+  </section>
+
+  <!-- Extension Features -->
+  <section class="features product-section active" id="features" data-product="extension">
     <div class="section-title">
       <h2>Everything You Need</h2>
       <p>A complete remote control solution for your browser</p>
@@ -1298,32 +1718,191 @@
     </div>
   </section>
 
-  <section class="how-it-works" id="how-it-works">
+  <!-- Desktop Features -->
+  <section class="features product-section" id="features-desktop" data-product="desktop">
+    <div class="section-title">
+      <h2>Everything You Need</h2>
+      <p>A complete remote control solution for your Mac</p>
+    </div>
+
+    <div class="feature-row">
+      <div class="feature-content">
+        <h3>App-Aware Controls</h3>
+        <p>OrbitXE Pro detects which app is active and shows relevant controls. PowerPoint gets slide controls, Spotify gets playback, Chrome gets browser controls - automatically.</p>
+      </div>
+      <div class="feature-visual">
+        <img src="/images/desktop-trackpad.png" alt="Smart Controls">
+      </div>
+    </div>
+
+    <div class="feature-row">
+      <div class="feature-content">
+        <h3>Full Keyboard</h3>
+        <p>Type using your phone's native keyboard with shortcuts like ⌘C, ⌘V, ⌘Z built in. Tab, Enter, Escape, and arrow keys all at your fingertips.</p>
+      </div>
+      <div class="feature-visual">
+        <img src="/images/desktop-keyboard.png" alt="Keyboard">
+      </div>
+    </div>
+
+    <div class="feature-row">
+      <div class="feature-content">
+        <h3>Media Controls</h3>
+        <p>Control YouTube, Music, Spotify and more with play/pause, skip, seek, and volume controls that appear automatically when media apps are active.</p>
+      </div>
+      <div class="feature-visual">
+        <img src="/images/desktop-youtube.png" alt="Media Controls">
+      </div>
+    </div>
+
+    <div class="feature-row">
+      <div class="feature-content">
+        <h3>Presenter Mode</h3>
+        <p>Control PowerPoint and Keynote presentations wirelessly. Navigate slides, see your presenter notes on your phone, and never lose your place.</p>
+      </div>
+      <div class="feature-visual">
+        <img src="/images/desktop-music.png" alt="Presenter Mode">
+      </div>
+    </div>
+
+    <div class="feature-row">
+      <div class="feature-content">
+        <h3>Instant Connect</h3>
+        <p>Scan the QR code and you're connected. No app to download, no account to create. Works on any phone with a browser.</p>
+      </div>
+      <div class="feature-visual">
+        <img src="/images/desktop-qr.png" alt="QR Code">
+      </div>
+    </div>
+  </section>
+
+  <!-- Extension How it Works -->
+  <section class="how-it-works product-section active" id="how-it-works" data-product="extension">
     <div class="section-title">
       <h2>How It Works</h2>
       <p>Get started in under 30 seconds</p>
     </div>
 
-    <div class="steps">
-      <div class="step">
-        <div class="step-number">1</div>
-        <div class="step-content">
-          <h3>Install the Chrome Extension</h3>
-          <p>Add OrbitXE to your Chrome browser with one click. It's lightweight and runs in the background.</p>
+    <div class="timeline-container">
+      <div class="timeline-track">
+        <div class="timeline-progress"></div>
+      </div>
+
+      <div class="timeline-steps">
+        <div class="timeline-step active" data-step="1">
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 4H5a2 2 0 00-2 2v12a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2zm0 14H5V8h14v10z"/></svg>
+          </div>
+          <div class="step-marker">1</div>
+          <div class="step-card">
+            <h3>Install Extension</h3>
+            <p>Add OrbitXE to Chrome with one click from the Web Store</p>
+            <div class="step-visual">
+              <img src="/images/popup.png" alt="Extension">
+            </div>
+          </div>
+        </div>
+
+        <div class="timeline-step" data-step="2">
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zm8-2v8h8V3h-8zm6 6h-4V5h4v4zM3 21h8v-8H3v8zm2-6h4v4H5v-4zm13 0h-2v2h2v2h-2v2h2v-2h2v2h2v-2h-2v-2h2v-2h-2v2h-2v-2zm0-2V9h-2v2h2z"/></svg>
+          </div>
+          <div class="step-marker">2</div>
+          <div class="step-card">
+            <h3>Scan QR Code</h3>
+            <p>Point your phone camera at the QR code to connect instantly</p>
+            <div class="step-visual">
+              <div class="qr-animation">
+                <div class="qr-frame"></div>
+                <div class="qr-scan-line"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="timeline-step" data-step="3">
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>
+          </div>
+          <div class="step-marker">3</div>
+          <div class="step-card">
+            <h3>Start Controlling</h3>
+            <p>Your phone is now a wireless remote for your browser</p>
+            <div class="step-visual">
+              <div class="control-animation">
+                <div class="phone-icon">📱</div>
+                <div class="signal-waves">
+                  <span></span><span></span><span></span>
+                </div>
+                <div class="laptop-icon">💻</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="step">
-        <div class="step-number">2</div>
-        <div class="step-content">
-          <h3>Scan the QR Code</h3>
-          <p>Click the extension icon to reveal a QR code. Scan it with your phone's camera.</p>
-        </div>
+    </div>
+  </section>
+
+  <!-- Desktop How it Works -->
+  <section class="how-it-works product-section" id="how-it-works-desktop" data-product="desktop">
+    <div class="section-title">
+      <h2>How It Works</h2>
+      <p>Control your entire Mac in 3 simple steps</p>
+    </div>
+
+    <div class="timeline-container">
+      <div class="timeline-track">
+        <div class="timeline-progress"></div>
       </div>
-      <div class="step">
-        <div class="step-number">3</div>
-        <div class="step-content">
-          <h3>Start Controlling</h3>
-          <p>Your phone is now a remote! Use the trackpad to move cursor, type with your keyboard, and more.</p>
+
+      <div class="timeline-steps">
+        <div class="timeline-step active" data-step="1">
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          </div>
+          <div class="step-marker">1</div>
+          <div class="step-card">
+            <h3>Download App</h3>
+            <p>Install OrbitXE Pro on your Mac - lightweight and runs in menubar</p>
+            <div class="step-visual">
+              <img src="/images/desktop-qr.png" alt="Desktop App">
+            </div>
+          </div>
+        </div>
+
+        <div class="timeline-step" data-step="2">
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zm8-2v8h8V3h-8zm6 6h-4V5h4v4zM3 21h8v-8H3v8zm2-6h4v4H5v-4zm13 0h-2v2h2v2h-2v2h2v-2h2v2h2v-2h-2v-2h2v-2h-2v2h-2v-2zm0-2V9h-2v2h2z"/></svg>
+          </div>
+          <div class="step-marker">2</div>
+          <div class="step-card">
+            <h3>Scan QR Code</h3>
+            <p>Scan with your phone - same WiFi network, instant connection</p>
+            <div class="step-visual">
+              <div class="qr-animation">
+                <div class="qr-frame"></div>
+                <div class="qr-scan-line"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="timeline-step" data-step="3">
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7v2H8v2h8v-2h-2v-2h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H3V4h18v12z"/></svg>
+          </div>
+          <div class="step-marker">3</div>
+          <div class="step-card">
+            <h3>Control Everything</h3>
+            <p>Smart controls adapt to any app - presentations, media, browsing</p>
+            <div class="step-visual">
+              <div class="apps-animation">
+                <span class="app-badge">PowerPoint</span>
+                <span class="app-badge">Spotify</span>
+                <span class="app-badge">Chrome</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1418,13 +1997,27 @@
     </div>
   </section>
 
-  <section class="cta" id="download">
+  <section class="cta product-section active" id="download" data-product="extension">
     <h2>Ready to Take Control?</h2>
     <p>Install OrbitXE and start controlling your browser from your phone today.</p>
     <a href="https://chrome.google.com/webstore" target="_blank" class="btn-primary">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm-1 14.59l-3.29-3.3 1.41-1.41L11 13.76l4.88-4.88 1.41 1.41L11 16.59z"/></svg>
       Add to Chrome - It's Free
     </a>
+  </section>
+
+  <section class="cta product-section" id="download-desktop" data-product="desktop">
+    <h2>Ready to Take Control?</h2>
+    <p>Download OrbitXE and control your entire Mac from your phone.</p>
+    <a href="/download/orbitxe-desktop-arm64.dmg" class="btn-primary">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+      Download for Mac
+    </a>
+    <div class="download-alt">
+      <a href="/download/orbitxe-desktop-arm64.dmg">Apple Silicon</a>
+      <span>•</span>
+      <a href="/download/orbitxe-desktop-intel.dmg">Intel</a>
+    </div>
   </section>
 
   <footer>
@@ -1667,6 +2260,107 @@
     });
 
     cube.style.cursor = 'grab';
+
+    // Product Switcher
+    const productTabs = document.querySelectorAll('.product-tab');
+    const productContents = document.querySelectorAll('.product-content');
+    const productDemos = document.querySelectorAll('.product-demo');
+    const productSections = document.querySelectorAll('.product-section');
+    const navCta = document.querySelector('.nav-cta');
+
+    productTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const product = tab.dataset.product;
+
+        // Update tabs
+        productTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        // Update content
+        productContents.forEach(c => c.classList.remove('active'));
+        document.querySelector(`.product-content[data-product="${product}"]`).classList.add('active');
+
+        // Update demo
+        productDemos.forEach(d => d.classList.remove('active'));
+        document.querySelector(`.product-demo[data-product="${product}"]`).classList.add('active');
+
+        // Update showcase sections
+        productSections.forEach(s => s.classList.remove('active'));
+        document.querySelectorAll(`.product-section[data-product="${product}"]`).forEach(s => s.classList.add('active'));
+
+        // Direct section toggles
+        document.getElementById('showcase').style.display = product === 'extension' ? 'block' : 'none';
+        document.getElementById('showcase-desktop').style.display = product === 'desktop' ? 'block' : 'none';
+        document.getElementById('features').style.display = product === 'extension' ? 'block' : 'none';
+        document.getElementById('features-desktop').style.display = product === 'desktop' ? 'block' : 'none';
+        document.getElementById('how-it-works').style.display = product === 'extension' ? 'block' : 'none';
+        document.getElementById('how-it-works-desktop').style.display = product === 'desktop' ? 'block' : 'none';
+
+        // Update nav CTA
+        if (product === 'desktop') {
+          navCta.href = '/download/orbitxe-desktop.dmg';
+          navCta.textContent = 'Download App';
+        } else {
+          navCta.href = 'https://chrome.google.com/webstore';
+          navCta.textContent = 'Get Extension';
+        }
+      });
+    });
+
+    // Desktop Cube Controls
+    const cubeDesktop = document.getElementById('cube-desktop');
+    let cubeDesktopRotation = 0;
+
+    function rotateCubeDesktop(direction) {
+      cubeDesktop.style.animation = 'none';
+      cubeDesktopRotation += direction * 72;
+      cubeDesktop.style.transform = `rotateY(${cubeDesktopRotation}deg) rotateX(-5deg)`;
+      cubeDesktop.style.transition = 'transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+      setTimeout(() => {
+        cubeDesktop.style.animation = 'cubeRotate 20s linear infinite';
+        cubeDesktop.style.transform = '';
+      }, 5000);
+    }
+
+    // Interactive Timeline
+    document.querySelectorAll('.timeline-step').forEach(step => {
+      step.addEventListener('click', function() {
+        const container = this.closest('.timeline-container');
+        const steps = container.querySelectorAll('.timeline-step');
+        const progress = container.querySelector('.timeline-progress');
+        const stepNum = parseInt(this.dataset.step);
+
+        // Update active states
+        steps.forEach(s => s.classList.remove('active'));
+        this.classList.add('active');
+
+        // Update progress bar
+        const progressPercent = ((stepNum - 1) / (steps.length - 1)) * 100 + 10;
+        progress.style.width = Math.min(progressPercent, 100) + '%';
+      });
+    });
+
+    // Auto-cycle timeline steps
+    let timelineInterval;
+    function startTimelineCycle(containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      const steps = container.querySelectorAll('.timeline-step');
+      const progress = container.querySelector('.timeline-progress');
+      let currentStep = 0;
+
+      timelineInterval = setInterval(() => {
+        currentStep = (currentStep + 1) % steps.length;
+        steps.forEach(s => s.classList.remove('active'));
+        steps[currentStep].classList.add('active');
+        const progressPercent = (currentStep / (steps.length - 1)) * 100 + 10;
+        progress.style.width = Math.min(progressPercent, 100) + '%';
+      }, 3000);
+    }
+
+    // Start cycling for visible section
+    startTimelineCycle('how-it-works');
   </script>
 </body>
 </html>
