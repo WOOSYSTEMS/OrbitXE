@@ -13,3 +13,5 @@ desktop-app/*.mp3
 desktop-app/*.mp4
 desktop-remote/
 public/download/*.dmg
+windows-build/
+workflow-fix.yml
