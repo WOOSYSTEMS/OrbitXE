@@ -325,20 +325,26 @@ const robotKeyMap = {
 
 // Simulate key press
 function simulateKey(key) {
-  if (robot) {
-    try {
-      const robotKey = robotKeyMap[key?.toLowerCase()];
-      if (robotKey) {
-        robot.keyTap(robotKey);
-      }
-    } catch (e) {
-      console.error('robotjs key error:', e.message);
-    }
-  } else {
+  if (isMac) {
     const keyCode = keyCodeMap[key?.toLowerCase()];
     if (keyCode !== undefined) {
       exec(`osascript -e 'tell application "System Events" to key code ${keyCode}'`, (err) => {
         if (err) console.error('Key error:', err.message);
+      });
+    }
+  } else if (isWindows) {
+    const keyMap = {
+      'up': '{UP}', 'down': '{DOWN}', 'left': '{LEFT}', 'right': '{RIGHT}',
+      'enter': '{ENTER}', 'return': '{ENTER}', 'space': ' ', 'escape': '{ESC}',
+      'tab': '{TAB}', 'backspace': '{BACKSPACE}', 'delete': '{DELETE}',
+      'f1': '{F1}', 'f2': '{F2}', 'f3': '{F3}', 'f4': '{F4}', 'f5': '{F5}', 'f6': '{F6}',
+      'f7': '{F7}', 'f8': '{F8}', 'f9': '{F9}', 'f10': '{F10}', 'f11': '{F11}', 'f12': '{F12}',
+      'home': '{HOME}', 'end': '{END}', 'pageup': '{PGUP}', 'pagedown': '{PGDN}'
+    };
+    const sendKey = keyMap[key?.toLowerCase()];
+    if (sendKey) {
+      exec(`powershell -command "(New-Object -ComObject WScript.Shell).SendKeys('${sendKey}')"`, (err) => {
+        if (err) console.error('Windows key error:', err.message);
       });
     }
   }
@@ -346,27 +352,7 @@ function simulateKey(key) {
 
 // Simulate keystroke (text character or key with modifiers)
 function simulateKeystroke(char, modifiers = []) {
-  if (robot) {
-    try {
-      // Convert modifier names for robotjs
-      const robotMods = modifiers.map(m => {
-        if (m === 'command') return 'command';
-        if (m === 'control') return 'control';
-        if (m === 'option') return 'alt';
-        if (m === 'shift') return 'shift';
-        return m;
-      });
-
-      const robotKey = robotKeyMap[char?.toLowerCase()];
-      if (robotKey) {
-        robot.keyTap(robotKey, robotMods);
-      } else {
-        robot.keyTap(char.toLowerCase(), robotMods);
-      }
-    } catch (e) {
-      console.error('robotjs keystroke error:', e.message);
-    }
-  } else {
+  if (isMac) {
     let modStr = '';
     if (modifiers.length > 0) {
       modStr = ` using {${modifiers.map(m => m + ' down').join(', ')}}`;
@@ -383,6 +369,29 @@ function simulateKeystroke(char, modifiers = []) {
         if (err) console.error('Keystroke error:', err.message);
       });
     }
+  } else if (isWindows) {
+    // Windows SendKeys format
+    const keyMap = {
+      'up': '{UP}', 'down': '{DOWN}', 'left': '{LEFT}', 'right': '{RIGHT}',
+      'enter': '{ENTER}', 'return': '{ENTER}', 'space': ' ', 'escape': '{ESC}',
+      'tab': '{TAB}', 'backspace': '{BACKSPACE}', 'delete': '{DELETE}',
+      'f1': '{F1}', 'f2': '{F2}', 'f3': '{F3}', 'f4': '{F4}', 'f5': '{F5}', 'f6': '{F6}',
+      'f7': '{F7}', 'f8': '{F8}', 'f9': '{F9}', 'f10': '{F10}', 'f11': '{F11}', 'f12': '{F12}',
+      'home': '{HOME}', 'end': '{END}', 'pageup': '{PGUP}', 'pagedown': '{PGDN}'
+    };
+
+    let sendKey = keyMap[char?.toLowerCase()] || char;
+    let prefix = '';
+
+    // Add modifier prefixes for SendKeys
+    if (modifiers.includes('control') || modifiers.includes('command')) prefix += '^';
+    if (modifiers.includes('option')) prefix += '%';
+    if (modifiers.includes('shift')) prefix += '+';
+
+    const escaped = (prefix + sendKey).replace(/'/g, "''");
+    exec(`powershell -command "(New-Object -ComObject WScript.Shell).SendKeys('${escaped}')"`, (err) => {
+      if (err) console.error('Windows keystroke error:', err.message);
+    });
   }
 }
 
@@ -887,14 +896,25 @@ function handleCommand(msg, deviceId = 'unknown') {
       break;
 
     case 'volume':
-      if (msg.value !== undefined) {
-        exec(`osascript -e 'set volume output volume ${msg.value}'`);
-      } else if (msg.action === 'up') {
-        exec(`osascript -e 'set volume output volume ((output volume of (get volume settings)) + 5)'`);
-      } else if (msg.action === 'down') {
-        exec(`osascript -e 'set volume output volume ((output volume of (get volume settings)) - 5)'`);
-      } else if (msg.action === 'mute') {
-        exec(`osascript -e 'set volume output muted not (output muted of (get volume settings))'`);
+      if (isMac) {
+        if (msg.value !== undefined) {
+          exec(`osascript -e 'set volume output volume ${msg.value}'`);
+        } else if (msg.action === 'up') {
+          exec(`osascript -e 'set volume output volume ((output volume of (get volume settings)) + 5)'`);
+        } else if (msg.action === 'down') {
+          exec(`osascript -e 'set volume output volume ((output volume of (get volume settings)) - 5)'`);
+        } else if (msg.action === 'mute') {
+          exec(`osascript -e 'set volume output muted not (output muted of (get volume settings))'`);
+        }
+      } else if (isWindows) {
+        // Windows volume control using media keys
+        if (msg.action === 'up') {
+          exec('powershell -command "(New-Object -ComObject WScript.Shell).SendKeys([char]175)"');
+        } else if (msg.action === 'down') {
+          exec('powershell -command "(New-Object -ComObject WScript.Shell).SendKeys([char]174)"');
+        } else if (msg.action === 'mute') {
+          exec('powershell -command "(New-Object -ComObject WScript.Shell).SendKeys([char]173)"');
+        }
       }
       break;
 
