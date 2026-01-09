@@ -213,6 +213,54 @@
       text-decoration: none;
     }
     .footer a:hover { color: var(--accent); }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+      background: var(--surface);
+      border: 1px solid #333;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      position: relative;
+    }
+    .modal-content h3 {
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+    .modal-content p {
+      color: var(--text2);
+      margin-bottom: 24px;
+    }
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      color: var(--text2);
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .modal-close:hover { color: var(--text); }
+    #googleSignInBtn {
+      display: flex;
+      justify-content: center;
+    }
   </style>
 </head>
 <body>
@@ -260,7 +308,7 @@
           <li class="included">Custom shortcuts</li>
           <li class="included">Cancel anytime</li>
         </ul>
-        <a href="https://github.com/WOOSYSTEMS/OrbitXE/releases/download/v1.0.0/OrbitXE-1.0.0-arm64.dmg" class="plan-btn">Start Free Trial</a>
+        <button class="plan-btn" data-plan="monthly" onclick="startCheckout('monthly')">Start Free Trial</button>
       </div>
 
       <!-- Lifetime -->
@@ -277,7 +325,7 @@
           <li class="included">All future features</li>
           <li class="included">Best value</li>
         </ul>
-        <a href="https://github.com/WOOSYSTEMS/OrbitXE/releases/download/v1.0.0/OrbitXE-1.0.0-arm64.dmg" class="plan-btn">Get Lifetime</a>
+        <button class="plan-btn" data-plan="lifetime" onclick="startCheckout('lifetime')">Get Lifetime</button>
       </div>
     </div>
 
@@ -289,8 +337,147 @@
     </div>
   </div>
 
+  <!-- Sign In Modal -->
+  <div id="authModal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <h3>Sign in to continue</h3>
+      <p>Sign in to start your 7-day free trial or purchase a plan.</p>
+      <div id="googleSignInBtn"></div>
+    </div>
+  </div>
+
   <footer class="footer">
     <p><a href="/terms">Terms of Service</a> · <a href="/privacy">Privacy Policy</a></p>
   </footer>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script>
+    const GOOGLE_CLIENT_ID = '737817809498-l0uc65gqnuv8p8qcf11avkrcl28dnbgp.apps.googleusercontent.com';
+    let authToken = localStorage.getItem('orbitxe_token');
+    let currentUser = null;
+    let pendingPlan = null;
+
+    // Check if already signed in
+    async function checkAuth() {
+      if (!authToken) return false;
+      try {
+        const res = await fetch('/api/auth/validate', {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          currentUser = data.user;
+          return true;
+        }
+      } catch (e) {}
+      localStorage.removeItem('orbitxe_token');
+      authToken = null;
+      return false;
+    }
+
+    // Initialize Google Sign-In
+    function initGoogleSignIn() {
+      if (typeof google === 'undefined') {
+        setTimeout(initGoogleSignIn, 100);
+        return;
+      }
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleSignIn,
+        auto_select: false
+      });
+      google.accounts.id.renderButton(
+        document.getElementById('googleSignInBtn'),
+        { theme: 'filled_black', size: 'large', width: 280, text: 'continue_with' }
+      );
+    }
+
+    // Handle Google Sign-In response
+    async function handleGoogleSignIn(response) {
+      try {
+        // Exchange Google credential for our token
+        const res = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: response.credential })
+        });
+
+        if (!res.ok) throw new Error('Auth failed');
+
+        const data = await res.json();
+        authToken = data.token;
+        currentUser = data.user;
+        localStorage.setItem('orbitxe_token', authToken);
+
+        closeModal();
+
+        // Continue with pending plan purchase
+        if (pendingPlan) {
+          startCheckout(pendingPlan);
+          pendingPlan = null;
+        }
+      } catch (e) {
+        alert('Sign in failed. Please try again.');
+      }
+    }
+
+    // Show modal
+    function showModal() {
+      document.getElementById('authModal').classList.add('active');
+    }
+
+    // Close modal
+    function closeModal() {
+      document.getElementById('authModal').classList.remove('active');
+      pendingPlan = null;
+    }
+
+    // Start checkout process
+    async function startCheckout(planType) {
+      if (!authToken) {
+        pendingPlan = planType;
+        showModal();
+        return;
+      }
+
+      try {
+        const btn = document.querySelector(`[data-plan="${planType}"]`);
+        if (btn) {
+          btn.textContent = 'Loading...';
+          btn.style.pointerEvents = 'none';
+        }
+
+        const res = await fetch('/api/payment/create-checkout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({ planType })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Checkout failed');
+        }
+
+        const data = await res.json();
+        window.location.href = data.checkoutUrl;
+      } catch (e) {
+        alert('Could not start checkout: ' + e.message);
+        location.reload();
+      }
+    }
+
+    // Initialize on load
+    checkAuth();
+    initGoogleSignIn();
+
+    // Close modal on background click
+    document.getElementById('authModal').addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal')) closeModal();
+    });
+  </script>
 </body>
 </html>

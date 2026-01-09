@@ -9,10 +9,39 @@ import {
 const JWT_SECRET = process.env.JWT_SECRET || 'orbitxe-dev-secret';
 const JWT_EXPIRY = '7d';
 
-// Verify Google OAuth token from Chrome extension
+// Decode JWT ID token payload (for Google Identity Services)
+function decodeJwtPayload(token) {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = Buffer.from(parts[1], 'base64').toString('utf8');
+    return JSON.parse(payload);
+  } catch (e) {
+    return null;
+  }
+}
+
+// Verify Google OAuth token - supports both access tokens and ID tokens
 export async function verifyGoogleToken(token) {
   try {
-    // For Chrome extension tokens, we need to verify with Google's tokeninfo endpoint
+    // Check if it's a JWT ID token (from Google Identity Services on web)
+    const jwtPayload = decodeJwtPayload(token);
+    if (jwtPayload && jwtPayload.iss && jwtPayload.iss.includes('accounts.google.com')) {
+      // Verify ID token with Google
+      const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${token}`);
+      if (!response.ok) {
+        throw new Error('Invalid ID token');
+      }
+      const data = await response.json();
+      return {
+        googleId: data.sub,
+        email: data.email,
+        name: data.name,
+        picture: data.picture
+      };
+    }
+
+    // Otherwise treat as access token (from Chrome extension)
     const response = await fetch(`https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${token}`);
 
     if (!response.ok) {
