@@ -28,17 +28,17 @@ exports.default = async function(configuration) {
   }
 
   try {
-    // Using AzureSignTool with Trusted Signing (not Key Vault)
+    // Using AzureSignTool with Trusted Signing (long-form flags)
     const command = [
       'AzureSignTool sign',
-      `-kvt "${CONFIG.tenantId}"`,
-      `-kvi "${CONFIG.clientId}"`,
-      `-kvs "${clientSecret}"`,
-      `-tse "${CONFIG.endpoint}"`,
-      `-tsa "${CONFIG.account}"`,
-      `-tscp "${CONFIG.certProfile}"`,
-      '-tr http://timestamp.digicert.com',
-      '-td sha256',
+      `--azure-key-vault-tenant-id "${CONFIG.tenantId}"`,
+      `--azure-key-vault-client-id "${CONFIG.clientId}"`,
+      `--azure-key-vault-client-secret "${clientSecret}"`,
+      `--trusted-signing-endpoint "${CONFIG.endpoint}"`,
+      `--trusted-signing-account "${CONFIG.account}"`,
+      `--trusted-signing-certificate-profile "${CONFIG.certProfile}"`,
+      '--timestamp-rfc3161 http://timestamp.digicert.com',
+      '--timestamp-digest sha256',
       `"${filePath}"`
     ].join(' ');
 
