@@ -1476,7 +1476,6 @@
       <button class="product-tab" data-product="windows">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/></svg>
         Windows
-        <span style="font-size:9px;background:#666;padding:2px 6px;border-radius:10px;margin-left:6px">SOON</span>
       </button>
       <button class="product-tab" data-product="extension">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
@@ -1517,16 +1516,22 @@
       </div>
     </div>
 
-    <!-- Windows Content - Coming Soon -->
+    <!-- Windows Content -->
     <div class="hero-content product-content" data-product="windows">
-      <div class="hero-badge">Coming Soon</div>
+      <div class="hero-badge">Universal System Remote for Windows</div>
       <h1>Control Your <span>Windows PC</span><br>From Your Phone</h1>
-      <p style="margin-bottom: 60px;">The same powerful remote control experience is coming to Windows. Sign up to be notified when it launches.</p>
+      <p style="margin-bottom: 60px;">Turn your phone into a wireless trackpad, keyboard, and smart controller for any app. Presenter mode, media controls, and more.</p>
       <div class="hero-buttons">
-        <a href="https://github.com/WOOSYSTEMS/OrbitXE/releases/download/v1.0.0/OrbitXE-1.0.0-arm64.dmg" class="btn-primary">
+        <a href="https://github.com/WOOSYSTEMS/OrbitXE/releases/download/v1.0.0/OrbitXE-Setup-1.0.0.exe" class="btn-primary" id="windowsDownloadBtn">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-          Download for Mac Instead
+          Download for Windows
         </a>
+        <a href="#how-it-works-mac" class="btn-secondary">See How It Works</a>
+      </div>
+      <div class="download-alt">
+        <a href="https://github.com/WOOSYSTEMS/OrbitXE/releases/download/v1.0.0/OrbitXE-Setup-1.0.0.exe">Installer (.exe)</a>
+        <span>•</span>
+        <a href="https://github.com/WOOSYSTEMS/OrbitXE/releases/download/v1.0.0/OrbitXE-1.0.0-portable.exe">Portable</a>
       </div>
     </div>
 
@@ -1603,34 +1608,34 @@
     <div class="hero-demo product-demo" data-product="windows">
       <div class="demo-phone">
         <div class="demo-phone-screen">
-          <div class="demo-phone-logo">ORBIT<span>XE</span></div>
-          <div class="demo-app-indicator" style="background:#333;color:#888">Coming Soon</div>
+          <div class="demo-phone-logo">ORBIT<span>XE</span> Pro</div>
+          <div class="demo-app-indicator">PowerPoint</div>
           <div class="demo-buttons">
-            <div class="demo-btn" style="opacity:0.5">—</div>
-            <div class="demo-btn" style="opacity:0.5">—</div>
-            <div class="demo-btn" style="opacity:0.5">—</div>
+            <div class="demo-btn">Prev</div>
+            <div class="demo-btn accent">Next</div>
+            <div class="demo-btn">End</div>
           </div>
         </div>
       </div>
 
       <div class="demo-connection">
-        <div class="connection-line" style="opacity:0.3"></div>
-        <div class="connection-icon" style="opacity:0.3">~</div>
-        <div class="connection-line" style="opacity:0.3"></div>
+        <div class="connection-line"></div>
+        <div class="connection-icon">~</div>
+        <div class="connection-line"></div>
       </div>
 
       <div class="demo-desktop">
         <div class="demo-browser-bar" style="background:#1a1a1a">
           <div style="display:flex;gap:4px;margin-left:auto">
-            <div style="width:10px;height:10px;border:1px solid #444;font-size:8px;display:flex;align-items:center;justify-content:center;color:#666">—</div>
-            <div style="width:10px;height:10px;border:1px solid #444;font-size:8px;display:flex;align-items:center;justify-content:center;color:#666">☐</div>
-            <div style="width:10px;height:10px;border:1px solid #444;font-size:8px;display:flex;align-items:center;justify-content:center;color:#666">×</div>
+            <div style="width:10px;height:10px;border:1px solid #555;font-size:8px;display:flex;align-items:center;justify-content:center;color:#888">—</div>
+            <div style="width:10px;height:10px;border:1px solid #555;font-size:8px;display:flex;align-items:center;justify-content:center;color:#888">☐</div>
+            <div style="width:10px;height:10px;border:1px solid #555;font-size:8px;display:flex;align-items:center;justify-content:center;color:#888">×</div>
           </div>
         </div>
         <div class="demo-browser-content">
-          <p style="font-size:11px;margin-bottom:8px;color:#666">Windows</p>
-          <div style="font-size:18px;color:#666;margin-bottom:10px">Coming Soon</div>
-          <p style="font-size:12px;color:#444">Stay tuned for Windows support</p>
+          <p style="font-size:11px;margin-bottom:8px">Active App:</p>
+          <div style="font-size:18px;color:var(--accent);margin-bottom:10px">PowerPoint</div>
+          <p style="font-size:12px;color:#666">Smart controls adapt to any app</p>
         </div>
       </div>
     </div>
@@ -2356,8 +2361,8 @@
           navCta.href = 'https://github.com/WOOSYSTEMS/OrbitXE/releases/download/v1.0.0/OrbitXE-1.0.0-arm64.dmg';
           navCta.textContent = 'Download for Mac';
         } else if (product === 'windows') {
-          navCta.href = 'https://github.com/WOOSYSTEMS/OrbitXE/releases/download/v1.0.0/OrbitXE-1.0.0-arm64.dmg';
-          navCta.textContent = 'Download for Mac';
+          navCta.href = 'https://github.com/WOOSYSTEMS/OrbitXE/releases/download/v1.0.0/OrbitXE-Setup-1.0.0.exe';
+          navCta.textContent = 'Download for Windows';
         } else {
           navCta.href = 'https://chrome.google.com/webstore';
           navCta.textContent = 'Get Extension';
