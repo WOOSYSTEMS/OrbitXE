@@ -25,7 +25,7 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Install AzureSignTool
-        run: dotnet tool install --global AzureSignTool
+        run: dotnet tool install --global AzureSignTool --version 6.0.0
 
       - name: Install dependencies
         working-directory: desktop-app
