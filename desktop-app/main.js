@@ -1938,7 +1938,7 @@ function updateProUI() {
 // Show upgrade modal
 function showUpgradeModal() {
   // If user already has Pro/Lifetime, show manage view instead
-  if (['pro', 'lifetime'].includes(currentLicense.tier)) {
+  if (['pro', 'lifetime'].includes(license.tier)) {
     showManageView();
   } else {
     showUpgradeView();
