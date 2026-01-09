@@ -10,6 +10,7 @@ import os from 'os';
 // Import new modules
 import {
   getUserById,
+  getUserByEmail,
   getLicenseForUser,
   updateUserSubscription,
   createSubscription,
@@ -219,6 +220,35 @@ app.get('/api/payment/portal', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Portal error:', error);
     res.status(500).json({ error: 'Failed to create portal session' });
+  }
+});
+
+// Check license by email (for desktop app restore)
+app.post('/api/license/check', (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email required' });
+    }
+
+    const user = getUserByEmail(email);
+    if (!user) {
+      return res.status(404).json({ error: 'No account found with this email' });
+    }
+
+    const license = getLicenseForUser(user);
+
+    if (license.tier === 'free') {
+      return res.status(404).json({ error: 'No active subscription' });
+    }
+
+    res.json({
+      tier: license.tier,
+      expiresAt: license.expiresAt || license.trialEndsAt
+    });
+  } catch (error) {
+    console.error('License check error:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
