@@ -194,6 +194,12 @@ app.post('/api/payment/create-checkout', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    // Check if user already has an active subscription
+    const license = getLicenseForUser(user);
+    if (license.tier === 'pro' || license.tier === 'lifetime') {
+      return res.status(400).json({ error: 'You already have an active subscription' });
+    }
+
     const baseUrl = getBaseUrl(req);
     const session = await createCheckoutSession(user, planType, baseUrl);
 
