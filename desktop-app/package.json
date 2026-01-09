@@ -1,0 +1,109 @@
+{
+  "name": "orbitxe-desktop",
+  "version": "1.0.0",
+  "description": "Control your computer with your phone",
+  "author": "OrbitXE <hello@orbitxe.com>",
+  "homepage": "https://orbitxe.com",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --mac",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:dmg": "electron-builder --mac dmg",
+    "build:zip": "electron-builder --mac zip"
+  },
+  "devDependencies": {
+    "@electron/notarize": "^3.1.1",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "dependencies": {
+    "@nut-tree-fork/nut-js": "^4.2.6",
+    "express": "^4.18.2",
+    "qrcode": "^1.5.3"
+  },
+  "build": {
+    "appId": "com.orbitxe.desktop",
+    "productName": "OrbitXE",
+    "mac": {
+      "category": "public.app-category.utilities",
+      "icon": "icon.icns",
+      "notarize": false,
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "entitlements.mac.plist",
+      "entitlementsInherit": "entitlements.mac.plist",
+      "extendInfo": {
+        "NSAppleEventsUsageDescription": "OrbitXE needs to control media playback in apps like Spotify and Music.",
+        "NSAccessibilityUsageDescription": "OrbitXE needs accessibility access to control your mouse and keyboard remotely."
+      }
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "window": {
+        "width": 540,
+        "height": 400
+      }
+    },
+    "extraResources": [
+      {
+        "from": "cliclick",
+        "to": "cliclick"
+      },
+      {
+        "from": "cert.pem",
+        "to": "cert.pem"
+      },
+      {
+        "from": "key.pem",
+        "to": "key.pem"
+      }
+    ],
+    "afterSign": "scripts/notarize.js"
+  }
+}

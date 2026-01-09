@@ -5,6 +5,11 @@ node_modules/
 orbitxe.db
 
 # Desktop app builds (large binaries)
-desktop-app/
+desktop-app/dist/
+desktop-app/node_modules/
+desktop-app/create_video.py
+desktop-app/main-direct-distribution.js
+desktop-app/*.mp3
+desktop-app/*.mp4
 desktop-remote/
 public/download/*.dmg
