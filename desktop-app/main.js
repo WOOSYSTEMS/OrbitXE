@@ -522,18 +522,21 @@ function simulateScroll(deltaX, deltaY, natural = true) {
   const scrollY = natural ? -deltaY : deltaY;
   const scrollX = natural ? -deltaX : deltaX;
 
-  if (robot) {
-    // Use robotjs (App Store compatible)
-    try {
-      const amount = Math.round(scrollY / 30);
-      if (amount !== 0) {
-        robot.scrollMouse(0, amount);
+  if (nutMouse) {
+    // Use nut-js for scrolling (cross-platform)
+    (async () => {
+      try {
+        const amount = Math.round(scrollY / 30);
+        if (amount !== 0) {
+          await nutMouse.scrollDown(amount > 0 ? amount : 0);
+          await nutMouse.scrollUp(amount < 0 ? -amount : 0);
+        }
+      } catch (e) {
+        console.error('nut-js scroll error:', e.message);
       }
-    } catch (e) {
-      console.error('robotjs scroll error:', e.message);
-    }
-  } else {
-    // Fallback to AppleScript
+    })();
+  } else if (isMac) {
+    // Fallback to AppleScript for Mac
     if (Math.abs(scrollY) > Math.abs(scrollX)) {
       const amount = Math.round(scrollY / 10);
       exec(`osascript -e 'tell application "System Events" to scroll (${amount})'`, (err) => {
@@ -545,6 +548,16 @@ function simulateScroll(deltaX, deltaY, natural = true) {
           }
         }
       });
+    }
+  } else if (isWindows) {
+    // Windows scroll using PowerShell
+    const amount = Math.round(scrollY / 30);
+    if (amount !== 0) {
+      const direction = amount > 0 ? '{PGDN}' : '{PGUP}';
+      const times = Math.min(Math.abs(amount), 5);
+      for (let i = 0; i < times; i++) {
+        exec(`powershell -command "(New-Object -ComObject WScript.Shell).SendKeys('${direction}')"`);
+      }
     }
   }
 }
@@ -868,8 +881,18 @@ function handleCommand(msg, deviceId = 'unknown') {
 
     case 'text':
       if (msg.text) {
-        const escaped = msg.text.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-        exec(`osascript -e 'tell application "System Events" to keystroke "${escaped}"'`);
+        if (isMac) {
+          const escaped = msg.text.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+          exec(`osascript -e 'tell application "System Events" to keystroke "${escaped}"'`);
+        } else if (isWindows) {
+          // Escape special SendKeys characters: + ^ % ~ { } [ ] ( )
+          const escaped = msg.text
+            .replace(/([+^%~{}[\]()])/g, '{$1}')
+            .replace(/'/g, "''");
+          exec(`powershell -command "(New-Object -ComObject WScript.Shell).SendKeys('${escaped}')"`, (err) => {
+            if (err) console.error('Windows text error:', err.message);
+          });
+        }
       }
       break;
 
