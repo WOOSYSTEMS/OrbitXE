@@ -2510,6 +2510,13 @@
     // Start cycling for visible section
     startTimelineCycle('how-it-works-mac');
 
+    // Page view tracking
+    fetch('/api/track-view', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ page: window.location.pathname })
+    }).catch(() => {});
+
     // Download tracking
     function trackDownload(platform, fileName) {
       fetch('/api/track-download', {

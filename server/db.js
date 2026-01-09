@@ -52,6 +52,17 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_downloads_platform ON downloads(platform);
   CREATE INDEX IF NOT EXISTS idx_downloads_date ON downloads(downloaded_at);
+
+  CREATE TABLE IF NOT EXISTS page_views (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    page TEXT NOT NULL,
+    ip_address TEXT,
+    user_agent TEXT,
+    referrer TEXT,
+    viewed_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_page_views_date ON page_views(viewed_at);
 `);
 
 // Feature definitions
@@ -283,10 +294,49 @@ export function getRecentDownloads(limit = 50) {
   return stmt.all(limit);
 }
 
+// Track page view
+export function trackPageView({ page, ipAddress, userAgent, referrer }) {
+  const stmt = db.prepare(`
+    INSERT INTO page_views (page, ip_address, user_agent, referrer)
+    VALUES (?, ?, ?, ?)
+  `);
+  stmt.run(page, ipAddress, userAgent, referrer);
+}
+
+// Get visitor stats
+export function getVisitorStats() {
+  const total = db.prepare('SELECT COUNT(*) as total FROM page_views').get();
+  const uniqueVisitors = db.prepare('SELECT COUNT(DISTINCT ip_address) as count FROM page_views').get();
+  const today = db.prepare(`
+    SELECT COUNT(*) as count FROM page_views
+    WHERE DATE(viewed_at) = DATE('now')
+  `).get();
+  const todayUnique = db.prepare(`
+    SELECT COUNT(DISTINCT ip_address) as count FROM page_views
+    WHERE DATE(viewed_at) = DATE('now')
+  `).get();
+  const last7Days = db.prepare(`
+    SELECT DATE(viewed_at) as date, COUNT(*) as views, COUNT(DISTINCT ip_address) as visitors
+    FROM page_views
+    WHERE viewed_at >= datetime('now', '-7 days')
+    GROUP BY DATE(viewed_at)
+    ORDER BY date DESC
+  `).all();
+
+  return {
+    totalPageViews: total.total,
+    uniqueVisitors: uniqueVisitors.count,
+    todayPageViews: today.count,
+    todayUniqueVisitors: todayUnique.count,
+    last7Days
+  };
+}
+
 // Admin stats summary
 export function getAdminStats() {
   const userStats = getUserStats();
   const downloadStats = getDownloadStats();
+  const visitorStats = getVisitorStats();
   const totalUsers = db.prepare('SELECT COUNT(*) as count FROM users').get();
   const todaySignups = db.prepare(`
     SELECT COUNT(*) as count FROM users
@@ -297,7 +347,8 @@ export function getAdminStats() {
     totalUsers: totalUsers.count,
     todaySignups: todaySignups.count,
     usersByTier: userStats,
-    downloads: downloadStats
+    downloads: downloadStats,
+    visitors: visitorStats
   };
 }
 

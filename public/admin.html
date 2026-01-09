@@ -462,6 +462,16 @@
       <!-- Stats Cards -->
       <div class="stats-grid" id="statsGrid">
         <div class="stat-card accent">
+          <h3>Page Views</h3>
+          <div class="value" id="totalPageViews">-</div>
+          <div class="sub" id="todayPageViews">- today</div>
+        </div>
+        <div class="stat-card">
+          <h3>Unique Visitors</h3>
+          <div class="value" id="uniqueVisitors">-</div>
+          <div class="sub" id="todayUniqueVisitors">- today</div>
+        </div>
+        <div class="stat-card">
           <h3>Total Users</h3>
           <div class="value" id="totalUsers">-</div>
           <div class="sub" id="todaySignups">- today</div>
@@ -471,21 +481,13 @@
           <div class="value" id="proUsers">-</div>
         </div>
         <div class="stat-card">
-          <h3>Trial Users</h3>
-          <div class="value" id="trialUsers">-</div>
-        </div>
-        <div class="stat-card">
           <h3>Total Downloads</h3>
           <div class="value" id="totalDownloads">-</div>
           <div class="sub" id="last30Downloads">- last 30 days</div>
         </div>
         <div class="stat-card">
-          <h3>Mac Downloads</h3>
-          <div class="value" id="macDownloads">-</div>
-        </div>
-        <div class="stat-card">
-          <h3>Windows Downloads</h3>
-          <div class="value" id="windowsDownloads">-</div>
+          <h3>Mac / Windows</h3>
+          <div class="value" id="platformDownloads">-</div>
         </div>
       </div>
 
@@ -648,22 +650,29 @@
       try {
         const stats = await apiCall('/api/admin/stats');
 
+        // Visitor stats
+        document.getElementById('totalPageViews').textContent = stats.visitors?.totalPageViews || 0;
+        document.getElementById('todayPageViews').textContent = `${stats.visitors?.todayPageViews || 0} today`;
+        document.getElementById('uniqueVisitors').textContent = stats.visitors?.uniqueVisitors || 0;
+        document.getElementById('todayUniqueVisitors').textContent = `${stats.visitors?.todayUniqueVisitors || 0} today`;
+
+        // User stats
         document.getElementById('totalUsers').textContent = stats.totalUsers;
         document.getElementById('todaySignups').textContent = `+${stats.todaySignups} today`;
-        document.getElementById('totalDownloads').textContent = stats.downloads.total;
-        document.getElementById('last30Downloads').textContent = `${stats.downloads.last30DaysTotal} last 30 days`;
 
         // Parse user tiers
         const tierMap = {};
         stats.usersByTier.forEach(t => tierMap[t.subscription_tier] = t.count);
         document.getElementById('proUsers').textContent = (tierMap.pro || 0) + (tierMap.lifetime || 0);
-        document.getElementById('trialUsers').textContent = tierMap.trial || 0;
+
+        // Download stats
+        document.getElementById('totalDownloads').textContent = stats.downloads.total;
+        document.getElementById('last30Downloads').textContent = `${stats.downloads.last30DaysTotal} last 30 days`;
 
         // Parse downloads by platform
         const platformMap = {};
         stats.downloads.byPlatform.forEach(p => platformMap[p.platform] = p.count);
-        document.getElementById('macDownloads').textContent = platformMap.mac || 0;
-        document.getElementById('windowsDownloads').textContent = platformMap.windows || 0;
+        document.getElementById('platformDownloads').textContent = `${platformMap.mac || 0} / ${platformMap.windows || 0}`;
 
         // Render chart
         renderChart(stats.downloads.last7Days);

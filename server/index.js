@@ -22,7 +22,8 @@ import {
   getAllSubscriptions,
   getAdminStats,
   getRecentDownloads,
-  trackDownload
+  trackDownload,
+  trackPageView
 } from './db.js';
 import { authenticateWithGoogle, verifyToken, authMiddleware } from './auth.js';
 import {
@@ -450,6 +451,28 @@ app.post('/api/track-download', (req, res) => {
   } catch (error) {
     console.error('Track download error:', error);
     res.status(500).json({ error: 'Failed to track download' });
+  }
+});
+
+// Track page view (public endpoint - called on page load)
+app.post('/api/track-view', (req, res) => {
+  try {
+    const { page } = req.body;
+    const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const userAgent = req.headers['user-agent'];
+    const referrer = req.headers['referer'] || null;
+
+    trackPageView({
+      page: page || '/',
+      ipAddress,
+      userAgent,
+      referrer
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Track view error:', error);
+    res.status(500).json({ error: 'Failed to track view' });
   }
 });
 
