@@ -2501,6 +2501,30 @@
 
     // Start cycling for visible section
     startTimelineCycle('how-it-works-mac');
+
+    // Download tracking
+    function trackDownload(platform, fileName) {
+      fetch('/api/track-download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ platform, fileName })
+      }).catch(() => {}); // Silent fail
+    }
+
+    // Track all download links
+    document.querySelectorAll('a[href*="github.com"][href*="/releases/download/"]').forEach(link => {
+      link.addEventListener('click', () => {
+        const href = link.href;
+        const fileName = href.split('/').pop();
+        let platform = 'unknown';
+        if (fileName.includes('.dmg') || fileName.includes('-mac')) {
+          platform = 'mac';
+        } else if (fileName.includes('.exe')) {
+          platform = 'windows';
+        }
+        trackDownload(platform, fileName);
+      });
+    });
   </script>
 </body>
 </html>

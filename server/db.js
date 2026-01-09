@@ -39,6 +39,19 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
   CREATE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id);
   CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id);
+
+  CREATE TABLE IF NOT EXISTS downloads (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    platform TEXT NOT NULL,
+    file_name TEXT NOT NULL,
+    ip_address TEXT,
+    user_agent TEXT,
+    country TEXT,
+    downloaded_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_downloads_platform ON downloads(platform);
+  CREATE INDEX IF NOT EXISTS idx_downloads_date ON downloads(downloaded_at);
 `);
 
 // Feature definitions
@@ -181,6 +194,111 @@ export function updateSubscriptionPeriod(stripeSubscriptionId, periodStart, peri
 export function getUserByStripeCustomerId(stripeCustomerId) {
   const stmt = db.prepare('SELECT * FROM users WHERE stripe_customer_id = ?');
   return stmt.get(stripeCustomerId);
+}
+
+// ==================== ADMIN FUNCTIONS ====================
+
+// Get all users with subscription info
+export function getAllUsers() {
+  const stmt = db.prepare(`
+    SELECT u.*,
+           s.plan_type as subscription_plan,
+           s.status as subscription_status,
+           s.current_period_end as subscription_ends
+    FROM users u
+    LEFT JOIN subscriptions s ON u.id = s.user_id AND s.status = 'active'
+    ORDER BY u.created_at DESC
+  `);
+  return stmt.all();
+}
+
+// Get user count by tier
+export function getUserStats() {
+  const stmt = db.prepare(`
+    SELECT
+      subscription_tier,
+      COUNT(*) as count
+    FROM users
+    GROUP BY subscription_tier
+  `);
+  return stmt.all();
+}
+
+// Get all subscriptions
+export function getAllSubscriptions() {
+  const stmt = db.prepare(`
+    SELECT s.*, u.email, u.name
+    FROM subscriptions s
+    JOIN users u ON s.user_id = u.id
+    ORDER BY s.created_at DESC
+  `);
+  return stmt.all();
+}
+
+// Track download
+export function trackDownload({ platform, fileName, ipAddress, userAgent, country }) {
+  const stmt = db.prepare(`
+    INSERT INTO downloads (platform, file_name, ip_address, user_agent, country)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+  stmt.run(platform, fileName, ipAddress, userAgent, country);
+}
+
+// Get download stats
+export function getDownloadStats() {
+  const total = db.prepare('SELECT COUNT(*) as total FROM downloads').get();
+  const byPlatform = db.prepare(`
+    SELECT platform, COUNT(*) as count
+    FROM downloads
+    GROUP BY platform
+  `).all();
+  const last7Days = db.prepare(`
+    SELECT DATE(downloaded_at) as date, COUNT(*) as count
+    FROM downloads
+    WHERE downloaded_at >= datetime('now', '-7 days')
+    GROUP BY DATE(downloaded_at)
+    ORDER BY date DESC
+  `).all();
+  const last30Days = db.prepare(`
+    SELECT COUNT(*) as count
+    FROM downloads
+    WHERE downloaded_at >= datetime('now', '-30 days')
+  `).get();
+
+  return {
+    total: total.total,
+    byPlatform,
+    last7Days,
+    last30DaysTotal: last30Days.count
+  };
+}
+
+// Get recent downloads
+export function getRecentDownloads(limit = 50) {
+  const stmt = db.prepare(`
+    SELECT * FROM downloads
+    ORDER BY downloaded_at DESC
+    LIMIT ?
+  `);
+  return stmt.all(limit);
+}
+
+// Admin stats summary
+export function getAdminStats() {
+  const userStats = getUserStats();
+  const downloadStats = getDownloadStats();
+  const totalUsers = db.prepare('SELECT COUNT(*) as count FROM users').get();
+  const todaySignups = db.prepare(`
+    SELECT COUNT(*) as count FROM users
+    WHERE DATE(created_at) = DATE('now')
+  `).get();
+
+  return {
+    totalUsers: totalUsers.count,
+    todaySignups: todaySignups.count,
+    usersByTier: userStats,
+    downloads: downloadStats
+  };
 }
 
 export default db;

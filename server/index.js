@@ -16,7 +16,13 @@ import {
   createSubscription,
   updateSubscriptionStatus,
   getUserByStripeCustomerId,
-  FEATURES
+  FEATURES,
+  // Admin functions
+  getAllUsers,
+  getAllSubscriptions,
+  getAdminStats,
+  getRecentDownloads,
+  trackDownload
 } from './db.js';
 import { authenticateWithGoogle, verifyToken, authMiddleware } from './auth.js';
 import {
@@ -354,6 +360,98 @@ function getLocalIPs() {
   }
   return ips;
 }
+
+// ==================== ADMIN ENDPOINTS ====================
+
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'orbitxe-admin-2024';
+
+// Admin auth middleware
+function adminAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Admin authentication required' });
+  }
+
+  const password = authHeader.split(' ')[1];
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: 'Invalid admin password' });
+  }
+
+  next();
+}
+
+// Admin dashboard page
+app.get('/admin', (req, res) => {
+  res.sendFile(join(__dirname, '../public/admin.html'));
+});
+
+// Admin stats
+app.get('/api/admin/stats', adminAuth, (req, res) => {
+  try {
+    const stats = getAdminStats();
+    res.json(stats);
+  } catch (error) {
+    console.error('Admin stats error:', error);
+    res.status(500).json({ error: 'Failed to get stats' });
+  }
+});
+
+// Admin users list
+app.get('/api/admin/users', adminAuth, (req, res) => {
+  try {
+    const users = getAllUsers();
+    res.json(users);
+  } catch (error) {
+    console.error('Admin users error:', error);
+    res.status(500).json({ error: 'Failed to get users' });
+  }
+});
+
+// Admin subscriptions list
+app.get('/api/admin/subscriptions', adminAuth, (req, res) => {
+  try {
+    const subscriptions = getAllSubscriptions();
+    res.json(subscriptions);
+  } catch (error) {
+    console.error('Admin subscriptions error:', error);
+    res.status(500).json({ error: 'Failed to get subscriptions' });
+  }
+});
+
+// Admin recent downloads
+app.get('/api/admin/downloads', adminAuth, (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 50;
+    const downloads = getRecentDownloads(limit);
+    res.json(downloads);
+  } catch (error) {
+    console.error('Admin downloads error:', error);
+    res.status(500).json({ error: 'Failed to get downloads' });
+  }
+});
+
+// Track download (public endpoint - called when user downloads)
+app.post('/api/track-download', (req, res) => {
+  try {
+    const { platform, fileName } = req.body;
+    const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const userAgent = req.headers['user-agent'];
+
+    trackDownload({
+      platform: platform || 'unknown',
+      fileName: fileName || 'unknown',
+      ipAddress,
+      userAgent,
+      country: null // Could use IP geolocation service
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Track download error:', error);
+    res.status(500).json({ error: 'Failed to track download' });
+  }
+});
 
 // Local network info endpoint
 app.get('/api/network', (req, res) => {

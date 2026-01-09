@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OrbitXE Admin Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0a;
+      --bg2: #141414;
+      --bg3: #1a1a1a;
+      --accent: #00ff88;
+      --text: #fff;
+      --text2: #888;
+      --red: #ff4444;
+      --yellow: #ffaa00;
+      --blue: #4488ff;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* Login Screen */
+    .login-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .login-box {
+      background: var(--bg2);
+      padding: 40px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 400px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .login-box h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .login-box p {
+      color: var(--text2);
+      margin-bottom: 30px;
+    }
+
+    .login-box input {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--bg);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 16px;
+      margin-bottom: 16px;
+    }
+
+    .login-box input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .login-box button {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .login-box button:hover {
+      opacity: 0.9;
+    }
+
+    .login-error {
+      color: var(--red);
+      font-size: 14px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    /* Dashboard */
+    .dashboard {
+      display: none;
+    }
+
+    .dashboard.active {
+      display: block;
+    }
+
+    /* Header */
+    header {
+      background: var(--bg2);
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .logo span {
+      color: var(--accent);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .refresh-btn {
+      padding: 8px 16px;
+      background: var(--bg3);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .refresh-btn:hover {
+      background: var(--bg);
+    }
+
+    .logout-btn {
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid var(--red);
+      border-radius: 6px;
+      color: var(--red);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    /* Main Content */
+    main {
+      padding: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--bg2);
+      padding: 24px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .stat-card h3 {
+      font-size: 13px;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .stat-card .value {
+      font-size: 36px;
+      font-weight: 700;
+    }
+
+    .stat-card .sub {
+      font-size: 13px;
+      color: var(--text2);
+      margin-top: 4px;
+    }
+
+    .stat-card.accent .value {
+      color: var(--accent);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 16px;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      color: var(--text2);
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .tab:hover {
+      background: var(--bg2);
+      color: var(--text);
+    }
+
+    .tab.active {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
+
+    /* Table */
+    .table-container {
+      background: var(--bg2);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      overflow: hidden;
+    }
+
+    .table-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .table-header h2 {
+      font-size: 16px;
+    }
+
+    .table-header .count {
+      font-size: 13px;
+      color: var(--text2);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 14px 20px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    th {
+      font-size: 12px;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 500;
+    }
+
+    td {
+      font-size: 14px;
+    }
+
+    tr:hover {
+      background: rgba(255,255,255,0.02);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .badge.pro {
+      background: rgba(0, 255, 136, 0.15);
+      color: var(--accent);
+    }
+
+    .badge.trial {
+      background: rgba(255, 170, 0, 0.15);
+      color: var(--yellow);
+    }
+
+    .badge.free {
+      background: rgba(255,255,255,0.1);
+      color: var(--text2);
+    }
+
+    .badge.lifetime {
+      background: rgba(68, 136, 255, 0.15);
+      color: var(--blue);
+    }
+
+    .badge.mac {
+      background: rgba(255,255,255,0.1);
+      color: var(--text);
+    }
+
+    .badge.windows {
+      background: rgba(68, 136, 255, 0.15);
+      color: var(--blue);
+    }
+
+    /* User Avatar */
+    .user-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg3);
+    }
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .user-name {
+      font-weight: 500;
+    }
+
+    .user-email {
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text2);
+    }
+
+    /* Panel visibility */
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    /* Downloads chart placeholder */
+    .chart-container {
+      background: var(--bg2);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .chart-title {
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      height: 150px;
+    }
+
+    .chart-bar {
+      flex: 1;
+      background: var(--accent);
+      border-radius: 4px 4px 0 0;
+      min-height: 4px;
+      position: relative;
+    }
+
+    .chart-bar .label {
+      position: absolute;
+      bottom: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: var(--text2);
+      white-space: nowrap;
+    }
+
+    .chart-bar .count {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .table-container {
+        overflow-x: auto;
+      }
+
+      table {
+        min-width: 600px;
+      }
+
+      .tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+      }
+
+      .tab {
+        white-space: nowrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-box">
+      <h1>OrbitXE Admin</h1>
+      <p>Enter admin password to continue</p>
+      <input type="password" id="passwordInput" placeholder="Admin password" autofocus>
+      <button onclick="login()">Login</button>
+      <div class="login-error" id="loginError">Invalid password</div>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="dashboard" id="dashboard">
+    <header>
+      <div class="logo">ORBIT<span>XE</span> Admin</div>
+      <div class="header-right">
+        <button class="refresh-btn" onclick="refreshData()">Refresh</button>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- Stats Cards -->
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card accent">
+          <h3>Total Users</h3>
+          <div class="value" id="totalUsers">-</div>
+          <div class="sub" id="todaySignups">- today</div>
+        </div>
+        <div class="stat-card">
+          <h3>Pro Users</h3>
+          <div class="value" id="proUsers">-</div>
+        </div>
+        <div class="stat-card">
+          <h3>Trial Users</h3>
+          <div class="value" id="trialUsers">-</div>
+        </div>
+        <div class="stat-card">
+          <h3>Total Downloads</h3>
+          <div class="value" id="totalDownloads">-</div>
+          <div class="sub" id="last30Downloads">- last 30 days</div>
+        </div>
+        <div class="stat-card">
+          <h3>Mac Downloads</h3>
+          <div class="value" id="macDownloads">-</div>
+        </div>
+        <div class="stat-card">
+          <h3>Windows Downloads</h3>
+          <div class="value" id="windowsDownloads">-</div>
+        </div>
+      </div>
+
+      <!-- Downloads Chart -->
+      <div class="chart-container">
+        <h3 class="chart-title">Downloads (Last 7 Days)</h3>
+        <div class="chart-bars" id="downloadChart">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" data-panel="users">Users</button>
+        <button class="tab" data-panel="subscriptions">Subscriptions</button>
+        <button class="tab" data-panel="downloads">Downloads</button>
+      </div>
+
+      <!-- Users Panel -->
+      <div class="panel active" id="usersPanel">
+        <div class="table-container">
+          <div class="table-header">
+            <h2>All Users</h2>
+            <span class="count" id="usersCount">0 users</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Tier</th>
+                <th>Trial Ends</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="usersTable">
+              <tr><td colspan="4" class="loading">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Subscriptions Panel -->
+      <div class="panel" id="subscriptionsPanel">
+        <div class="table-container">
+          <div class="table-header">
+            <h2>All Subscriptions</h2>
+            <span class="count" id="subsCount">0 subscriptions</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Plan</th>
+                <th>Status</th>
+                <th>Period End</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="subscriptionsTable">
+              <tr><td colspan="5" class="loading">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Downloads Panel -->
+      <div class="panel" id="downloadsPanel">
+        <div class="table-container">
+          <div class="table-header">
+            <h2>Recent Downloads</h2>
+            <span class="count" id="downloadsCount">0 downloads</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Platform</th>
+                <th>File</th>
+                <th>IP Address</th>
+                <th>Downloaded</th>
+              </tr>
+            </thead>
+            <tbody id="downloadsTable">
+              <tr><td colspan="4" class="loading">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let adminPassword = localStorage.getItem('adminPassword');
+
+    // Check if already logged in
+    if (adminPassword) {
+      showDashboard();
+    }
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.panel + 'Panel').classList.add('active');
+      });
+    });
+
+    async function login() {
+      const password = document.getElementById('passwordInput').value;
+
+      try {
+        const res = await fetch('/api/admin/stats', {
+          headers: { 'Authorization': `Bearer ${password}` }
+        });
+
+        if (res.ok) {
+          adminPassword = password;
+          localStorage.setItem('adminPassword', password);
+          showDashboard();
+        } else {
+          document.getElementById('loginError').style.display = 'block';
+        }
+      } catch (e) {
+        document.getElementById('loginError').style.display = 'block';
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('adminPassword');
+      adminPassword = null;
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('dashboard').classList.remove('active');
+    }
+
+    function showDashboard() {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('dashboard').classList.add('active');
+      refreshData();
+    }
+
+    async function refreshData() {
+      await Promise.all([
+        loadStats(),
+        loadUsers(),
+        loadSubscriptions(),
+        loadDownloads()
+      ]);
+    }
+
+    async function apiCall(endpoint) {
+      const res = await fetch(endpoint, {
+        headers: { 'Authorization': `Bearer ${adminPassword}` }
+      });
+      if (!res.ok) throw new Error('API error');
+      return res.json();
+    }
+
+    async function loadStats() {
+      try {
+        const stats = await apiCall('/api/admin/stats');
+
+        document.getElementById('totalUsers').textContent = stats.totalUsers;
+        document.getElementById('todaySignups').textContent = `+${stats.todaySignups} today`;
+        document.getElementById('totalDownloads').textContent = stats.downloads.total;
+        document.getElementById('last30Downloads').textContent = `${stats.downloads.last30DaysTotal} last 30 days`;
+
+        // Parse user tiers
+        const tierMap = {};
+        stats.usersByTier.forEach(t => tierMap[t.subscription_tier] = t.count);
+        document.getElementById('proUsers').textContent = (tierMap.pro || 0) + (tierMap.lifetime || 0);
+        document.getElementById('trialUsers').textContent = tierMap.trial || 0;
+
+        // Parse downloads by platform
+        const platformMap = {};
+        stats.downloads.byPlatform.forEach(p => platformMap[p.platform] = p.count);
+        document.getElementById('macDownloads').textContent = platformMap.mac || 0;
+        document.getElementById('windowsDownloads').textContent = platformMap.windows || 0;
+
+        // Render chart
+        renderChart(stats.downloads.last7Days);
+      } catch (e) {
+        console.error('Failed to load stats:', e);
+      }
+    }
+
+    function renderChart(data) {
+      const container = document.getElementById('downloadChart');
+      if (!data || data.length === 0) {
+        container.innerHTML = '<div style="color: var(--text2); text-align: center; width: 100%;">No data</div>';
+        return;
+      }
+
+      const maxCount = Math.max(...data.map(d => d.count), 1);
+
+      // Ensure we have 7 days
+      const days = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        const found = data.find(d => d.date === dateStr);
+        days.push({
+          date: dateStr,
+          count: found ? found.count : 0,
+          label: date.toLocaleDateString('en-US', { weekday: 'short' })
+        });
+      }
+
+      container.innerHTML = days.map(d => `
+        <div class="chart-bar" style="height: ${Math.max((d.count / maxCount) * 100, 3)}%">
+          <span class="count">${d.count}</span>
+          <span class="label">${d.label}</span>
+        </div>
+      `).join('');
+    }
+
+    async function loadUsers() {
+      try {
+        const users = await apiCall('/api/admin/users');
+        document.getElementById('usersCount').textContent = `${users.length} users`;
+
+        document.getElementById('usersTable').innerHTML = users.map(u => `
+          <tr>
+            <td>
+              <div class="user-cell">
+                <img class="user-avatar" src="${u.picture_url || ''}" onerror="this.style.display='none'">
+                <div class="user-info">
+                  <span class="user-name">${u.name || 'Unknown'}</span>
+                  <span class="user-email">${u.email}</span>
+                </div>
+              </div>
+            </td>
+            <td><span class="badge ${u.subscription_tier}">${u.subscription_tier}</span></td>
+            <td>${u.trial_ends_at ? new Date(u.trial_ends_at).toLocaleDateString() : '-'}</td>
+            <td>${new Date(u.created_at).toLocaleDateString()}</td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        document.getElementById('usersTable').innerHTML = '<tr><td colspan="4">Failed to load</td></tr>';
+      }
+    }
+
+    async function loadSubscriptions() {
+      try {
+        const subs = await apiCall('/api/admin/subscriptions');
+        document.getElementById('subsCount').textContent = `${subs.length} subscriptions`;
+
+        document.getElementById('subscriptionsTable').innerHTML = subs.length === 0
+          ? '<tr><td colspan="5" style="text-align: center; color: var(--text2);">No subscriptions yet</td></tr>'
+          : subs.map(s => `
+          <tr>
+            <td>
+              <div class="user-info">
+                <span class="user-name">${s.name || 'Unknown'}</span>
+                <span class="user-email">${s.email}</span>
+              </div>
+            </td>
+            <td><span class="badge ${s.plan_type}">${s.plan_type}</span></td>
+            <td><span class="badge ${s.status === 'active' ? 'pro' : 'free'}">${s.status}</span></td>
+            <td>${s.current_period_end ? new Date(s.current_period_end).toLocaleDateString() : 'Never'}</td>
+            <td>${new Date(s.created_at).toLocaleDateString()}</td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        document.getElementById('subscriptionsTable').innerHTML = '<tr><td colspan="5">Failed to load</td></tr>';
+      }
+    }
+
+    async function loadDownloads() {
+      try {
+        const downloads = await apiCall('/api/admin/downloads');
+        document.getElementById('downloadsCount').textContent = `${downloads.length} recent downloads`;
+
+        document.getElementById('downloadsTable').innerHTML = downloads.length === 0
+          ? '<tr><td colspan="4" style="text-align: center; color: var(--text2);">No downloads tracked yet</td></tr>'
+          : downloads.map(d => `
+          <tr>
+            <td><span class="badge ${d.platform}">${d.platform}</span></td>
+            <td>${d.file_name}</td>
+            <td style="font-family: monospace; font-size: 12px;">${d.ip_address || '-'}</td>
+            <td>${new Date(d.downloaded_at).toLocaleString()}</td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        document.getElementById('downloadsTable').innerHTML = '<tr><td colspan="4">Failed to load</td></tr>';
+      }
+    }
+
+    // Enter key to login
+    document.getElementById('passwordInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') login();
+    });
+  </script>
+</body>
+</html>
