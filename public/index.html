@@ -1428,12 +1428,63 @@
       .cursor, .cursor-dot, .glow { display: none; }
       nav { padding: 16px 20px; }
       .nav-links { display: none; }
-      .hero { padding: 100px 20px 60px; }
-      .hero h1 { font-size: 36px; }
-      .hero-demo { flex-direction: column; gap: 30px; }
-      .demo-browser { width: 100%; max-width: 320px; }
-      .demo-phone { width: 180px; }
-      .demo-connection { transform: rotate(90deg); }
+      .nav-cta {
+        padding: 10px 20px;
+        font-size: 13px;
+      }
+      .hero { padding: 90px 20px 40px; }
+      .hero h1 { font-size: 32px; line-height: 1.2; }
+      .hero p { font-size: 15px; margin-bottom: 40px !important; }
+      .hero-badge { font-size: 12px; padding: 8px 16px; margin-bottom: 20px; }
+
+      /* Product Switcher Mobile */
+      .product-switcher {
+        gap: 4px;
+        padding: 4px;
+        margin-bottom: 20px;
+        overflow-x: auto;
+        justify-content: flex-start;
+        -webkit-overflow-scrolling: touch;
+      }
+      .product-tab {
+        padding: 10px 14px;
+        font-size: 12px;
+        gap: 6px;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .product-tab svg { width: 14px; height: 14px; }
+      .product-tab .soon-badge {
+        font-size: 8px;
+        padding: 2px 6px;
+      }
+
+      /* Hero Buttons Mobile */
+      .hero-buttons {
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto;
+      }
+      .btn-primary, .btn-secondary {
+        width: 100%;
+        justify-content: center;
+        padding: 16px 30px;
+        font-size: 15px;
+      }
+      .download-alt {
+        margin-top: 16px;
+        font-size: 13px;
+      }
+
+      /* Demo Mobile */
+      .hero-demo { flex-direction: column; gap: 20px; margin-top: 40px; }
+      .demo-browser, .demo-desktop { width: 100%; max-width: 280px; }
+      .demo-phone { width: 160px; }
+      .demo-connection { transform: rotate(90deg); margin: -10px 0; }
+
+      /* Features Mobile */
       .feature-row, .feature-row:nth-child(even) {
         flex-direction: column;
         gap: 40px;
@@ -1441,8 +1492,32 @@
       }
       .feature-content h3::after { left: 50%; transform: translateX(-50%); }
       .feature-visual img { height: 300px; }
+      .features { padding: 80px 20px; }
+      .features .section-title h2 { font-size: 28px; }
+
+      /* How it Works Mobile */
+      .how-it-works { padding: 80px 20px; }
+      .how-it-works .section-title h2 { font-size: 28px; }
+
+      /* Use Cases Mobile */
+      .use-cases { padding: 80px 20px; }
+
+      /* CTA Mobile */
+      .cta { padding: 80px 20px; }
+      .cta h2 { font-size: 28px; }
+      .cta p { font-size: 15px; }
+
+      /* Footer Mobile */
+      footer { padding: 40px 20px; }
+
       .step { flex-direction: column; text-align: center; }
-      .cta h2 { font-size: 32px; }
+    }
+
+    /* Extra small mobile */
+    @media (max-width: 380px) {
+      .hero h1 { font-size: 28px; }
+      .product-tab { padding: 8px 12px; font-size: 11px; }
+      .btn-primary, .btn-secondary { padding: 14px 24px; font-size: 14px; }
     }
   </style>
 </head>
