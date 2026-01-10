@@ -793,20 +793,54 @@ function takeScreenshot(callback) {
 
 // Get screen preview (lower quality for streaming)
 function getScreenPreview(callback) {
-  const screenshotPath = path.join(os.tmpdir(), `orbitxe_preview_${Date.now()}.jpg`);
-  exec(`screencapture -x -t jpg ${screenshotPath}`, (err) => {
-    if (err) {
-      callback(null, err);
-    } else {
-      // Resize for preview
-      exec(`sips -Z 480 ${screenshotPath}`, () => {
-        const data = fs.readFileSync(screenshotPath);
-        const base64 = data.toString('base64');
-        fs.unlinkSync(screenshotPath);
-        callback(`data:image/jpeg;base64,${base64}`, null);
-      });
-    }
-  });
+  const screenshotPath = path.join(os.tmpdir(), `orbitxe_preview_${Date.now()}.png`);
+
+  if (isMac) {
+    exec(`screencapture -x -t jpg ${screenshotPath.replace('.png', '.jpg')}`, (err) => {
+      if (err) {
+        callback(null, err);
+      } else {
+        exec(`sips -Z 480 ${screenshotPath.replace('.png', '.jpg')}`, () => {
+          try {
+            const data = fs.readFileSync(screenshotPath.replace('.png', '.jpg'));
+            const base64 = data.toString('base64');
+            fs.unlinkSync(screenshotPath.replace('.png', '.jpg'));
+            callback(`data:image/jpeg;base64,${base64}`, null);
+          } catch (e) {
+            callback(null, e);
+          }
+        });
+      }
+    });
+  } else if (isWindows) {
+    const psScript = `
+      Add-Type -AssemblyName System.Windows.Forms
+      Add-Type -AssemblyName System.Drawing
+      $screen = [System.Windows.Forms.Screen]::PrimaryScreen
+      $bitmap = New-Object System.Drawing.Bitmap($screen.Bounds.Width, $screen.Bounds.Height)
+      $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+      $graphics.CopyFromScreen($screen.Bounds.Location, [System.Drawing.Point]::Empty, $screen.Bounds.Size)
+      $bitmap.Save('${screenshotPath.replace(/\\/g, '\\\\')}')
+      $graphics.Dispose()
+      $bitmap.Dispose()
+    `;
+    exec(`powershell -command "${psScript.replace(/\n/g, ' ')}"`, (err) => {
+      if (err) {
+        callback(null, err);
+      } else {
+        try {
+          const data = fs.readFileSync(screenshotPath);
+          const base64 = data.toString('base64');
+          fs.unlinkSync(screenshotPath);
+          callback(`data:image/png;base64,${base64}`, null);
+        } catch (e) {
+          callback(null, e);
+        }
+      }
+    });
+  } else {
+    callback(null, new Error('Screen preview not supported on this platform'));
+  }
 }
 
 // Get monitors
