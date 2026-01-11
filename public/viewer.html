@@ -436,15 +436,26 @@
     }
 
     async function handleWebRTCOffer(sdp) {
-      console.log('Received WebRTC offer');
-      setupPeerConnection();
+      try {
+        console.log('Received WebRTC offer:', sdp);
+        setupPeerConnection();
 
-      await peerConnection.setRemoteDescription(new RTCSessionDescription(sdp));
-      const answer = await peerConnection.createAnswer();
-      await peerConnection.setLocalDescription(answer);
+        console.log('Setting remote description...');
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(sdp));
 
-      send({ type: 'webrtc-answer', sdp: peerConnection.localDescription });
-      console.log('Sent WebRTC answer');
+        console.log('Creating answer...');
+        const answer = await peerConnection.createAnswer();
+
+        console.log('Setting local description...');
+        await peerConnection.setLocalDescription(answer);
+
+        console.log('Sending answer to server...');
+        send({ type: 'webrtc-answer', sdp: peerConnection.localDescription });
+        console.log('Sent WebRTC answer successfully');
+      } catch (err) {
+        console.error('handleWebRTCOffer error:', err);
+        alert('WebRTC Error: ' + err.message);
+      }
     }
 
     async function handleWebRTCIce(candidate) {
@@ -506,9 +517,17 @@
               alert('Clipboard: ' + msg.text.slice(0, 100));
             });
           } else if (msg.type === 'webrtc-offer') {
-            handleWebRTCOffer(msg.sdp).catch(err => console.error('WebRTC offer error:', err));
+            console.log('Got webrtc-offer message');
+            if (msg.sdp) {
+              handleWebRTCOffer(msg.sdp);
+            } else {
+              console.error('webrtc-offer missing sdp:', msg);
+            }
           } else if (msg.type === 'webrtc-ice') {
-            handleWebRTCIce(msg.candidate).catch(err => console.error('ICE error:', err));
+            console.log('Got webrtc-ice message');
+            if (msg.candidate) {
+              handleWebRTCIce(msg.candidate);
+            }
           }
         } catch (err) {}
       };
