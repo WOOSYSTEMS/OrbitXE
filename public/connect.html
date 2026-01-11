@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>OrbitEN - Connect</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: linear-gradient(180deg, #0a0a0b 0%, #111113 100%);
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .logo {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .logo span { color: #3b82f6; }
+
+    .subtitle {
+      text-align: center;
+      color: #71717a;
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+
+    .card {
+      background: #1a1a1c;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+
+    .field {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #a1a1aa;
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 16px;
+      background: #0a0a0b;
+      border: 1px solid #27272a;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 18px;
+      font-family: 'SF Mono', Monaco, monospace;
+      letter-spacing: 3px;
+      text-align: center;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+
+    input::placeholder {
+      color: #52525b;
+      letter-spacing: 0;
+      font-size: 14px;
+    }
+
+    .code-hint {
+      text-align: center;
+      font-size: 12px;
+      color: #52525b;
+      margin-top: 8px;
+    }
+
+    .code-type {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      margin-left: 4px;
+    }
+
+    .code-type.guest {
+      background: rgba(245, 158, 11, 0.2);
+      color: #f59e0b;
+    }
+
+    .code-type.device {
+      background: rgba(59, 130, 246, 0.2);
+      color: #3b82f6;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 16px;
+      background: #3b82f6;
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: #2563eb;
+    }
+
+    .btn:disabled {
+      background: #27272a;
+      color: #52525b;
+      cursor: not-allowed;
+    }
+
+    .devices-section {
+      margin-top: 24px;
+    }
+
+    .devices-title {
+      font-size: 13px;
+      color: #71717a;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .clear-all {
+      background: none;
+      border: none;
+      color: #52525b;
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .device-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .device-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0a0a0b;
+      border: 1px solid #27272a;
+      border-radius: 10px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .device-item:hover {
+      border-color: #3b82f6;
+    }
+
+    .device-id {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 16px;
+      letter-spacing: 2px;
+    }
+
+    .device-time {
+      color: #52525b;
+      font-size: 12px;
+    }
+
+    .device-remove {
+      background: none;
+      border: none;
+      color: #52525b;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px 8px;
+      line-height: 1;
+    }
+
+    .device-remove:hover {
+      color: #ef4444;
+    }
+
+    .info {
+      text-align: center;
+      color: #71717a;
+      font-size: 12px;
+      margin-top: 24px;
+      line-height: 1.6;
+    }
+
+    .code-types-info {
+      display: flex;
+      gap: 16px;
+      margin-top: 16px;
+      padding: 12px;
+      background: #0f0f10;
+      border-radius: 8px;
+    }
+
+    .code-type-info {
+      flex: 1;
+      text-align: center;
+    }
+
+    .code-type-info .type-label {
+      font-size: 11px;
+      color: #71717a;
+      margin-bottom: 4px;
+    }
+
+    .code-type-info .type-example {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+
+    .code-type-info.guest .type-example { color: #f59e0b; }
+    .code-type-info.device .type-example { color: #3b82f6; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">Orbit<span>EN</span></div>
+    <p class="subtitle">Remote Desktop Access</p>
+
+    <div class="card">
+      <div class="field">
+        <label>Access Code</label>
+        <input type="text" id="computer-id" placeholder="Enter code" maxlength="8" autocomplete="off">
+        <p class="code-hint" id="code-hint"></p>
+      </div>
+
+      <button class="btn" id="connect-btn">Connect</button>
+
+      <div class="code-types-info">
+        <div class="code-type-info guest">
+          <div class="type-label">Guest Access</div>
+          <div class="type-example">12345678</div>
+        </div>
+        <div class="code-type-info device">
+          <div class="type-label">Device ID</div>
+          <div class="type-example">NPE3HE</div>
+        </div>
+      </div>
+
+      <div class="devices-section" id="devices-section">
+        <div class="devices-title">
+          <span>Your Devices</span>
+          <button class="clear-all" id="clear-all">Clear All</button>
+        </div>
+        <div class="device-list" id="device-list"></div>
+      </div>
+    </div>
+
+    <p class="info">
+      Enter the 8-digit Guest Code for temporary access,<br>
+      or your Device ID for permanent access.
+    </p>
+  </div>
+
+  <script>
+    // OrbitEN relay server
+    const RELAY_SERVER = 'https://orbiten-server-production.up.railway.app';
+
+    const $ = id => document.getElementById(id);
+    const computerIdInput = $('computer-id');
+    const connectBtn = $('connect-btn');
+    const deviceList = $('device-list');
+    const devicesSection = $('devices-section');
+    const clearAllBtn = $('clear-all');
+    const codeHint = $('code-hint');
+
+    // Check URL for computer ID (from QR code)
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlComputerId = urlParams.get('id');
+
+    // Detect code type
+    function getCodeType(code) {
+      if (/^\d{8}$/.test(code)) {
+        return 'guest';
+      } else if (/^[A-Z0-9]{4,8}$/i.test(code)) {
+        return 'device';
+      }
+      return null;
+    }
+
+    // Get saved devices
+    function getDevices() {
+      return JSON.parse(localStorage.getItem('orbiten_devices') || '[]');
+    }
+
+    // Save devices
+    function saveDevices(devices) {
+      localStorage.setItem('orbiten_devices', JSON.stringify(devices));
+    }
+
+    // Remove a device
+    function removeDevice(id) {
+      const devices = getDevices().filter(d => d.id !== id);
+      saveDevices(devices);
+      renderDevices();
+    }
+
+    // Clear all devices
+    function clearAllDevices() {
+      saveDevices([]);
+      renderDevices();
+    }
+
+    // Format relative time
+    function timeAgo(timestamp) {
+      const seconds = Math.floor((Date.now() - timestamp) / 1000);
+      if (seconds < 60) return 'Just now';
+      if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+      if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+      return Math.floor(seconds / 86400) + 'd ago';
+    }
+
+    // Render device list
+    function renderDevices() {
+      const devices = getDevices().sort((a, b) => b.lastConnected - a.lastConnected);
+
+      if (devices.length === 0) {
+        devicesSection.style.display = 'none';
+        return;
+      }
+
+      devicesSection.style.display = 'block';
+      deviceList.innerHTML = devices.map(d => `
+        <div class="device-item" data-id="${d.id}">
+          <div>
+            <div class="device-id">${d.id}</div>
+            <div class="device-time">${timeAgo(d.lastConnected)}</div>
+          </div>
+          <button class="device-remove" data-id="${d.id}">&times;</button>
+        </div>
+      `).join('');
+
+      // Add click handlers
+      deviceList.querySelectorAll('.device-item').forEach(item => {
+        item.onclick = (e) => {
+          if (e.target.classList.contains('device-remove')) {
+            e.stopPropagation();
+            removeDevice(e.target.dataset.id);
+          } else {
+            connectTo(item.dataset.id);
+          }
+        };
+      });
+    }
+
+    // Connect to a computer via OrbitEN relay
+    function connectTo(code) {
+      const codeType = getCodeType(code);
+      if (codeType === 'device') {
+        window.location.href = `${RELAY_SERVER}/view/${code.toUpperCase()}`;
+      } else {
+        window.location.href = `${RELAY_SERVER}/view/${code}`;
+      }
+    }
+
+    // Connect button
+    connectBtn.onclick = () => {
+      const code = computerIdInput.value.trim();
+      if (getCodeType(code)) {
+        connectTo(code);
+      }
+    };
+
+    // Enter key
+    computerIdInput.onkeydown = (e) => {
+      if (e.key === 'Enter') connectBtn.click();
+    };
+
+    // Clear all button
+    clearAllBtn.onclick = clearAllDevices;
+
+    // Handle input - detect code type and show hint
+    computerIdInput.oninput = () => {
+      let value = computerIdInput.value.replace(/[^A-Za-z0-9]/g, '');
+
+      // Auto uppercase for device IDs (letters present)
+      if (/[A-Za-z]/.test(value)) {
+        value = value.toUpperCase();
+      }
+
+      computerIdInput.value = value;
+
+      const codeType = getCodeType(value);
+
+      if (codeType === 'guest') {
+        codeHint.innerHTML = 'Guest Access <span class="code-type guest">Temporary</span>';
+        connectBtn.disabled = false;
+      } else if (codeType === 'device') {
+        codeHint.innerHTML = 'Device ID <span class="code-type device">Permanent</span>';
+        connectBtn.disabled = false;
+      } else if (value.length > 0) {
+        codeHint.innerHTML = '';
+        connectBtn.disabled = true;
+      } else {
+        codeHint.innerHTML = '';
+        connectBtn.disabled = true;
+      }
+    };
+
+    // Initialize
+    connectBtn.disabled = true;
+    renderDevices();
+
+    // If coming from QR code, connect immediately
+    if (urlComputerId) {
+      connectTo(urlComputerId);
+    }
+  </script>
+</body>
+</html>

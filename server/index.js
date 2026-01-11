@@ -132,6 +132,10 @@ app.use(express.static(join(__dirname, '../public')));
 // Rooms: { roomId: { displays: Set, controllers: Set } }
 const rooms = new Map();
 
+// Desktop streaming sessions: { computerId: { desktop: ws, phone: ws } }
+const desktopSessions = new Map();
+
+
 // Helper to get base URL
 function getBaseUrl(req) {
   return process.env.RAILWAY_PUBLIC_DOMAIN
@@ -304,6 +308,11 @@ app.get('/terms', (req, res) => {
 // Upgrade page
 app.get('/upgrade', (req, res) => {
   res.sendFile(join(__dirname, '../public/upgrade.html'));
+});
+
+// OrbitEN Connect page
+app.get('/connect', (req, res) => {
+  res.sendFile(join(__dirname, '../public/connect.html'));
 });
 
 // Payment success/cancel pages
@@ -510,11 +519,93 @@ app.get('/api/network', (req, res) => {
   });
 });
 
+// ==================== DESKTOP STREAMING ====================
+// Handle WebRTC signaling for desktop-to-phone streaming
+
+function handleDesktopConnection(ws, code, role) {
+  console.log(`[Desktop] ${code} - ${role} connected`);
+
+  // Create session if doesn't exist
+  if (!desktopSessions.has(code)) {
+    desktopSessions.set(code, { desktop: null, phone: null, computerId: code });
+  }
+  const session = desktopSessions.get(code);
+
+  // Set up the connection based on role
+  if (role === 'desktop') {
+    session.desktop = ws;
+    // Notify phone if already connected
+    if (session.phone?.readyState === 1) {
+      session.phone.send(JSON.stringify({ type: 'desktop-connected' }));
+      ws.send(JSON.stringify({ type: 'phone-connected' }));
+    }
+  } else if (role === 'phone') {
+    session.phone = ws;
+    // Notify desktop if already connected
+    if (session.desktop?.readyState === 1) {
+      session.desktop.send(JSON.stringify({ type: 'phone-connected' }));
+      ws.send(JSON.stringify({ type: 'desktop-connected' }));
+    }
+  }
+
+  // Relay all messages between desktop and phone
+  ws.on('message', (data, isBinary) => {
+    const s = desktopSessions.get(code);
+    if (!s) return;
+
+    // Relay from desktop to phone
+    if (role === 'desktop' && s.phone?.readyState === 1) {
+      s.phone.send(data, { binary: isBinary });
+    }
+    // Relay from phone to desktop
+    else if (role === 'phone' && s.desktop?.readyState === 1) {
+      s.desktop.send(data, { binary: isBinary });
+    }
+  });
+
+  // Handle disconnection
+  ws.on('close', () => {
+    console.log(`[Desktop] ${code} - ${role} disconnected`);
+    const s = desktopSessions.get(code);
+    if (!s) return;
+
+    if (role === 'desktop') {
+      s.desktop = null;
+      if (s.phone?.readyState === 1) {
+        s.phone.send(JSON.stringify({ type: 'desktop-disconnected' }));
+      }
+    } else {
+      s.phone = null;
+      if (s.desktop?.readyState === 1) {
+        s.desktop.send(JSON.stringify({ type: 'phone-disconnected' }));
+      }
+    }
+
+    // Clean up empty sessions
+    if (!s.desktop && !s.phone) {
+      desktopSessions.delete(code);
+    }
+  });
+}
+
 // ==================== WEBSOCKET ====================
 
 wss.on('connection', (ws, req) => {
+  const url = new URL(req.url, 'http://localhost');
+  const code = url.searchParams.get('code'); // Computer ID for desktop streaming
+  const streamRole = url.searchParams.get('role'); // 'desktop' or 'phone'
+
+  // ==================== DESKTOP STREAMING MODE ====================
+  // If code and role params exist, this is a desktop streaming connection
+  if (code && streamRole) {
+    handleDesktopConnection(ws, code, streamRole);
+    return;
+  }
+
+  // ==================== WEB REMOTE MODE ====================
+  // Otherwise, use path-based room ID for web remote
   const pathParts = req.url.split('/');
-  const roomId = pathParts[pathParts.length - 1];
+  const roomId = pathParts[pathParts.length - 1].split('?')[0]; // Remove query string
 
   ws.roomId = roomId;
   ws.role = null;
