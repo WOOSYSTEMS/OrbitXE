@@ -1,700 +1,3030 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#0a0a0a">
-  <title>OrbitXE Remote</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>OrbitXE</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    :root {
-      --accent: #00ff88;
-      --bg: #0a0a0a;
-      --surface: #141414;
-      --surface2: #1e1e1e;
-      --text: #fff;
-      --text2: #666;
-    }
-    html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+      height: 100vh;
       overflow: hidden;
       touch-action: none;
-      user-select: none;
     }
-    .app {
+
+    #loading {
+      position: fixed;
+      inset: 0;
       display: flex;
       flex-direction: column;
-      height: 100%;
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, #0a0a0b 0%, #111113 100%);
+      z-index: 100;
     }
 
-    /* Header */
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 16px;
-      background: var(--surface);
-      border-bottom: 1px solid #222;
-    }
-    .logo { font-size: 16px; font-weight: 700; }
-    .logo span { color: var(--accent); }
-    .status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 11px;
-      color: var(--text2);
-    }
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #333;
-    }
-    .status-dot.connected { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+    #loading.hidden { display: none; }
 
-    /* Trackpad */
-    .trackpad-container { flex: 1; padding: 12px; display: flex; flex-direction: column; }
-    .trackpad {
-      flex: 1;
-      background: linear-gradient(145deg, var(--surface), var(--surface2));
-      border-radius: 16px;
-      position: relative;
-      border: 1px solid #222;
-      min-height: 200px;
+    .logo {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      margin-bottom: 32px;
     }
-    .trackpad-hint {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+
+    .logo span { color: #00ff88; }
+
+    #status {
+      font-size: 15px;
+      color: #71717a;
+      margin-bottom: 24px;
       text-align: center;
-      color: #333;
-      pointer-events: none;
+      padding: 0 20px;
     }
-    .trackpad-hint .title { font-size: 14px; font-weight: 500; }
-    .trackpad-hint .sub { font-size: 11px; margin-top: 6px; }
-    .trackpad.active .trackpad-hint { opacity: 0.3; }
-    .touch-ripple {
-      position: absolute;
-      width: 60px;
-      height: 60px;
-      background: rgba(0, 255, 136, 0.3);
-      border-radius: 50%;
-      transform: translate(-50%, -50%) scale(0);
-      pointer-events: none;
-      animation: ripple 0.4s ease-out forwards;
-    }
-    @keyframes ripple { to { transform: translate(-50%, -50%) scale(1); opacity: 0; } }
 
-    /* Scroll buttons */
-    .scroll-btns {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      padding: 8px 12px;
+    .loader {
+      width: 32px;
+      height: 32px;
+      border: 2px solid #27272a;
+      border-top-color: #00ff88;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
     }
-    .scroll-btn {
-      width: 60px;
-      height: 44px;
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #main-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    /* Tab Switcher */
+    #tab-bar {
+      display: flex;
+      background: #0a0a0b;
+      border-bottom: 1px solid #27272a;
+      flex-shrink: 0;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      background: transparent;
+      border: none;
+      color: #71717a;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      color: #00ff88;
+      border-bottom-color: #00ff88;
+    }
+
+    .tab-content {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .tab-content.active {
+      display: flex;
+    }
+
+    /* File Transfer Tab */
+    #file-transfer-view {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .file-transfer-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .transfer-zone {
+      flex: 1;
+      min-height: 120px;
+      border: 2px dashed #00ff88;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      padding: 16px;
+    }
+
+    .transfer-zone:active {
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    .transfer-zone svg {
+      width: 36px;
+      height: 36px;
+      color: #00ff88;
+    }
+
+    .zone-text {
+      color: #71717a;
+      font-size: 13px;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .zone-text small {
+      font-size: 11px;
+      color: #52525b;
+    }
+
+    #get-from-desktop {
+      border-color: #22c55e;
+    }
+
+    #get-from-desktop svg {
+      color: #22c55e;
+    }
+
+    #get-from-desktop:active {
+      background: rgba(34, 197, 94, 0.1);
+    }
+
+    #file-input {
+      display: none;
+    }
+
+    #transfer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .transfer-item {
+      background: #1a1a1c;
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .transfer-icon {
+      width: 40px;
+      height: 40px;
+      background: #27272a;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: var(--surface2);
-      border: 1px solid #333;
-      border-radius: 10px;
-      color: #888;
-      cursor: pointer;
+      color: #71717a;
     }
-    .scroll-btn:active { background: var(--accent); color: #000; }
 
-    /* Context controls */
-    .context-controls {
+    .transfer-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .transfer-name {
+      font-size: 13px;
+      color: #fafafa;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .transfer-size {
+      font-size: 11px;
+      color: #71717a;
+    }
+
+    .transfer-progress {
+      height: 4px;
+      background: #27272a;
+      border-radius: 2px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .transfer-progress-bar {
+      height: 100%;
+      background: #00ff88;
+      border-radius: 2px;
+      transition: width 0.2s;
+    }
+
+    .transfer-status {
+      font-size: 11px;
+      color: #22c55e;
+    }
+
+    /* Remote view layout - action panel left, video right */
+    #remote-view-wrapper {
+      flex: 1;
+      min-height: 0;
       display: flex;
-      gap: 6px;
-      padding: 8px 12px;
-      overflow-x: auto;
-      scrollbar-width: none;
+      gap: 0;
     }
-    .context-controls::-webkit-scrollbar { display: none; }
-    .ctx-btn {
-      flex-shrink: 0;
-      padding: 10px 14px;
-      background: var(--surface2);
-      border: 1px solid #333;
-      border-radius: 10px;
-      color: var(--text);
-      font-size: 12px;
-      cursor: pointer;
-    }
-    .ctx-btn:active { background: var(--accent); color: #000; }
 
-    /* Bottom bar */
-    .bottom-bar {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
+    /* Action Panel - Left Side */
+    #action-panel {
+      width: 70px;
+      background: #0a0a0b;
+      border-right: 1px solid #1f1f23;
+      display: flex;
+      flex-direction: column;
+      padding: 12px 8px;
       gap: 8px;
-      padding: 10px 12px;
-      background: var(--surface);
-      border-top: 1px solid #222;
+      overflow-y: auto;
     }
+
     .action-btn {
+      width: 54px;
+      height: 54px;
+      background: #1a1a1c;
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      color: #a1a1aa;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 4px;
-      padding: 12px;
-      background: var(--surface2);
-      border: 1px solid #333;
-      border-radius: 12px;
-      color: var(--text);
       cursor: pointer;
+      transition: all 0.2s;
+      font-size: 9px;
     }
-    .action-btn:active { background: var(--accent); color: #000; }
-    .action-btn svg { width: 22px; height: 22px; }
-    .action-btn span { font-size: 10px; color: var(--text2); }
-    .action-btn:active span { color: #000; }
-    .action-btn.primary { background: var(--accent); color: #000; }
-    .action-btn.primary span { color: #000; }
 
-    /* Keyboard overlay */
-    .keyboard-overlay {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--surface);
-      border-top: 1px solid #333;
-      transform: translateY(100%);
-      transition: transform 0.25s ease;
-      z-index: 100;
-      padding-bottom: env(safe-area-inset-bottom);
+    .action-btn svg {
+      width: 22px;
+      height: 22px;
     }
-    .keyboard-overlay.active { transform: translateY(0); }
-    .keyboard-header {
-      display: flex;
-      align-items: center;
-      padding: 10px 12px;
-      gap: 10px;
+
+    .action-btn:active {
+      transform: scale(0.95);
+      background: #27272a;
     }
-    .keyboard-input {
+
+    .action-btn.danger {
+      border-color: #7f1d1d;
+      color: #fca5a5;
+    }
+
+    .action-btn.danger:active {
+      background: #450a0a;
+    }
+
+    .action-btn.success {
+      border-color: #166534;
+      color: #86efac;
+    }
+
+    .action-divider {
+      height: 1px;
+      background: #27272a;
+      margin: 4px 0;
+    }
+
+    #screen-container {
       flex: 1;
-      background: var(--surface2);
-      border: 1px solid #333;
-      border-radius: 8px;
-      padding: 10px 12px;
-      color: var(--text);
-      font-size: 16px;
-    }
-    .keyboard-input:focus { outline: none; border-color: var(--accent); }
-    .keyboard-done {
-      background: var(--accent);
-      border: none;
-      border-radius: 8px;
-      padding: 10px 16px;
-      color: #000;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    /* Connection overlay */
-    .connecting {
-      position: fixed;
-      inset: 0;
+      min-height: 0;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: var(--bg);
-      z-index: 200;
-    }
-    .connecting.hidden { display: none; }
-    .spinner {
-      width: 36px;
-      height: 36px;
-      border: 3px solid #222;
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .connecting .logo { font-size: 28px; margin-bottom: 24px; }
-    .connecting p { margin-top: 16px; color: var(--text2); font-size: 13px; }
-
-    /* Video overlay */
-    .video-overlay {
-      position: fixed;
-      inset: 0;
       background: #000;
-      z-index: 150;
-      display: none;
-      flex-direction: column;
-    }
-    .video-overlay.active { display: flex; }
-    .video-container {
-      flex: 1;
       position: relative;
       overflow: hidden;
     }
-    .video-container video {
-      width: 100%;
-      height: 100%;
+
+    #screen {
+      max-width: 100%;
+      max-height: 100%;
       object-fit: contain;
+      display: block;
       background: #000;
+      transition: transform 0.15s ease-out;
     }
-    .video-controls {
+
+    #screen.zoomed {
+      transform-origin: center center;
+    }
+
+    #zoom-toggle {
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      padding: 12px;
-      background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      opacity: 1;
-      transition: opacity 0.3s;
-    }
-    .video-overlay.hide-controls .video-controls { opacity: 0; }
-    .video-close {
-      width: 40px;
-      height: 40px;
-      background: rgba(255,255,255,0.2);
+      top: 8px;
+      right: 8px;
+      width: 36px;
+      height: 36px;
+      background: rgba(39, 39, 42, 0.9);
       border: none;
-      border-radius: 50%;
+      border-radius: 8px;
       color: #fff;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
+      z-index: 5;
     }
-    .video-status {
+
+    #zoom-toggle.active {
+      background: rgba(59, 130, 246, 0.9);
+    }
+
+    #zoom-toggle svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    #zoom-label {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      font-size: 11px;
+      color: #00ff88;
+      font-weight: 600;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 4px 8px;
+      border-radius: 6px;
+      display: none;
+    }
+
+    #zoom-label.visible {
+      display: block;
+    }
+
+    #shortcuts-bar {
+      display: flex;
+      gap: 6px;
+      padding: 8px 12px;
+      background: #0f0f10;
+      border-top: 1px solid #27272a;
+      overflow-x: auto;
+      flex-shrink: 0;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    #shortcuts-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .shortcut-btn {
+      flex-shrink: 0;
+      padding: 8px 14px;
+      background: #1a1a1c;
+      border: 1px solid #27272a;
+      border-radius: 8px;
+      color: #a1a1aa;
       font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+
+    .shortcut-btn:active {
+      background: #00ff88;
+      border-color: #00ff88;
       color: #fff;
+    }
+
+    #trackpad-strip {
+      height: 140px;
+      background: linear-gradient(180deg, #1a1a1c 0%, #0f0f10 100%);
+      border-top: 1px solid #00ff88;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    #trackpad-surface {
+      flex: 1;
+      position: relative;
+      touch-action: none;
+    }
+
+    #trackpad-hint {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #3f3f46;
+      font-size: 12px;
+      pointer-events: none;
+      opacity: 0.5;
+    }
+
+    #trackpad-buttons {
+      display: flex;
+      height: 44px;
+      border-top: 1px solid #27272a;
+      flex-shrink: 0;
+    }
+
+    .trackpad-btn {
+      flex: 1;
+      background: #0f0f10;
+      border: none;
+      color: #71717a;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .trackpad-btn:first-child {
+      border-right: 1px solid #27272a;
+    }
+
+    .trackpad-btn:active {
+      background: #00ff88;
+      color: #fff;
+    }
+
+    #scroll-zone {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 44px;
+      width: 50px;
+      background: rgba(59, 130, 246, 0.1);
+      border-left: 1px solid #27272a;
       display: flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
     }
-    .video-status .live-dot {
+
+    #scroll-zone svg {
+      width: 20px;
+      height: 20px;
+      color: #3f3f46;
+    }
+
+    #toolbar {
+      display: flex;
+      gap: 4px;
+      background: #0a0a0b;
+      padding: 8px 12px;
+      padding-bottom: calc(8px + env(safe-area-inset-bottom));
+      justify-content: center;
+      border-top: 1px solid #27272a;
+      flex-shrink: 0;
+    }
+
+    .tool-btn {
+      width: 44px;
+      height: 44px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: #71717a;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .tool-btn:active {
+      transform: scale(0.95);
+    }
+
+    .tool-btn.active {
+      background: #00ff88;
+      color: #fff;
+    }
+
+    .tool-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    #keyboard-input {
+      position: fixed;
+      bottom: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1px;
+      height: 1px;
+      opacity: 0.01;
+      border: none;
+      outline: none;
+      background: transparent;
+      caret-color: transparent;
+      z-index: 9999;
+    }
+
+    #stats {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      color: #a1a1aa;
+      display: flex;
+      gap: 8px;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .stat-value {
+      color: #fafafa;
+      font-weight: 500;
+    }
+
+    .p2p-badge {
+      background: #22c55e;
+      color: #000;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    /* Monitor selector */
+    #btn-monitor {
+      position: relative;
+    }
+
+    #monitor-badge {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: #00ff88;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 600;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #monitor-dropdown {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a1a1c;
+      border: 1px solid #00ff88;
+      border-radius: 12px;
+      padding: 8px;
+      z-index: 50;
+      min-width: 200px;
+      max-width: 90vw;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    #monitor-dropdown.hidden {
+      display: none;
+    }
+
+    .monitor-option {
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: background 0.15s;
+    }
+
+    .monitor-option:hover,
+    .monitor-option:active {
+      background: rgba(59, 130, 246, 0.2);
+    }
+
+    .monitor-option.active {
+      background: #00ff88;
+    }
+
+    .monitor-option svg {
+      width: 20px;
+      height: 20px;
+      color: #71717a;
+      flex-shrink: 0;
+    }
+
+    .monitor-option.active svg {
+      color: #fff;
+    }
+
+    .monitor-name {
+      font-size: 13px;
+      color: #fafafa;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .monitor-index {
+      font-size: 11px;
+      color: #71717a;
+      background: #27272a;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .monitor-option.active .monitor-index {
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    /* Clipboard modal */
+    #clipboard-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+
+    #clipboard-modal.hidden {
+      display: none;
+    }
+
+    .clipboard-panel {
+      background: #1a1a1c;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 400px;
+      padding: 16px;
+    }
+
+    .clipboard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .clipboard-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fafafa;
+    }
+
+    .clipboard-close {
+      width: 32px;
+      height: 32px;
+      background: transparent;
+      border: none;
+      color: #71717a;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+    }
+
+    .clipboard-close:active {
+      background: #27272a;
+    }
+
+    #clipboard-text {
+      width: 100%;
+      height: 150px;
+      background: #0a0a0b;
+      border: 1px solid #27272a;
+      border-radius: 8px;
+      padding: 12px;
+      color: #fafafa;
+      font-size: 14px;
+      font-family: inherit;
+      resize: none;
+      margin-bottom: 12px;
+    }
+
+    #clipboard-text:focus {
+      outline: none;
+      border-color: #00ff88;
+    }
+
+    .clipboard-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .clipboard-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .clipboard-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .clipboard-btn.primary {
+      background: #00ff88;
+      color: #fff;
+    }
+
+    .clipboard-btn.primary:active {
+      background: #2563eb;
+    }
+
+    .clipboard-btn.secondary {
+      background: #27272a;
+      color: #a1a1aa;
+    }
+
+    .clipboard-btn.secondary:active {
+      background: #3f3f46;
+      color: #fafafa;
+    }
+
+    .clipboard-status {
+      font-size: 11px;
+      color: #22c55e;
+      text-align: center;
+      margin-top: 8px;
+      height: 16px;
+    }
+
+    /* Password Modal */
+    #password-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 16px;
+    }
+
+    #password-modal.hidden {
+      display: none;
+    }
+
+    .password-panel {
+      background: #1a1a1c;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 360px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .password-icon {
+      width: 56px;
+      height: 56px;
+      background: rgba(59, 130, 246, 0.15);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+
+    .password-icon svg {
+      width: 28px;
+      height: 28px;
+      color: #00ff88;
+    }
+
+    .password-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fafafa;
+      margin-bottom: 8px;
+    }
+
+    .password-subtitle {
+      font-size: 13px;
+      color: #71717a;
+      margin-bottom: 20px;
+    }
+
+    #password-input {
+      width: 100%;
+      padding: 14px 16px;
+      background: #0a0a0b;
+      border: 1px solid #27272a;
+      border-radius: 10px;
+      color: #fafafa;
+      font-size: 16px;
+      text-align: center;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
+    }
+
+    #password-input:focus {
+      outline: none;
+      border-color: #00ff88;
+    }
+
+    #password-input.error {
+      border-color: #ef4444;
+      animation: shake 0.4s;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      75% { transform: translateX(8px); }
+    }
+
+    #password-error {
+      color: #ef4444;
+      font-size: 13px;
+      margin-bottom: 16px;
+      min-height: 20px;
+    }
+
+    #password-submit {
+      width: 100%;
+      padding: 14px;
+      background: #00ff88;
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    #password-submit:active {
+      background: #2563eb;
+    }
+
+    #password-submit:disabled {
+      background: #27272a;
+      color: #71717a;
+    }
+
+    /* Laser Pointer Overlay */
+    #pointer-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    #laser-pointer {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: radial-gradient(circle, rgba(239, 68, 68, 1) 0%, rgba(239, 68, 68, 0.6) 30%, transparent 70%);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      display: none;
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4);
+      animation: pulse-pointer 1s ease-in-out infinite;
+    }
+
+    @keyframes pulse-pointer {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.3); }
+    }
+
+    #laser-pointer.visible { display: block; }
+
+    /* Drawing Canvas Overlay */
+    #draw-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 8;
+      display: none;
+    }
+
+    #draw-overlay.active {
+      display: block;
+    }
+
+    #draw-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    #draw-toolbar {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(26, 26, 28, 0.95);
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      padding: 8px;
+      display: flex;
+      gap: 8px;
+      z-index: 9;
+    }
+
+    .draw-tool {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: #a1a1aa;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .draw-tool:active, .draw-tool.active {
+      background: #00ff88;
+      color: #fff;
+    }
+
+    .draw-tool svg { width: 18px; height: 18px; }
+
+    .color-picker {
+      display: flex;
+      gap: 4px;
+      padding: 0 8px;
+      border-left: 1px solid #27272a;
+      border-right: 1px solid #27272a;
+    }
+
+    .color-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+
+    .color-dot.active { border-color: #fff; }
+
+    /* Recording Indicator */
+    #recording-indicator {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(239, 68, 68, 0.9);
+      color: #fff;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      z-index: 15;
+    }
+
+    #recording-indicator.visible { display: flex; }
+
+    .rec-dot {
       width: 8px;
       height: 8px;
-      background: #f00;
+      background: #fff;
       border-radius: 50%;
-      animation: pulse 1s infinite;
+      animation: blink-rec 1s ease-in-out infinite;
     }
-    @keyframes pulse { 50% { opacity: 0.5; } }
+
+    @keyframes blink-rec {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Chat/Notes Modal */
+    #chat-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+
+    #chat-modal.hidden { display: none; }
+
+    .chat-panel {
+      background: #1a1a1c;
+      border-radius: 16px 16px 0 0;
+      width: 100%;
+      max-width: 500px;
+      max-height: 60vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      border-bottom: 1px solid #27272a;
+    }
+
+    .chat-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fafafa;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 200px;
+    }
+
+    .chat-message {
+      padding: 10px 14px;
+      border-radius: 12px;
+      max-width: 80%;
+      font-size: 14px;
+    }
+
+    .chat-message.sent {
+      background: #00ff88;
+      color: #fff;
+      align-self: flex-end;
+    }
+
+    .chat-message.received {
+      background: #27272a;
+      color: #fafafa;
+      align-self: flex-start;
+    }
+
+    .chat-input-area {
+      display: flex;
+      gap: 8px;
+      padding: 16px;
+      border-top: 1px solid #27272a;
+    }
+
+    #chat-input {
+      flex: 1;
+      padding: 12px 16px;
+      background: #0a0a0b;
+      border: 1px solid #27272a;
+      border-radius: 24px;
+      color: #fafafa;
+      font-size: 14px;
+    }
+
+    #chat-input:focus {
+      outline: none;
+      border-color: #00ff88;
+    }
+
+    .chat-send {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #00ff88;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chat-send svg { width: 18px; height: 18px; }
+
+    /* System Info Modal */
+    #info-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+
+    #info-modal.hidden { display: none; }
+
+    .info-panel {
+      background: #1a1a1c;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+    }
+
+    .info-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .info-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fafafa;
+    }
+
+    .info-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px;
+      background: #0a0a0b;
+      border-radius: 10px;
+    }
+
+    .info-label {
+      color: #71717a;
+      font-size: 13px;
+    }
+
+    .info-value {
+      color: #fafafa;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .info-bar {
+      height: 6px;
+      background: #27272a;
+      border-radius: 3px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .info-bar-fill {
+      height: 100%;
+      background: #00ff88;
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+
+    .info-bar-fill.warning { background: #f59e0b; }
+    .info-bar-fill.danger { background: #ef4444; }
+
+    /* Volume Slider Modal */
+    #volume-modal {
+      position: fixed;
+      bottom: 140px;
+      left: 80px;
+      background: #1a1a1c;
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      padding: 16px;
+      z-index: 50;
+      width: 200px;
+    }
+
+    #volume-modal.hidden { display: none; }
+
+    .volume-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .volume-label {
+      font-size: 13px;
+      color: #fafafa;
+    }
+
+    .volume-value {
+      font-size: 13px;
+      color: #00ff88;
+      font-weight: 600;
+    }
+
+    #volume-slider {
+      width: 100%;
+      height: 6px;
+      -webkit-appearance: none;
+      background: #27272a;
+      border-radius: 3px;
+      outline: none;
+    }
+
+    #volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      background: #00ff88;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    /* Action button active states */
+    .action-btn.recording {
+      border-color: #ef4444 !important;
+      color: #fca5a5 !important;
+      animation: pulse-btn 1s ease-in-out infinite;
+    }
+
+    @keyframes pulse-btn {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .action-btn.pointer-active {
+      border-color: #ef4444;
+      color: #fca5a5;
+    }
+
+    .action-btn.draw-active {
+      border-color: #f59e0b;
+      color: #fcd34d;
+    }
   </style>
 </head>
 <body>
-  <div class="connecting" id="connecting">
+  <div id="loading">
     <div class="logo">ORBIT<span>XE</span></div>
-    <div class="spinner"></div>
-    <p id="statusMsg">Connecting to desktop...</p>
+    <p id="status">Connecting...</p>
+    <div class="loader"></div>
   </div>
 
-  <div class="video-overlay" id="videoOverlay">
-    <div class="video-container" id="videoContainer">
-      <video id="remoteVideo" autoplay playsinline></video>
-      <div class="video-controls">
-        <div class="video-status">
-          <div class="live-dot"></div>
-          <span>Screen Share</span>
-        </div>
-        <button class="video-close" id="videoClose">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+  <div id="main-container">
+    <!-- Tab Bar -->
+    <div id="tab-bar">
+      <button class="tab-btn active" data-tab="remote">Remote Control</button>
+      <button class="tab-btn" data-tab="files">File Transfer</button>
+    </div>
+
+    <!-- Remote Control Tab -->
+    <div id="remote-tab" class="tab-content active">
+    <!-- Remote View Wrapper: Action Panel + Video -->
+    <div id="remote-view-wrapper">
+      <!-- Action Panel - Left Side (Unique tools only) -->
+      <div id="action-panel">
+        <!-- File Transfer -->
+        <button class="action-btn" id="action-files" title="File Transfer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+          </svg>
+          <span>Files</span>
+        </button>
+
+        <div class="action-divider"></div>
+
+        <!-- Presentation & Annotation Tools -->
+        <button class="action-btn" id="action-pointer" title="Laser Pointer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <circle cx="12" cy="12" r="7"/>
+            <circle cx="12" cy="12" r="11"/>
+          </svg>
+          <span>Pointer</span>
+        </button>
+        <button class="action-btn" id="action-draw" title="Draw/Annotate">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+            <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+            <path d="M2 2l7.586 7.586"/>
+            <circle cx="11" cy="11" r="2"/>
+          </svg>
+          <span>Draw</span>
+        </button>
+        <button class="action-btn" id="action-record" title="Record Session">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <circle cx="12" cy="12" r="4" fill="currentColor"/>
+          </svg>
+          <span>Record</span>
+        </button>
+
+        <div class="action-divider"></div>
+
+        <!-- Remote Screen Control -->
+        <button class="action-btn" id="action-blank" title="Blank Remote Screen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          </svg>
+          <span>Blank</span>
+        </button>
+
+        <div class="action-divider"></div>
+
+        <!-- Chat & Info -->
+        <button class="action-btn" id="action-chat" title="Quick Notes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span>Chat</span>
+        </button>
+        <button class="action-btn" id="action-info" title="System Info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          <span>Info</span>
         </button>
       </div>
-    </div>
-  </div>
 
-  <div class="app">
-    <header class="header">
-      <div class="logo">ORBIT<span>XE</span></div>
-      <div class="status">
-        <span id="statusText">Connecting</span>
-        <div class="status-dot" id="statusDot"></div>
+      <!-- Video Stream -->
+      <div id="screen-container">
+        <video id="screen" autoplay playsinline></video>
+
+        <!-- Pointer Overlay -->
+        <div id="pointer-overlay">
+          <div id="laser-pointer"></div>
+        </div>
+
+        <!-- Drawing Canvas Overlay -->
+        <div id="draw-overlay">
+          <div id="draw-toolbar">
+            <button class="draw-tool active" data-tool="pen" title="Pen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+              </svg>
+            </button>
+            <button class="draw-tool" data-tool="arrow" title="Arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </button>
+            <button class="draw-tool" data-tool="rect" title="Rectangle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+              </svg>
+            </button>
+            <button class="draw-tool" data-tool="circle" title="Circle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+              </svg>
+            </button>
+            <div class="color-picker">
+              <div class="color-dot active" style="background: #ef4444" data-color="#ef4444"></div>
+              <div class="color-dot" style="background: #22c55e" data-color="#22c55e"></div>
+              <div class="color-dot" style="background: #00ff88" data-color="#00ff88"></div>
+              <div class="color-dot" style="background: #f59e0b" data-color="#f59e0b"></div>
+            </div>
+            <button class="draw-tool" id="draw-clear" title="Clear">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+            </button>
+            <button class="draw-tool" id="draw-done" title="Done">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </button>
+          </div>
+          <canvas id="draw-canvas"></canvas>
+        </div>
+
+        <!-- Recording Indicator -->
+        <div id="recording-indicator">
+          <span class="rec-dot"></span>
+          <span id="rec-time">REC 0:00</span>
+        </div>
+
+        <div id="stats">
+          <span class="p2p-badge">P2P</span>
+          <div class="stat-item"><span class="stat-value" id="fps">--</span> FPS</div>
+        </div>
+        <!-- Zoom Toggle -->
+        <button id="zoom-toggle" title="Toggle Zoom (3x)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="M21 21l-4.35-4.35"/>
+            <path d="M11 8v6M8 11h6"/>
+          </svg>
+        </button>
+        <span id="zoom-label">3x Zoom</span>
       </div>
-    </header>
+    </div>
 
-    <div class="trackpad-container">
-      <div class="trackpad" id="trackpad">
-        <div class="trackpad-hint">
-          <div class="title">Swipe to move cursor</div>
-          <div class="sub">Tap = Click · Hold = Right-click · 2 fingers = Scroll</div>
+    <!-- Shortcuts Bar -->
+    <div id="shortcuts-bar">
+      <button class="shortcut-btn" data-key="c">Copy</button>
+      <button class="shortcut-btn" data-key="v">Paste</button>
+      <button class="shortcut-btn" data-key="x">Cut</button>
+      <button class="shortcut-btn" data-key="z">Undo</button>
+      <button class="shortcut-btn" data-key="z" data-shift="true">Redo</button>
+      <button class="shortcut-btn" data-key="a">Select All</button>
+      <button class="shortcut-btn" data-key="s">Save</button>
+      <button class="shortcut-btn" data-key="f">Find</button>
+      <button class="shortcut-btn" data-key="n">New</button>
+      <button class="shortcut-btn" data-key="w">Close</button>
+    </div>
+
+    <!-- Trackpad Strip -->
+    <div id="trackpad-strip">
+      <div id="trackpad-surface">
+        <div id="trackpad-hint">Swipe to move cursor | Tap to click</div>
+        <div id="scroll-zone">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/>
+          </svg>
+        </div>
+      </div>
+      <div id="trackpad-buttons">
+        <button class="trackpad-btn" id="btn-left-click">Left Click</button>
+        <button class="trackpad-btn" id="btn-right-click">Right Click</button>
+      </div>
+    </div>
+    </div> <!-- End Remote Tab -->
+
+    <!-- File Transfer Tab -->
+    <div id="files-tab" class="tab-content">
+      <div id="file-transfer-view">
+        <div class="file-transfer-buttons">
+          <div id="drop-zone" class="transfer-zone">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <div class="zone-text">Send to Desktop<br><small>Tap to select files</small></div>
+          </div>
+          <div id="get-from-desktop" class="transfer-zone">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <div class="zone-text">Get from Desktop<br><small>Download file to phone</small></div>
+          </div>
+        </div>
+        <input type="file" id="file-input" multiple>
+        <div id="transfer-list"></div>
+      </div>
+    </div>
+
+    <!-- Monitor Selector Dropdown -->
+    <div id="monitor-dropdown" class="hidden">
+      <div id="monitor-list"></div>
+    </div>
+
+    <!-- Clipboard Modal -->
+    <div id="clipboard-modal" class="hidden">
+      <div class="clipboard-panel">
+        <div class="clipboard-header">
+          <span class="clipboard-title">Clipboard Sync</span>
+          <button class="clipboard-close" id="clipboard-close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <textarea id="clipboard-text" placeholder="Clipboard content will appear here..."></textarea>
+        <div class="clipboard-actions">
+          <button class="clipboard-btn secondary" id="btn-get-clipboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Get Desktop
+          </button>
+          <button class="clipboard-btn primary" id="btn-send-clipboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Send to Desktop
+          </button>
+        </div>
+        <div class="clipboard-status" id="clipboard-status"></div>
+      </div>
+    </div>
+
+    <!-- Password Modal -->
+    <div id="password-modal" class="hidden">
+      <div class="password-panel">
+        <div class="password-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <h2 class="password-title">Password Required</h2>
+        <p class="password-subtitle">This computer requires a password for remote access</p>
+        <input type="password" id="password-input" placeholder="Enter password" autocomplete="off">
+        <p id="password-error"></p>
+        <button id="password-submit">Connect</button>
+      </div>
+    </div>
+
+    <!-- Chat/Notes Modal -->
+    <div id="chat-modal" class="hidden">
+      <div class="chat-panel">
+        <div class="chat-header">
+          <span class="chat-title">Quick Notes</span>
+          <button class="clipboard-close" id="chat-close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-message received">Session started. Use this to take notes or send messages to the desktop.</div>
+        </div>
+        <div class="chat-input-area">
+          <input type="text" id="chat-input" placeholder="Type a note...">
+          <button class="chat-send" id="chat-send">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
         </div>
       </div>
     </div>
 
-    <div class="scroll-btns">
-      <button class="scroll-btn" id="scrollUp">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
-      </button>
-      <button class="scroll-btn" id="scrollDown">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
-      </button>
+    <!-- System Info Modal -->
+    <div id="info-modal" class="hidden">
+      <div class="info-panel">
+        <div class="info-header">
+          <span class="info-title">Session Info</span>
+          <button class="clipboard-close" id="info-close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Device ID</span>
+            <span class="info-value" id="info-device-id">--</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Connection</span>
+            <span class="info-value" id="info-connection">WebRTC P2P</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Resolution</span>
+            <span class="info-value" id="info-resolution">--</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Frame Rate</span>
+            <span class="info-value" id="info-fps">-- FPS</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Session Duration</span>
+            <span class="info-value" id="info-duration">0:00</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Data Transferred</span>
+            <span class="info-value" id="info-data">0 MB</span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="context-controls">
-      <button class="ctx-btn" data-action="escape">Esc</button>
-      <button class="ctx-btn" data-action="enter">Enter</button>
-      <button class="ctx-btn" data-action="space">Space</button>
-      <button class="ctx-btn" data-action="tab">Tab</button>
-      <button class="ctx-btn" data-action="undo">Undo</button>
-      <button class="ctx-btn" data-action="copy">Copy</button>
-      <button class="ctx-btn" data-action="paste">Paste</button>
-      <button class="ctx-btn" data-action="select-all">Select All</button>
+    <!-- Volume Control Popup -->
+    <div id="volume-modal" class="hidden">
+      <div class="volume-header">
+        <span class="volume-label">Remote Volume</span>
+        <span class="volume-value" id="volume-value">100%</span>
+      </div>
+      <input type="range" id="volume-slider" min="0" max="100" value="100">
     </div>
 
-    <div class="bottom-bar">
-      <button class="action-btn" id="btnClick">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>
-        <span>Click</span>
+    <!-- Toolbar -->
+    <div id="toolbar">
+      <button class="tool-btn" id="btn-monitor" title="Switch Monitor">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+          <line x1="8" y1="21" x2="16" y2="21"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+        <span id="monitor-badge">1</span>
       </button>
-      <button class="action-btn primary" id="btnKeyboard">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 16h8"/></svg>
-        <span>Type</span>
+      <button class="tool-btn" id="btn-fullscreen" title="Fullscreen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 3 21 3 21 9"/>
+          <polyline points="9 21 3 21 3 15"/>
+          <line x1="21" y1="3" x2="14" y2="10"/>
+          <line x1="3" y1="21" x2="10" y2="14"/>
+        </svg>
       </button>
-      <button class="action-btn" id="btnScreen">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-        <span>Screen</span>
+      <button class="tool-btn" id="btn-screenshot" title="Screenshot">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
       </button>
-      <button class="action-btn" id="btnClipboard">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
-        <span>Clipboard</span>
+      <button class="tool-btn" id="btn-audio" title="Toggle Audio">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+        </svg>
+      </button>
+      <button class="tool-btn" id="btn-clipboard" title="Clipboard Sync">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+        </svg>
+      </button>
+      <button class="tool-btn" id="btn-wake" title="Wake Screen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"/>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+      </button>
+      <button class="tool-btn" id="btn-lock" title="Lock Screen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </button>
+      <button class="tool-btn" id="btn-keyboard" title="Keyboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M8 16h8"/>
+        </svg>
+      </button>
+      <button class="tool-btn danger" id="btn-disconnect" title="Disconnect">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18.36 6.64A9 9 0 1 1 5.64 6.64"/>
+          <line x1="12" y1="2" x2="12" y2="12"/>
+        </svg>
       </button>
     </div>
   </div>
 
-  <div class="keyboard-overlay" id="keyboardOverlay">
-    <div class="keyboard-header">
-      <input type="text" class="keyboard-input" id="keyboardInput" placeholder="Type here..." autocomplete="off" autocapitalize="off">
-      <button class="keyboard-done" id="keyboardDone">Done</button>
-    </div>
-  </div>
+  <input type="text" id="keyboard-input" autocomplete="off" autocapitalize="off">
 
   <script>
-    const pathParts = window.location.pathname.split('/');
-    const code = pathParts[pathParts.length - 1];
+    const code = location.pathname.split('/').pop();
+    const $ = id => document.getElementById(id);
 
-    if (!code || code.length < 4) {
-      document.getElementById('statusMsg').textContent = 'Invalid code';
-      throw new Error('Invalid code');
+    // Save this device to remembered devices
+    function saveDevice(computerId) {
+      const devices = JSON.parse(localStorage.getItem('orbitxe_devices') || '[]');
+      const existing = devices.find(d => d.id === computerId);
+      if (existing) {
+        existing.lastConnected = Date.now();
+      } else {
+        devices.push({ id: computerId, lastConnected: Date.now() });
+      }
+      localStorage.setItem('orbitxe_devices', JSON.stringify(devices));
     }
 
-    const connecting = document.getElementById('connecting');
-    const statusMsg = document.getElementById('statusMsg');
-    const statusDot = document.getElementById('statusDot');
-    const statusText = document.getElementById('statusText');
-    const trackpad = document.getElementById('trackpad');
+    // Save this device when connecting
+    if (code) saveDevice(code);
 
-    let ws = null;
-    let connected = false;
-
-    // WebRTC for screen sharing
+    // WebRTC Configuration
     const RTC_CONFIG = {
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' }
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' }
       ]
     };
+
+    const loading = $('loading');
+    const status = $('status');
+    const screen = $('screen');
+    const keyboardInput = $('keyboard-input');
+    const fpsDisplay = $('fps');
+    const trackpadSurface = $('trackpad-surface');
+    const scrollZone = $('scroll-zone');
+    const zoomToggle = $('zoom-toggle');
+    const zoomLabel = $('zoom-label');
+    let isZoomed = false;
+    const ZOOM_LEVEL = 3;
+
+    const btnWake = $('btn-wake');
+    const btnLock = $('btn-lock');
+    const btnKeyboard = $('btn-keyboard');
+    const btnDisconnect = $('btn-disconnect');
+    const btnFullscreen = $('btn-fullscreen');
+    const btnScreenshot = $('btn-screenshot');
+    const btnAudio = $('btn-audio');
+    const btnLeftClick = $('btn-left-click');
+    const btnRightClick = $('btn-right-click');
+    const btnMonitor = $('btn-monitor');
+    const monitorBadge = $('monitor-badge');
+    const monitorDropdown = $('monitor-dropdown');
+    const monitorListEl = $('monitor-list');
+    const btnClipboard = $('btn-clipboard');
+    const clipboardModal = $('clipboard-modal');
+    const clipboardText = $('clipboard-text');
+    const clipboardStatus = $('clipboard-status');
+    const btnGetClipboard = $('btn-get-clipboard');
+    const btnSendClipboard = $('btn-send-clipboard');
+    const clipboardClose = $('clipboard-close');
+
+    // Password modal elements
+    const passwordModal = $('password-modal');
+    const passwordInput = $('password-input');
+    const passwordError = $('password-error');
+    const passwordSubmit = $('password-submit');
+
+    let ws = null;
     let peerConnection = null;
-    const remoteVideo = document.getElementById('remoteVideo');
-    const videoOverlay = document.getElementById('videoOverlay');
+    let dataChannel = null;
+    let videoWidth = 1280, videoHeight = 720;
+    let cursorX = 0.5, cursorY = 0.5;
+    let availableMonitors = [];
+    let currentMonitorIndex = 0;
 
-    function setupPeerConnection() {
-      peerConnection = new RTCPeerConnection(RTC_CONFIG);
+    // File transfer elements
+    const dropZone = $('drop-zone');
+    const fileInput = $('file-input');
+    const transferList = $('transfer-list');
+    const getFromDesktop = $('get-from-desktop');
 
-      peerConnection.ontrack = (event) => {
-        console.log('Received remote track:', event.track.kind);
-        if (event.streams && event.streams[0]) {
-          remoteVideo.srcObject = event.streams[0];
-          videoOverlay.classList.add('active');
-        }
-      };
-
-      peerConnection.onicecandidate = (event) => {
-        if (event.candidate) {
-          send({ type: 'webrtc-ice', candidate: event.candidate });
-        }
-      };
-
-      peerConnection.onconnectionstatechange = () => {
-        console.log('WebRTC state:', peerConnection.connectionState);
-        if (peerConnection.connectionState === 'disconnected' ||
-            peerConnection.connectionState === 'failed') {
-          closeVideo();
-        }
-      };
-    }
-
-    async function handleWebRTCOffer(sdp) {
-      try {
-        console.log('Received WebRTC offer:', sdp);
-        setupPeerConnection();
-
-        console.log('Setting remote description...');
-        await peerConnection.setRemoteDescription(new RTCSessionDescription(sdp));
-
-        console.log('Creating answer...');
-        const answer = await peerConnection.createAnswer();
-
-        console.log('Setting local description...');
-        await peerConnection.setLocalDescription(answer);
-
-        console.log('Sending answer to server...');
-        send({ type: 'webrtc-answer', sdp: peerConnection.localDescription });
-        console.log('Sent WebRTC answer successfully');
-      } catch (err) {
-        console.error('handleWebRTCOffer error:', err);
-        alert('WebRTC Error: ' + err.message);
-      }
-    }
-
-    async function handleWebRTCIce(candidate) {
-      if (peerConnection && candidate) {
-        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-        console.log('Added ICE candidate');
-      }
-    }
-
-    function closeVideo() {
-      videoOverlay.classList.remove('active');
-      if (peerConnection) {
-        peerConnection.close();
-        peerConnection = null;
-      }
-      remoteVideo.srcObject = null;
-    }
-
-    function requestScreenShare() {
-      send({ type: 'request-screen' });
-    }
-
-    // Trackpad state
-    let lastTouchX = 0, lastTouchY = 0;
-    let touchStartTime = 0;
-    let isTouching = false;
-    let moved = false;
-    let lastTwoFinger = null;
-    const SENSITIVITY = 1.8;
+    // Higher sensitivity for the compact trackpad strip
+    const TRACKPAD_SENSITIVITY = 3.0;
 
     function connect() {
-      statusMsg.textContent = 'Connecting...';
+      status.textContent = 'Connecting to signaling server...';
+
       const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
       ws = new WebSocket(`${proto}//${location.host}/?code=${code}&role=phone`);
 
       ws.onopen = () => {
-        statusMsg.textContent = 'Waiting for desktop...';
+        status.textContent = 'Waiting for desktop...';
       };
 
-      ws.onmessage = (e) => {
+      ws.onmessage = async (e) => {
         try {
           const msg = JSON.parse(e.data);
-          if (msg.type === 'desktop-connected') {
-            connected = true;
-            connecting.classList.add('hidden');
-            statusDot.classList.add('connected');
-            statusText.textContent = 'Connected';
-          } else if (msg.type === 'desktop-disconnected') {
-            connected = false;
-            connecting.classList.remove('hidden');
-            statusMsg.textContent = 'Desktop disconnected';
-            statusDot.classList.remove('connected');
-            statusText.textContent = 'Disconnected';
-            closeVideo();
-          } else if (msg.type === 'clipboard-content' && msg.text) {
-            navigator.clipboard.writeText(msg.text).then(() => {
-              alert('Clipboard synced!');
-            }).catch(() => {
-              alert('Clipboard: ' + msg.text.slice(0, 100));
-            });
-          } else if (msg.type === 'webrtc-offer') {
-            console.log('Got webrtc-offer message');
-            if (msg.sdp) {
-              handleWebRTCOffer(msg.sdp);
-            } else {
-              console.error('webrtc-offer missing sdp:', msg);
-            }
-          } else if (msg.type === 'webrtc-ice') {
-            console.log('Got webrtc-ice message');
-            if (msg.candidate) {
-              handleWebRTCIce(msg.candidate);
-            }
+          console.log('Received:', msg.type);
+
+          switch (msg.type) {
+            case 'auth-required':
+            case 'auth-failed':
+              // Redirect back to connect page
+              status.textContent = msg.reason || 'Authentication failed';
+              setTimeout(() => {
+                window.location.href = `/connect?id=${code}&error=auth`;
+              }, 1500);
+              break;
+
+            case 'desktop-connected':
+              status.textContent = 'Desktop connected, waiting for stream...';
+              break;
+
+            case 'password-required':
+              // Show password modal
+              loading.classList.add('hidden');
+              passwordModal.classList.remove('hidden');
+              passwordInput.focus();
+              status.textContent = 'Password required';
+              break;
+
+            case 'password-verified':
+              // Password accepted, hide modal
+              passwordModal.classList.add('hidden');
+              loading.classList.remove('hidden');
+              status.textContent = 'Password verified, connecting...';
+              break;
+
+            case 'password-failed':
+              // Show error
+              passwordInput.classList.add('error');
+              passwordError.textContent = 'Incorrect password';
+              passwordSubmit.disabled = false;
+              passwordSubmit.textContent = 'Connect';
+              setTimeout(() => {
+                passwordInput.classList.remove('error');
+              }, 400);
+              break;
+
+            case 'desktop-disconnected':
+              loading.classList.remove('hidden');
+              status.textContent = 'Desktop disconnected';
+              if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+              }
+              break;
+
+            case 'webrtc-offer':
+              status.textContent = 'Connecting peer-to-peer...';
+              await handleOffer(msg.sdp);
+              break;
+
+            case 'webrtc-ice':
+              if (peerConnection && msg.candidate) {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(msg.candidate));
+                console.log('Added ICE candidate');
+              }
+              break;
+
+            case 'cursor-position':
+              cursorX = msg.x;
+              cursorY = msg.y;
+              scheduleZoomUpdate();
+              break;
+
+            case 'monitor-list':
+              availableMonitors = msg.monitors || [];
+              updateMonitorButton();
+              console.log('Available monitors:', availableMonitors);
+              break;
+
+            case 'clipboard-content':
+              // Received desktop clipboard content
+              clipboardText.value = msg.text || '';
+              showClipboardStatus('Desktop clipboard received');
+              break;
+
+            case 'file-to-phone-start':
+              // Desktop is sending a file
+              startReceivingFile(msg.name, msg.size);
+              break;
+
+            case 'file-to-phone-chunk':
+              // Receive file chunk
+              receiveFileChunk(msg.data, msg.offset);
+              break;
+
+            case 'file-to-phone-end':
+              // File transfer complete
+              finishReceivingFile(msg.name);
+              break;
           }
-        } catch (err) {}
+        } catch (err) {
+          console.error('Message error:', err);
+        }
       };
 
       ws.onclose = () => {
-        connected = false;
-        connecting.classList.remove('hidden');
-        statusMsg.textContent = 'Disconnected - reconnecting...';
-        statusDot.classList.remove('connected');
-        setTimeout(connect, 2000);
+        loading.classList.remove('hidden');
+        status.textContent = 'Disconnected';
       };
 
       ws.onerror = () => {
-        statusMsg.textContent = 'Connection error';
+        status.textContent = 'Connection error';
       };
     }
 
-    function send(msg) {
-      if (ws?.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify(msg));
-        if (navigator.vibrate) navigator.vibrate(10);
+    async function handleOffer(sdp) {
+      try {
+        // Create peer connection
+        peerConnection = new RTCPeerConnection(RTC_CONFIG);
+
+        // Handle incoming stream
+        peerConnection.ontrack = (event) => {
+          console.log('Received track:', event.track.kind);
+          if (event.streams && event.streams[0]) {
+            screen.srcObject = event.streams[0];
+            screen.play().then(() => {
+              loading.classList.add('hidden');
+              console.log('Video playing');
+
+              // Get video dimensions
+              screen.onloadedmetadata = () => {
+                videoWidth = screen.videoWidth || 1280;
+                videoHeight = screen.videoHeight || 720;
+                console.log('Video size:', videoWidth, 'x', videoHeight);
+              };
+            });
+          }
+        };
+
+        // Handle ICE candidates
+        peerConnection.onicecandidate = (event) => {
+          if (event.candidate && ws?.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+              type: 'webrtc-ice',
+              candidate: event.candidate
+            }));
+          }
+        };
+
+        // Monitor connection state
+        peerConnection.onconnectionstatechange = () => {
+          console.log('Connection state:', peerConnection.connectionState);
+          if (peerConnection.connectionState === 'connected') {
+            status.textContent = 'Connected (P2P)';
+            startFpsCounter();
+          } else if (peerConnection.connectionState === 'failed') {
+            status.textContent = 'Connection failed';
+            loading.classList.remove('hidden');
+          }
+        };
+
+        // Set remote description (offer)
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(sdp));
+        console.log('Set remote description (offer)');
+
+        // Create and send answer
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+
+        ws.send(JSON.stringify({
+          type: 'webrtc-answer',
+          sdp: peerConnection.localDescription
+        }));
+
+        console.log('Sent WebRTC answer');
+
+      } catch (err) {
+        console.error('WebRTC error:', err);
+        status.textContent = 'WebRTC failed: ' + err.message;
       }
     }
 
-    // Trackpad
-    trackpad.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      trackpad.classList.add('active');
-      const touch = e.touches[0];
-      lastTouchX = touch.clientX;
-      lastTouchY = touch.clientY;
-      touchStartTime = Date.now();
-      isTouching = true;
-      moved = false;
-    }, { passive: false });
+    // FPS counter using video frame callback
+    let lastFrameTime = 0;
+    let frameCount = 0;
 
-    trackpad.addEventListener('touchmove', (e) => {
-      e.preventDefault();
-      if (!isTouching) return;
+    function startFpsCounter() {
+      if ('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
+        screen.requestVideoFrameCallback(countFrame);
+      } else {
+        // Fallback: estimate from WebRTC stats
+        setInterval(updateFpsFromStats, 1000);
+      }
+    }
 
-      // Two-finger scroll
-      if (e.touches.length === 2) {
-        const avgY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-        if (lastTwoFinger !== null) {
-          const dy = lastTwoFinger - avgY;
-          send({ type: 'mouse-scroll', deltaY: dy * 3 });
-        }
-        lastTwoFinger = avgY;
+    function countFrame(now, metadata) {
+      frameCount++;
+      if (now - lastFrameTime >= 1000) {
+        fpsDisplay.textContent = frameCount;
+        frameCount = 0;
+        lastFrameTime = now;
+      }
+      screen.requestVideoFrameCallback(countFrame);
+    }
+
+    function updateFpsFromStats() {
+      if (!peerConnection) return;
+      peerConnection.getStats().then(stats => {
+        stats.forEach(report => {
+          if (report.type === 'inbound-rtp' && report.kind === 'video') {
+            if (report.framesPerSecond) {
+              fpsDisplay.textContent = Math.round(report.framesPerSecond);
+            }
+          }
+        });
+      });
+    }
+
+    // Zoom to cursor area
+    function updateZoom() {
+      if (!isZoomed) {
+        screen.style.transform = 'none';
+        screen.classList.remove('zoomed');
+        zoomLabel.classList.remove('visible');
         return;
       }
-      lastTwoFinger = null;
+
+      screen.classList.add('zoomed');
+      zoomLabel.classList.add('visible');
+
+      // Calculate transform origin based on cursor position (as percentage)
+      const originX = cursorX * 100;
+      const originY = cursorY * 100;
+      screen.style.transformOrigin = `${originX}% ${originY}%`;
+      screen.style.transform = `scale(${ZOOM_LEVEL})`;
+    }
+
+    // Update zoom position when cursor moves (if zoomed)
+    let zoomUpdatePending = false;
+    function scheduleZoomUpdate() {
+      if (!zoomUpdatePending && isZoomed) {
+        zoomUpdatePending = true;
+        requestAnimationFrame(() => {
+          updateZoom();
+          zoomUpdatePending = false;
+        });
+      }
+    }
+
+    // Toggle zoom
+    zoomToggle.addEventListener('click', () => {
+      isZoomed = !isZoomed;
+      zoomToggle.classList.toggle('active', isZoomed);
+      updateZoom();
+    });
+
+    function send(m) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(m));
+      }
+    }
+
+    // Convert touch to normalized screen coordinates
+    function toScreen(touch) {
+      const r = screen.getBoundingClientRect();
+      const ratio = videoWidth / videoHeight;
+      const cr = r.width / r.height;
+      let w, h, ox, oy;
+
+      if (cr > ratio) {
+        h = r.height;
+        w = h * ratio;
+        ox = (r.width - w) / 2;
+        oy = 0;
+      } else {
+        w = r.width;
+        h = w / ratio;
+        ox = 0;
+        oy = (r.height - h) / 2;
+      }
+
+      return {
+        x: Math.max(0, Math.min(1, (touch.clientX - r.left - ox) / w)),
+        y: Math.max(0, Math.min(1, (touch.clientY - r.top - oy) / h))
+      };
+    }
+
+    // ============ TRACKPAD STRIP ============
+    let trackpadLastTouch = null;
+    let trackpadTouchStart = 0;
+    let trackpadMoved = false;
+    let isScrolling = false;
+    let isDragging = false;
+    let lastTapTime = 0;
+    let dragTimeout = null;
+
+    trackpadSurface.addEventListener('touchstart', e => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      trackpadLastTouch = { x: touch.clientX, y: touch.clientY };
+      trackpadTouchStart = Date.now();
+      trackpadMoved = false;
+
+      // Check if touch is in scroll zone (right edge)
+      const rect = trackpadSurface.getBoundingClientRect();
+      isScrolling = (touch.clientX > rect.right - 60);
+
+      // Long press to start drag (500ms)
+      if (!isScrolling && !isDragging) {
+        dragTimeout = setTimeout(() => {
+          isDragging = true;
+          send({ type: 'mouse-down' });
+          // Haptic feedback if available
+          if (navigator.vibrate) navigator.vibrate(50);
+        }, 500);
+      }
+    });
+
+    trackpadSurface.addEventListener('touchmove', e => {
+      e.preventDefault();
+      if (!trackpadLastTouch) return;
 
       const touch = e.touches[0];
-      const deltaX = (touch.clientX - lastTouchX) * SENSITIVITY;
-      const deltaY = (touch.clientY - lastTouchY) * SENSITIVITY;
+      const deltaX = (touch.clientX - trackpadLastTouch.x) * TRACKPAD_SENSITIVITY;
+      const deltaY = (touch.clientY - trackpadLastTouch.y) * TRACKPAD_SENSITIVITY;
 
       if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
-        moved = true;
-        send({ type: 'mouse-move-delta', deltaX, deltaY });
+        trackpadMoved = true;
+        // Cancel drag initiation if moved before 500ms
+        if (dragTimeout) {
+          clearTimeout(dragTimeout);
+          dragTimeout = null;
+        }
+
+        if (isScrolling) {
+          // Scroll mode - vertical movement scrolls
+          send({ type: 'mouse-scroll', deltaY: -deltaY * 3 });
+        } else {
+          // Normal trackpad - move cursor (also works while dragging)
+          send({ type: 'mouse-move-delta', deltaX, deltaY });
+        }
       }
 
-      lastTouchX = touch.clientX;
-      lastTouchY = touch.clientY;
-    }, { passive: false });
+      trackpadLastTouch = { x: touch.clientX, y: touch.clientY };
+    });
 
-    trackpad.addEventListener('touchend', (e) => {
+    trackpadSurface.addEventListener('touchend', e => {
       e.preventDefault();
-      trackpad.classList.remove('active');
-      isTouching = false;
-      lastTwoFinger = null;
 
-      const duration = Date.now() - touchStartTime;
+      // Cancel drag timeout
+      if (dragTimeout) {
+        clearTimeout(dragTimeout);
+        dragTimeout = null;
+      }
 
-      if (!moved) {
-        const rect = trackpad.getBoundingClientRect();
-        const x = e.changedTouches[0].clientX - rect.left;
-        const y = e.changedTouches[0].clientY - rect.top;
-        const ripple = document.createElement('div');
-        ripple.className = 'touch-ripple';
-        ripple.style.left = x + 'px';
-        ripple.style.top = y + 'px';
-        trackpad.appendChild(ripple);
-        setTimeout(() => ripple.remove(), 400);
-
-        if (duration < 200) {
+      // Release drag if active
+      if (isDragging) {
+        send({ type: 'mouse-up' });
+        isDragging = false;
+      } else if (!trackpadMoved && Date.now() - trackpadTouchStart < 300) {
+        // Check for double-tap (two taps within 300ms)
+        const now = Date.now();
+        if (now - lastTapTime < 300) {
+          send({ type: 'mouse-double-click' });
+          lastTapTime = 0;
+        } else {
           send({ type: 'mouse-click-current', button: 'left' });
-        } else if (duration >= 400) {
-          send({ type: 'mouse-click-current', button: 'right' });
+          lastTapTime = now;
         }
       }
-    }, { passive: false });
 
-    // Scroll buttons
-    document.getElementById('scrollUp').onclick = () => send({ type: 'mouse-scroll', deltaY: -300 });
-    document.getElementById('scrollDown').onclick = () => send({ type: 'mouse-scroll', deltaY: 300 });
+      trackpadLastTouch = null;
+      isScrolling = false;
 
-    // Context buttons
-    document.querySelectorAll('[data-action]').forEach(btn => {
-      btn.onclick = () => {
-        const action = btn.dataset.action;
-        switch (action) {
-          case 'escape': send({ type: 'key-down', key: 'escape' }); break;
-          case 'enter': send({ type: 'key-down', key: 'return' }); break;
-          case 'space': send({ type: 'key-down', key: 'space' }); break;
-          case 'tab': send({ type: 'key-down', key: 'tab' }); break;
-          case 'undo': send({ type: 'shortcut', key: 'z' }); break;
-          case 'copy': send({ type: 'shortcut', key: 'c' }); break;
-          case 'paste': send({ type: 'shortcut', key: 'v' }); break;
-          case 'select-all': send({ type: 'shortcut', key: 'a' }); break;
+      // Refocus keyboard input if it was active
+      refocusKeyboard();
+    });
+
+    btnLeftClick.addEventListener('touchstart', e => {
+      e.preventDefault();
+      send({ type: 'mouse-click-current', button: 'left' });
+      refocusKeyboard();
+    });
+
+    btnRightClick.addEventListener('touchstart', e => {
+      e.preventDefault();
+      send({ type: 'mouse-click-current', button: 'right' });
+      refocusKeyboard();
+    });
+
+    // ============ SHORTCUTS BAR ============
+    document.querySelectorAll('.shortcut-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.key;
+        const shift = btn.dataset.shift === 'true';
+        const alt = btn.dataset.alt === 'true';
+        send({ type: 'shortcut', key, shift, alt });
+      });
+    });
+
+    // ============ TOOLBAR ============
+    btnWake.onclick = () => {
+      send({ type: 'wake' });
+      // Visual feedback
+      btnWake.classList.add('active');
+      setTimeout(() => btnWake.classList.remove('active'), 500);
+    };
+
+    // Lock button - simple tap to lock
+    btnLock.onclick = () => {
+      send({ type: 'lock-screen' });
+      btnLock.classList.add('active');
+      setTimeout(() => btnLock.classList.remove('active'), 500);
+    };
+
+    // Fullscreen button
+    btnFullscreen.onclick = () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+        btnFullscreen.classList.add('active');
+      } else {
+        document.exitFullscreen();
+        btnFullscreen.classList.remove('active');
+      }
+    };
+
+    // Update fullscreen button on change
+    document.addEventListener('fullscreenchange', () => {
+      btnFullscreen.classList.toggle('active', !!document.fullscreenElement);
+    });
+
+    // Screenshot button
+    btnScreenshot.onclick = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = screen.videoWidth;
+      canvas.height = screen.videoHeight;
+      canvas.getContext('2d').drawImage(screen, 0, 0);
+      canvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `screenshot-${Date.now()}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+      btnScreenshot.classList.add('active');
+      setTimeout(() => btnScreenshot.classList.remove('active'), 300);
+    };
+
+    // Audio toggle
+    let audioEnabled = true;
+    btnAudio.onclick = () => {
+      audioEnabled = !audioEnabled;
+      screen.muted = !audioEnabled;
+      btnAudio.classList.toggle('active', audioEnabled);
+      btnAudio.style.opacity = audioEnabled ? '1' : '0.5';
+    };
+
+    let keyboardActive = false;
+
+    btnKeyboard.onclick = () => {
+      keyboardActive = !keyboardActive;
+      btnKeyboard.classList.toggle('active', keyboardActive);
+
+      if (keyboardActive) {
+        // Focus and show keyboard
+        keyboardInput.focus();
+        // iOS needs a slight delay sometimes
+        setTimeout(() => keyboardInput.focus(), 100);
+      } else {
+        keyboardInput.blur();
+      }
+    };
+
+    // Ensure keyboard stays focused after trackpad interaction
+    function refocusKeyboard() {
+      if (keyboardActive) {
+        setTimeout(() => keyboardInput.focus(), 50);
+      }
+    }
+
+    btnDisconnect.onclick = () => {
+      if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+      }
+      if (ws) ws.close();
+      window.location.href = '/';
+    };
+
+    // ============ KEYBOARD ============
+    keyboardInput.addEventListener('input', e => {
+      if (e.data) {
+        send({ type: 'key-press', key: e.data });
+        keyboardInput.value = '';
+      }
+    });
+
+    keyboardInput.addEventListener('keydown', e => {
+      const special = ['Enter', 'Backspace', 'Tab', 'Escape', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+      if (special.includes(e.key)) {
+        e.preventDefault();
+        send({ type: 'key-down', key: e.key });
+      }
+    });
+
+    // ============ TAB SWITCHING ============
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tabId = btn.dataset.tab;
+
+        // Update buttons
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Update content
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        $(`${tabId}-tab`).classList.add('active');
+      });
+    });
+
+    // ============ FILE TRANSFER ============
+    const CHUNK_SIZE = 64 * 1024; // 64KB chunks
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', async (e) => {
+      const files = Array.from(e.target.files);
+      for (const file of files) {
+        await sendFile(file);
+      }
+      fileInput.value = '';
+    });
+
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+      return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+    }
+
+    async function sendFile(file) {
+      // Create transfer item UI
+      const item = document.createElement('div');
+      item.className = 'transfer-item';
+      item.innerHTML = `
+        <div class="transfer-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+        </div>
+        <div class="transfer-info">
+          <div class="transfer-name">${file.name}</div>
+          <div class="transfer-size">${formatSize(file.size)}</div>
+          <div class="transfer-progress"><div class="transfer-progress-bar" style="width: 0%"></div></div>
+        </div>
+        <div class="transfer-status">0%</div>
+      `;
+      transferList.prepend(item);
+
+      const progressBar = item.querySelector('.transfer-progress-bar');
+      const statusText = item.querySelector('.transfer-status');
+
+      // Send file metadata first
+      send({
+        type: 'file-start',
+        name: file.name,
+        size: file.size,
+        mimeType: file.type
+      });
+
+      // Read and send file in chunks
+      const reader = new FileReader();
+      let offset = 0;
+
+      const readNextChunk = () => {
+        const slice = file.slice(offset, offset + CHUNK_SIZE);
+        reader.readAsArrayBuffer(slice);
+      };
+
+      reader.onload = (e) => {
+        const chunk = e.target.result;
+
+        // Send chunk as base64 through WebSocket (data channel would be better but more complex)
+        const base64 = btoa(String.fromCharCode(...new Uint8Array(chunk)));
+        send({
+          type: 'file-chunk',
+          data: base64,
+          offset: offset
+        });
+
+        offset += chunk.byteLength;
+        const percent = Math.round((offset / file.size) * 100);
+        progressBar.style.width = percent + '%';
+        statusText.textContent = percent + '%';
+
+        if (offset < file.size) {
+          readNextChunk();
+        } else {
+          send({ type: 'file-end', name: file.name });
+          statusText.textContent = 'Done';
+          statusText.style.color = '#22c55e';
         }
+      };
+
+      reader.onerror = () => {
+        statusText.textContent = 'Error';
+        statusText.style.color = '#ef4444';
+      };
+
+      readNextChunk();
+    }
+
+    // ============ MONITOR SELECTOR ============
+    function updateMonitorButton() {
+      // Only show monitor button if more than 1 monitor
+      if (availableMonitors.length > 1) {
+        btnMonitor.style.display = 'flex';
+        monitorBadge.textContent = currentMonitorIndex + 1;
+      } else {
+        btnMonitor.style.display = 'none';
+        monitorDropdown.classList.add('hidden');
+      }
+    }
+
+    function renderMonitorDropdown() {
+      monitorListEl.innerHTML = availableMonitors.map((mon, i) => `
+        <div class="monitor-option ${i === currentMonitorIndex ? 'active' : ''}" data-id="${mon.id}" data-index="${i}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+          <span class="monitor-name">${mon.name}</span>
+          <span class="monitor-index">${i + 1}</span>
+        </div>
+      `).join('');
+
+      // Add click handlers
+      monitorListEl.querySelectorAll('.monitor-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+          const monitorId = opt.dataset.id;
+          const index = parseInt(opt.dataset.index);
+
+          if (index !== currentMonitorIndex) {
+            currentMonitorIndex = index;
+            send({ type: 'switch-monitor', monitorId });
+            monitorBadge.textContent = index + 1;
+
+            // Update active state
+            monitorListEl.querySelectorAll('.monitor-option').forEach(o => o.classList.remove('active'));
+            opt.classList.add('active');
+          }
+
+          monitorDropdown.classList.add('hidden');
+        });
+      });
+    }
+
+    btnMonitor.onclick = () => {
+      const isHidden = monitorDropdown.classList.contains('hidden');
+      if (isHidden) {
+        renderMonitorDropdown();
+        monitorDropdown.classList.remove('hidden');
+      } else {
+        monitorDropdown.classList.add('hidden');
+      }
+    };
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!btnMonitor.contains(e.target) && !monitorDropdown.contains(e.target)) {
+        monitorDropdown.classList.add('hidden');
+      }
+    });
+
+    // ============ FILE FROM DESKTOP ============
+    let incomingFile = null;
+    let incomingChunks = [];
+    let incomingTransferItem = null;
+
+    getFromDesktop.addEventListener('click', () => {
+      send({ type: 'file-request' });
+
+      // Show waiting indicator
+      const item = document.createElement('div');
+      item.className = 'transfer-item';
+      item.innerHTML = `
+        <div class="transfer-icon" style="background: #14532d;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </div>
+        <div class="transfer-info">
+          <div class="transfer-name">Waiting for file selection...</div>
+          <div class="transfer-size">Select a file on desktop</div>
+        </div>
+      `;
+      transferList.prepend(item);
+      incomingTransferItem = item;
+    });
+
+    function startReceivingFile(name, size) {
+      console.log('Receiving file from desktop:', name, size);
+      incomingFile = { name, size };
+      incomingChunks = [];
+
+      // Update UI
+      if (incomingTransferItem) {
+        incomingTransferItem.innerHTML = `
+          <div class="transfer-icon" style="background: #14532d;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+          </div>
+          <div class="transfer-info">
+            <div class="transfer-name">${name}</div>
+            <div class="transfer-size">${formatSize(size)}</div>
+            <div class="transfer-progress"><div class="transfer-progress-bar" style="width: 0%; background: #22c55e;"></div></div>
+          </div>
+          <div class="transfer-status" style="color: #22c55e;">0%</div>
+        `;
+      }
+    }
+
+    function receiveFileChunk(data, offset) {
+      if (!incomingFile) return;
+
+      // Decode base64 and store chunk
+      const binaryString = atob(data);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      incomingChunks.push(bytes);
+
+      // Update progress
+      const received = offset + bytes.length;
+      const percent = Math.round((received / incomingFile.size) * 100);
+
+      if (incomingTransferItem) {
+        const progressBar = incomingTransferItem.querySelector('.transfer-progress-bar');
+        const statusText = incomingTransferItem.querySelector('.transfer-status');
+        if (progressBar) progressBar.style.width = percent + '%';
+        if (statusText) statusText.textContent = percent + '%';
+      }
+    }
+
+    function finishReceivingFile(name) {
+      if (!incomingFile || incomingChunks.length === 0) return;
+
+      console.log('File received, creating download');
+
+      // Combine chunks into blob
+      const blob = new Blob(incomingChunks);
+
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      // Update UI
+      if (incomingTransferItem) {
+        const statusText = incomingTransferItem.querySelector('.transfer-status');
+        if (statusText) statusText.textContent = 'Done';
+      }
+
+      // Reset
+      incomingFile = null;
+      incomingChunks = [];
+      incomingTransferItem = null;
+    }
+
+    // ============ CLIPBOARD SYNC ============
+    function showClipboardStatus(msg) {
+      clipboardStatus.textContent = msg;
+      setTimeout(() => {
+        clipboardStatus.textContent = '';
+      }, 2000);
+    }
+
+    btnClipboard.onclick = () => {
+      clipboardModal.classList.remove('hidden');
+    };
+
+    clipboardClose.onclick = () => {
+      clipboardModal.classList.add('hidden');
+    };
+
+    // Close modal when clicking outside panel
+    clipboardModal.onclick = (e) => {
+      if (e.target === clipboardModal) {
+        clipboardModal.classList.add('hidden');
+      }
+    };
+
+    // Get desktop clipboard
+    btnGetClipboard.onclick = () => {
+      send({ type: 'clipboard-get' });
+      showClipboardStatus('Requesting desktop clipboard...');
+    };
+
+    // Send to desktop clipboard
+    btnSendClipboard.onclick = () => {
+      const text = clipboardText.value;
+      if (text) {
+        send({ type: 'clipboard-set', text });
+        showClipboardStatus('Sent to desktop clipboard');
+      } else {
+        showClipboardStatus('Nothing to send');
+      }
+    };
+
+    // ============ PASSWORD HANDLING ============
+    passwordSubmit.onclick = () => {
+      const password = passwordInput.value.trim();
+      if (!password) {
+        passwordError.textContent = 'Please enter a password';
+        return;
+      }
+
+      passwordError.textContent = '';
+      passwordSubmit.disabled = true;
+      passwordSubmit.textContent = 'Verifying...';
+
+      send({ type: 'verify-password', password });
+    };
+
+    passwordInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        passwordSubmit.click();
+      }
+    });
+
+    // Clear error when typing
+    passwordInput.addEventListener('input', () => {
+      passwordError.textContent = '';
+    });
+
+    // ============ ACTION PANEL HANDLERS ============
+    const actionFiles = $('action-files');
+    const actionPointer = $('action-pointer');
+    const actionDraw = $('action-draw');
+    const actionRecord = $('action-record');
+    const actionBlank = $('action-blank');
+    const actionChat = $('action-chat');
+    const actionInfo = $('action-info');
+
+    // New modal elements
+    const chatModal = $('chat-modal');
+    const chatClose = $('chat-close');
+    const chatMessages = $('chat-messages');
+    const chatInput = $('chat-input');
+    const chatSend = $('chat-send');
+    const infoModal = $('info-modal');
+    const infoClose = $('info-close');
+
+    // Drawing elements
+    const drawOverlay = $('draw-overlay');
+    const drawCanvas = $('draw-canvas');
+    const drawClear = $('draw-clear');
+    const drawDone = $('draw-done');
+    let drawCtx = null;
+    let isDrawing = false;
+    let drawColor = '#ef4444';
+    let drawTool = 'pen';
+    let drawStartX, drawStartY;
+
+    // Pointer elements
+    const pointerOverlay = $('pointer-overlay');
+    const laserPointer = $('laser-pointer');
+    let pointerMode = false;
+
+    // Recording elements
+    const recordingIndicator = $('recording-indicator');
+    const recTime = $('rec-time');
+    let isRecording = false;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let recordStartTime = 0;
+    let recordTimer = null;
+
+    // Session tracking
+    let sessionStartTime = Date.now();
+    let totalDataTransferred = 0;
+
+    // Files - switch to file transfer tab
+    actionFiles.onclick = () => {
+      document.querySelector('[data-tab="files"]').click();
+    };
+
+    // ============ LASER POINTER ============
+    actionPointer.onclick = () => {
+      pointerMode = !pointerMode;
+      actionPointer.classList.toggle('pointer-active', pointerMode);
+
+      if (pointerMode) {
+        // Pointer follows cursor position from desktop
+        laserPointer.classList.add('visible');
+        updatePointerPosition();
+      } else {
+        laserPointer.classList.remove('visible');
+      }
+    };
+
+    function updatePointerPosition() {
+      if (!pointerMode) return;
+      // Get video position relative to its container
+      const containerRect = $('screen-container').getBoundingClientRect();
+      const screenRect = screen.getBoundingClientRect();
+
+      // Calculate offset of video within container (accounts for letterboxing)
+      const offsetX = screenRect.left - containerRect.left;
+      const offsetY = screenRect.top - containerRect.top;
+
+      // Position laser pointer at cursor position within the video
+      laserPointer.style.left = (offsetX + cursorX * screenRect.width) + 'px';
+      laserPointer.style.top = (offsetY + cursorY * screenRect.height) + 'px';
+      requestAnimationFrame(updatePointerPosition);
+    }
+
+    // ============ DRAWING MODE ============
+    actionDraw.onclick = () => {
+      const isActive = drawOverlay.classList.contains('active');
+      if (isActive) {
+        drawOverlay.classList.remove('active');
+        actionDraw.classList.remove('draw-active');
+      } else {
+        drawOverlay.classList.add('active');
+        actionDraw.classList.add('draw-active');
+        initDrawCanvas();
+      }
+    };
+
+    function initDrawCanvas() {
+      const container = $('screen-container');
+      const rect = container.getBoundingClientRect();
+      // Set canvas size to match container exactly
+      drawCanvas.width = rect.width;
+      drawCanvas.height = rect.height;
+      // Also set CSS size to prevent scaling issues
+      drawCanvas.style.width = rect.width + 'px';
+      drawCanvas.style.height = rect.height + 'px';
+      drawCtx = drawCanvas.getContext('2d');
+      drawCtx.lineCap = 'round';
+      drawCtx.lineJoin = 'round';
+      drawCtx.lineWidth = 3;
+      drawCtx.strokeStyle = drawColor;
+    }
+
+    // Draw tool selection
+    document.querySelectorAll('.draw-tool[data-tool]').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.draw-tool[data-tool]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        drawTool = btn.dataset.tool;
       };
     });
 
-    // Bottom bar
-    document.getElementById('btnClick').onclick = () => send({ type: 'mouse-click-current', button: 'left' });
-    document.getElementById('btnScreen').onclick = () => requestScreenShare();
-    document.getElementById('btnClipboard').onclick = () => send({ type: 'clipboard-get' });
+    // Color selection
+    document.querySelectorAll('.color-dot').forEach(dot => {
+      dot.onclick = () => {
+        document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+        dot.classList.add('active');
+        drawColor = dot.dataset.color;
+        if (drawCtx) drawCtx.strokeStyle = drawColor;
+      };
+    });
 
-    // Video controls
-    document.getElementById('videoClose').onclick = () => {
-      closeVideo();
-      send({ type: 'stop-screen' });
-    };
+    // Get touch coordinates relative to canvas
+    function getTouchPos(touch) {
+      const rect = drawCanvas.getBoundingClientRect();
+      const scaleX = drawCanvas.width / rect.width;
+      const scaleY = drawCanvas.height / rect.height;
+      return {
+        x: (touch.clientX - rect.left) * scaleX,
+        y: (touch.clientY - rect.top) * scaleY
+      };
+    }
 
-    // Toggle controls visibility on video tap
-    document.getElementById('videoContainer').onclick = (e) => {
-      if (e.target === remoteVideo) {
-        videoOverlay.classList.toggle('hide-controls');
+    // Convert to normalized coordinates (0-1) for sending to desktop
+    function toNormalized(x, y) {
+      return {
+        x: x / drawCanvas.width,
+        y: y / drawCanvas.height
+      };
+    }
+
+    // Stroke ID for grouping drawing points
+    let currentStrokeId = 0;
+
+    // Drawing handlers - also sends to desktop for live annotation
+    drawCanvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const pos = getTouchPos(e.touches[0]);
+      drawStartX = pos.x;
+      drawStartY = pos.y;
+      isDrawing = true;
+      currentStrokeId = Date.now();
+
+      if (drawTool === 'pen') {
+        drawCtx.beginPath();
+        drawCtx.moveTo(drawStartX, drawStartY);
+        // Send to desktop for live annotation
+        const norm = toNormalized(drawStartX, drawStartY);
+        send({ type: 'draw-start', strokeId: currentStrokeId, x: norm.x, y: norm.y, color: drawColor, tool: 'pen' });
+      }
+    });
+
+    drawCanvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (!isDrawing) return;
+      const pos = getTouchPos(e.touches[0]);
+
+      if (drawTool === 'pen') {
+        drawCtx.lineTo(pos.x, pos.y);
+        drawCtx.stroke();
+        // Send to desktop
+        const norm = toNormalized(pos.x, pos.y);
+        send({ type: 'draw-move', strokeId: currentStrokeId, x: norm.x, y: norm.y });
+      }
+    });
+
+    drawCanvas.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      if (!isDrawing) return;
+      isDrawing = false;
+
+      // Send stroke end to desktop
+      if (drawTool === 'pen') {
+        send({ type: 'draw-end', strokeId: currentStrokeId });
+      }
+
+      // For shapes, draw on touch end
+      if (drawTool !== 'pen') {
+        const pos = getTouchPos(e.changedTouches[0]);
+        const endX = pos.x;
+        const endY = pos.y;
+        const startNorm = toNormalized(drawStartX, drawStartY);
+        const endNorm = toNormalized(endX, endY);
+
+        drawCtx.beginPath();
+        if (drawTool === 'rect') {
+          drawCtx.strokeRect(drawStartX, drawStartY, endX - drawStartX, endY - drawStartY);
+          // Send rectangle to desktop
+          send({ type: 'draw-shape', shape: 'rect', x1: startNorm.x, y1: startNorm.y, x2: endNorm.x, y2: endNorm.y, color: drawColor });
+        } else if (drawTool === 'circle') {
+          const radius = Math.sqrt(Math.pow(endX - drawStartX, 2) + Math.pow(endY - drawStartY, 2));
+          drawCtx.arc(drawStartX, drawStartY, radius, 0, Math.PI * 2);
+          drawCtx.stroke();
+          // Send circle to desktop (normalize radius)
+          const normRadius = radius / Math.min(drawCanvas.width, drawCanvas.height);
+          send({ type: 'draw-shape', shape: 'circle', x1: startNorm.x, y1: startNorm.y, radius: normRadius, color: drawColor });
+        } else if (drawTool === 'arrow') {
+          // Draw line
+          drawCtx.moveTo(drawStartX, drawStartY);
+          drawCtx.lineTo(endX, endY);
+          drawCtx.stroke();
+          // Draw arrowhead
+          const angle = Math.atan2(endY - drawStartY, endX - drawStartX);
+          drawCtx.beginPath();
+          drawCtx.moveTo(endX, endY);
+          drawCtx.lineTo(endX - 15 * Math.cos(angle - Math.PI / 6), endY - 15 * Math.sin(angle - Math.PI / 6));
+          drawCtx.moveTo(endX, endY);
+          drawCtx.lineTo(endX - 15 * Math.cos(angle + Math.PI / 6), endY - 15 * Math.sin(angle + Math.PI / 6));
+          drawCtx.stroke();
+          // Send arrow to desktop
+          send({ type: 'draw-shape', shape: 'arrow', x1: startNorm.x, y1: startNorm.y, x2: endNorm.x, y2: endNorm.y, color: drawColor });
+        }
+      }
+    });
+
+    drawClear.onclick = () => {
+      if (drawCtx) {
+        drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
       }
     };
 
-    // Keyboard
-    const keyboardOverlay = document.getElementById('keyboardOverlay');
-    const keyboardInput = document.getElementById('keyboardInput');
-    let lastInputValue = '';
-
-    document.getElementById('btnKeyboard').onclick = () => {
-      keyboardOverlay.classList.add('active');
-      keyboardInput.value = '';
-      lastInputValue = '';
-      setTimeout(() => keyboardInput.focus(), 100);
+    drawDone.onclick = () => {
+      drawOverlay.classList.remove('active');
+      actionDraw.classList.remove('draw-active');
     };
 
-    document.getElementById('keyboardDone').onclick = () => {
-      keyboardOverlay.classList.remove('active');
-      keyboardInput.blur();
-    };
+    // ============ SCREEN RECORDING ============
+    actionRecord.onclick = async () => {
+      if (!isRecording) {
+        try {
+          const stream = screen.captureStream(30);
+          mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+          recordedChunks = [];
 
-    keyboardInput.addEventListener('input', () => {
-      const val = keyboardInput.value;
-      if (val.length > lastInputValue.length) {
-        const newChar = val.slice(lastInputValue.length);
-        for (const char of newChar) {
-          send({ type: 'key-press', key: char });
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) recordedChunks.push(e.data);
+          };
+
+          mediaRecorder.onstop = () => {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `recording-${Date.now()}.webm`;
+            a.click();
+            URL.revokeObjectURL(url);
+          };
+
+          mediaRecorder.start(1000);
+          isRecording = true;
+          recordStartTime = Date.now();
+          actionRecord.classList.add('recording');
+          recordingIndicator.classList.add('visible');
+
+          recordTimer = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - recordStartTime) / 1000);
+            const mins = Math.floor(elapsed / 60);
+            const secs = elapsed % 60;
+            recTime.textContent = `REC ${mins}:${secs.toString().padStart(2, '0')}`;
+          }, 1000);
+
+        } catch (err) {
+          console.error('Recording error:', err);
+          alert('Recording failed. Make sure the stream is active.');
         }
-      } else if (val.length < lastInputValue.length) {
-        for (let i = 0; i < lastInputValue.length - val.length; i++) {
-          send({ type: 'key-down', key: 'backspace' });
+      } else {
+        // Stop recording
+        if (mediaRecorder) {
+          mediaRecorder.stop();
         }
+        isRecording = false;
+        actionRecord.classList.remove('recording');
+        recordingIndicator.classList.remove('visible');
+        clearInterval(recordTimer);
       }
-      lastInputValue = val;
-    });
+    };
 
-    keyboardInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') send({ type: 'key-down', key: 'return' });
-    });
+    // Blank screen (privacy mode)
+    let isBlank = false;
+    actionBlank.onclick = () => {
+      isBlank = !isBlank;
+      send({ type: 'blank-screen', enabled: isBlank });
+      actionBlank.classList.toggle('active', isBlank);
+      actionBlank.querySelector('span').textContent = isBlank ? 'Show' : 'Blank';
+    };
 
+    // ============ CHAT/NOTES ============
+    actionChat.onclick = () => {
+      chatModal.classList.remove('hidden');
+      chatInput.focus();
+    };
+
+    chatClose.onclick = () => {
+      chatModal.classList.add('hidden');
+    };
+
+    chatModal.onclick = (e) => {
+      if (e.target === chatModal) chatModal.classList.add('hidden');
+    };
+
+    function addChatMessage(text, type = 'sent') {
+      const msg = document.createElement('div');
+      msg.className = `chat-message ${type}`;
+      msg.textContent = text;
+      chatMessages.appendChild(msg);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    chatSend.onclick = () => {
+      const text = chatInput.value.trim();
+      if (text) {
+        addChatMessage(text, 'sent');
+        send({ type: 'chat-message', text });
+        chatInput.value = '';
+      }
+    };
+
+    chatInput.onkeypress = (e) => {
+      if (e.key === 'Enter') chatSend.click();
+    };
+
+    // ============ SYSTEM INFO ============
+    actionInfo.onclick = () => {
+      infoModal.classList.remove('hidden');
+      updateInfoPanel();
+    };
+
+    infoClose.onclick = () => {
+      infoModal.classList.add('hidden');
+    };
+
+    infoModal.onclick = (e) => {
+      if (e.target === infoModal) infoModal.classList.add('hidden');
+    };
+
+    function updateInfoPanel() {
+      $('info-device-id').textContent = code || '--';
+      $('info-resolution').textContent = screen.videoWidth && screen.videoHeight
+        ? `${screen.videoWidth} x ${screen.videoHeight}`
+        : '--';
+      $('info-fps').textContent = fpsDisplay.textContent + ' FPS';
+
+      // Session duration
+      const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+      const mins = Math.floor(elapsed / 60);
+      const secs = elapsed % 60;
+      $('info-duration').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+      // Data transferred (estimate from WebRTC stats)
+      if (peerConnection) {
+        peerConnection.getStats().then(stats => {
+          let bytesReceived = 0;
+          stats.forEach(report => {
+            if (report.type === 'inbound-rtp' && report.bytesReceived) {
+              bytesReceived += report.bytesReceived;
+            }
+          });
+          const mb = (bytesReceived / (1024 * 1024)).toFixed(1);
+          $('info-data').textContent = mb + ' MB';
+        });
+      }
+    }
+
+    // Initialize
     connect();
   </script>
 </body>
