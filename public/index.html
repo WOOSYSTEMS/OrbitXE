@@ -1430,12 +1430,57 @@
       }
     }
 
+    /* Hamburger Menu */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 10px;
+      z-index: 1001;
+    }
+    .hamburger span {
+      width: 24px;
+      height: 2px;
+      background: var(--text);
+      transition: all 0.3s;
+    }
+    .hamburger.active span:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+    }
+    .hamburger.active span:nth-child(2) {
+      opacity: 0;
+    }
+    .hamburger.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(5px, -5px);
+    }
+
     /* Mobile */
     @media (max-width: 768px) {
       body { cursor: auto; }
       .cursor, .cursor-dot, .glow { display: none; }
       nav { padding: 16px 20px; }
-      .nav-links { display: none; }
+      .hamburger { display: flex; }
+      .nav-links {
+        display: none;
+        position: fixed;
+        top: 60px;
+        left: 0;
+        right: 0;
+        background: rgba(5, 5, 5, 0.98);
+        flex-direction: column;
+        padding: 20px;
+        gap: 0;
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+      }
+      .nav-links.active { display: flex; }
+      .nav-links li { border-bottom: 1px solid rgba(255,255,255,0.05); }
+      .nav-links a {
+        display: block;
+        padding: 16px 0;
+        font-size: 16px;
+      }
       .nav-cta {
         padding: 10px 20px;
         font-size: 13px;
@@ -1542,7 +1587,7 @@
 
   <nav>
     <div class="logo">ORBIT<span>XE</span></div>
-    <ul class="nav-links">
+    <ul class="nav-links" id="navLinks">
       <li><a href="#features">Features</a></li>
       <li><a href="#how-it-works">How it Works</a></li>
       <li><a href="/upgrade">Pricing</a></li>
@@ -1550,6 +1595,11 @@
       <li><a href="/connect">Connect</a></li>
     </ul>
     <a href="https://github.com/WOOSYSTEMS/OrbitXE/releases/download/v1.0.0/OrbitXE-1.0.0-arm64.dmg" class="nav-cta">Download for Mac</a>
+    <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
   </nav>
 
   <section class="hero">
@@ -2395,6 +2445,19 @@
   </footer>
 
   <script>
+    // Mobile Menu Toggle
+    function toggleMenu() {
+      document.getElementById('hamburger').classList.toggle('active');
+      document.getElementById('navLinks').classList.toggle('active');
+    }
+    // Close menu when clicking a link
+    document.querySelectorAll('.nav-links a').forEach(link => {
+      link.addEventListener('click', () => {
+        document.getElementById('hamburger').classList.remove('active');
+        document.getElementById('navLinks').classList.remove('active');
+      });
+    });
+
     // Custom Cursor
     const cursor = document.querySelector('.cursor');
     const cursorDot = document.querySelector('.cursor-dot');
