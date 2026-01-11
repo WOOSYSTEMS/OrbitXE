@@ -48,5 +48,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Drawing/Annotation overlay
   sendDrawMessage: (msg) => ipcRenderer.send('draw-message', msg),
-  onDrawMessage: (callback) => ipcRenderer.on('draw-message', (event, msg) => callback(msg))
+  onDrawMessage: (callback) => ipcRenderer.on('draw-message', (event, msg) => callback(msg)),
+
+  // WebRTC streaming
+  onStartStream: (callback) => ipcRenderer.on('start-stream', () => callback()),
+  onStopStream: (callback) => ipcRenderer.on('stop-stream', () => callback()),
+  onWebRTCFromServer: (callback) => ipcRenderer.on('webrtc-from-server', (_, msg) => callback(msg)),
+  sendWebRTCToServer: (msg) => ipcRenderer.send('webrtc-to-server', msg)
 });

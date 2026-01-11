@@ -1077,7 +1077,10 @@ function connectToSignalingServer() {
           // Notify stream window to start
           setTimeout(() => {
             if (streamWindow && !streamWindow.isDestroyed()) {
+              console.log('[WebRTC] Sending start-stream to stream window');
               streamWindow.webContents.send('start-stream');
+            } else {
+              console.log('[WebRTC] Stream window not ready');
             }
           }, 500);
           break;
@@ -3132,8 +3135,12 @@ let streamWindow = null;
 
 // Create hidden streaming window for WebRTC
 function createStreamWindow() {
-  if (streamWindow && !streamWindow.isDestroyed()) return streamWindow;
+  if (streamWindow && !streamWindow.isDestroyed()) {
+    console.log('[WebRTC] Stream window already exists');
+    return streamWindow;
+  }
 
+  console.log('[WebRTC] Creating stream window...');
   streamWindow = new BrowserWindow({
     width: 1,
     height: 1,
@@ -3143,6 +3150,14 @@ function createStreamWindow() {
       contextIsolation: true,
       nodeIntegration: false
     }
+  });
+
+  streamWindow.webContents.on('did-finish-load', () => {
+    console.log('[WebRTC] Stream window loaded');
+  });
+
+  streamWindow.webContents.on('console-message', (_, level, message) => {
+    console.log('[StreamWindow]', message);
   });
 
   streamWindow.loadFile(path.join(__dirname, 'stream.html'));
@@ -3178,8 +3193,11 @@ ipcMain.on('clipboard-write', (_, { text }) => clipboard.writeText(text));
 
 // IPC: Forward WebRTC messages to/from signaling server
 ipcMain.on('webrtc-to-server', (_, msg) => {
+  console.log('[WebRTC] Sending to server:', msg.type);
   if (signalingWs?.readyState === WebSocket.OPEN) {
     signalingWs.send(JSON.stringify(msg));
+  } else {
+    console.log('[WebRTC] Cannot send - WebSocket not open');
   }
 });
 

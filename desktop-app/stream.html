@@ -17,21 +17,18 @@
   let peerConnection = null;
   let stream = null;
 
-  // Start streaming when phone connects
-  window.electronAPI.onStartStream = null;
-  const { ipcRenderer } = require('electron');
-
-  ipcRenderer.on('start-stream', async () => {
+  // Start streaming when phone requests
+  window.electronAPI.onStartStream(async () => {
     console.log('Starting WebRTC stream...');
     await startWebRTC();
   });
 
-  ipcRenderer.on('stop-stream', () => {
+  window.electronAPI.onStopStream(() => {
     console.log('Stopping stream...');
     stopStream();
   });
 
-  ipcRenderer.on('webrtc-from-server', (_, msg) => {
+  window.electronAPI.onWebRTCFromServer((msg) => {
     handleWebRTCMessage(msg);
   });
 
@@ -84,7 +81,7 @@
       // Handle ICE candidates
       peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
-          ipcRenderer.send('webrtc-to-server', {
+          window.electronAPI.sendWebRTCToServer({
             type: 'webrtc-ice',
             candidate: event.candidate
           });
@@ -100,7 +97,7 @@
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
 
-      ipcRenderer.send('webrtc-to-server', {
+      window.electronAPI.sendWebRTCToServer({
         type: 'webrtc-offer',
         sdp: peerConnection.localDescription
       });
