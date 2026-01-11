@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>OrbitXE Remote</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, #0a0a0a 0%, #111 100%);
+      z-index: 100;
+    }
+
+    #loading.hidden { display: none; }
+
+    .logo {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 32px;
+    }
+
+    .logo span { color: #00ff88; }
+
+    #status {
+      font-size: 15px;
+      color: #666;
+      margin-bottom: 24px;
+      text-align: center;
+      padding: 0 20px;
+    }
+
+    .loader {
+      width: 32px;
+      height: 32px;
+      border: 2px solid #222;
+      border-top-color: #00ff88;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #main {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    #screen-container {
+      flex: 1;
+      position: relative;
+      background: #000;
+      overflow: hidden;
+    }
+
+    #screen {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+    }
+
+    #stats {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      display: flex;
+      gap: 8px;
+      font-size: 11px;
+      color: #666;
+    }
+
+    .p2p-badge {
+      background: #00ff8820;
+      color: #00ff88;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    #trackpad {
+      height: 140px;
+      background: #111;
+      border-top: 1px solid #222;
+      position: relative;
+    }
+
+    #trackpad-surface {
+      position: absolute;
+      inset: 8px;
+      background: #0a0a0a;
+      border-radius: 12px;
+      border: 1px solid #222;
+    }
+
+    #trackpad-hint {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #333;
+      font-size: 12px;
+      pointer-events: none;
+    }
+
+    #toolbar {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 12px 16px;
+      background: #0a0a0a;
+      border-top: 1px solid #222;
+    }
+
+    .tool-btn {
+      width: 44px;
+      height: 44px;
+      border: none;
+      border-radius: 10px;
+      background: #1a1a1a;
+      color: #888;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tool-btn:active {
+      transform: scale(0.95);
+      background: #222;
+    }
+
+    .tool-btn svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .tool-btn.danger {
+      background: #2a1515;
+      color: #ff6b6b;
+    }
+
+    #keyboard-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      display: none;
+      flex-direction: column;
+      z-index: 50;
+    }
+
+    #keyboard-overlay.active { display: flex; }
+
+    #keyboard-input {
+      flex: 1;
+      padding: 60px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #keyboard-input input {
+      width: 100%;
+      max-width: 400px;
+      padding: 16px;
+      font-size: 18px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 12px;
+      color: #fff;
+      text-align: center;
+    }
+
+    #keyboard-close {
+      padding: 16px;
+      background: #222;
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div class="logo">ORBIT<span>XE</span></div>
+    <p id="status">Connecting...</p>
+    <div class="loader"></div>
+  </div>
+
+  <div id="main">
+    <div id="screen-container">
+      <video id="screen" autoplay playsinline></video>
+      <div id="stats">
+        <span class="p2p-badge">P2P</span>
+        <span><span id="fps">--</span> FPS</span>
+      </div>
+    </div>
+
+    <div id="trackpad">
+      <div id="trackpad-surface">
+        <div id="trackpad-hint">Swipe to move cursor | Tap to click</div>
+      </div>
+    </div>
+
+    <div id="toolbar">
+      <button class="tool-btn" id="btn-left">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" fill="currentColor"/>
+          <rect x="3" y="14" width="7" height="7"/>
+          <rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/>
+        </svg>
+      </button>
+      <button class="tool-btn" id="btn-right">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/>
+          <rect x="14" y="3" width="7" height="7" fill="currentColor"/>
+          <rect x="14" y="14" width="7" height="7"/>
+        </svg>
+      </button>
+      <button class="tool-btn" id="btn-keyboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M8 16h8"/>
+        </svg>
+      </button>
+      <button class="tool-btn" id="btn-wake">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"/>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+      </button>
+      <button class="tool-btn danger" id="btn-disconnect">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18.36 6.64A9 9 0 1 1 5.64 6.64"/>
+          <line x1="12" y1="2" x2="12" y2="12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="keyboard-overlay">
+    <div id="keyboard-input">
+      <input type="text" id="text-input" placeholder="Type here..." autofocus>
+    </div>
+    <button id="keyboard-close">Done</button>
+  </div>
+
+  <script>
+    // Get code from URL path: /view/ABC123
+    const pathParts = window.location.pathname.split('/');
+    const code = pathParts[pathParts.length - 1];
+
+    if (!code || code.length < 4) {
+      document.getElementById('status').textContent = 'Invalid code';
+      throw new Error('Invalid code');
+    }
+
+    // WebRTC config
+    const RTC_CONFIG = {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+      ]
+    };
+
+    // Elements
+    const loading = document.getElementById('loading');
+    const status = document.getElementById('status');
+    const screen = document.getElementById('screen');
+    const fpsDisplay = document.getElementById('fps');
+    const trackpadSurface = document.getElementById('trackpad-surface');
+
+    let ws = null;
+    let peerConnection = null;
+    let videoWidth = 1920, videoHeight = 1080;
+
+    // Trackpad state
+    let lastTouchX = 0, lastTouchY = 0;
+    let touchStartTime = 0;
+    let isTouching = false;
+    const TRACKPAD_SENSITIVITY = 2.5;
+
+    function connect() {
+      status.textContent = 'Connecting...';
+
+      const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${proto}//${location.host}/?code=${code}&role=phone`);
+
+      ws.onopen = () => {
+        status.textContent = 'Waiting for desktop...';
+      };
+
+      ws.onmessage = async (e) => {
+        try {
+          const msg = JSON.parse(e.data);
+          console.log('Received:', msg.type);
+
+          switch (msg.type) {
+            case 'desktop-connected':
+              status.textContent = 'Desktop connected...';
+              break;
+
+            case 'desktop-disconnected':
+              loading.classList.remove('hidden');
+              status.textContent = 'Desktop disconnected';
+              if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+              }
+              break;
+
+            case 'webrtc-offer':
+              status.textContent = 'Connecting P2P...';
+              await handleOffer(msg.sdp);
+              break;
+
+            case 'webrtc-ice':
+              if (peerConnection && msg.candidate) {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(msg.candidate));
+              }
+              break;
+
+            case 'monitor-list':
+              console.log('Monitors:', msg.monitors);
+              break;
+          }
+        } catch (err) {
+          console.error('Message error:', err);
+        }
+      };
+
+      ws.onclose = () => {
+        loading.classList.remove('hidden');
+        status.textContent = 'Disconnected';
+      };
+
+      ws.onerror = () => {
+        status.textContent = 'Connection error';
+      };
+    }
+
+    async function handleOffer(sdp) {
+      try {
+        peerConnection = new RTCPeerConnection(RTC_CONFIG);
+
+        peerConnection.ontrack = (event) => {
+          console.log('Received track:', event.track.kind);
+          if (event.streams && event.streams[0]) {
+            screen.srcObject = event.streams[0];
+            screen.play().then(() => {
+              loading.classList.add('hidden');
+
+              screen.onloadedmetadata = () => {
+                videoWidth = screen.videoWidth || 1920;
+                videoHeight = screen.videoHeight || 1080;
+                console.log('Video:', videoWidth, 'x', videoHeight);
+              };
+            });
+          }
+        };
+
+        peerConnection.onicecandidate = (event) => {
+          if (event.candidate && ws?.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+              type: 'webrtc-ice',
+              candidate: event.candidate
+            }));
+          }
+        };
+
+        peerConnection.onconnectionstatechange = () => {
+          console.log('State:', peerConnection.connectionState);
+          if (peerConnection.connectionState === 'connected') {
+            startFpsCounter();
+          }
+        };
+
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(sdp));
+
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+
+        ws.send(JSON.stringify({
+          type: 'webrtc-answer',
+          sdp: peerConnection.localDescription
+        }));
+
+      } catch (err) {
+        console.error('WebRTC error:', err);
+        status.textContent = 'WebRTC failed: ' + err.message;
+      }
+    }
+
+    // FPS counter
+    let frameCount = 0;
+    let lastFpsTime = performance.now();
+
+    function startFpsCounter() {
+      if ('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
+        screen.requestVideoFrameCallback(countFrame);
+      }
+    }
+
+    function countFrame(now) {
+      frameCount++;
+      if (now - lastFpsTime >= 1000) {
+        fpsDisplay.textContent = frameCount;
+        frameCount = 0;
+        lastFpsTime = now;
+      }
+      screen.requestVideoFrameCallback(countFrame);
+    }
+
+    // Trackpad touch handling
+    trackpadSurface.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      lastTouchX = touch.clientX;
+      lastTouchY = touch.clientY;
+      touchStartTime = Date.now();
+      isTouching = true;
+    });
+
+    trackpadSurface.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (!isTouching) return;
+
+      const touch = e.touches[0];
+      const deltaX = (touch.clientX - lastTouchX) * TRACKPAD_SENSITIVITY;
+      const deltaY = (touch.clientY - lastTouchY) * TRACKPAD_SENSITIVITY;
+
+      lastTouchX = touch.clientX;
+      lastTouchY = touch.clientY;
+
+      if (ws?.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'mouse-move-delta',
+          deltaX: deltaX,
+          deltaY: deltaY
+        }));
+      }
+    });
+
+    trackpadSurface.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      const duration = Date.now() - touchStartTime;
+      isTouching = false;
+
+      // Tap to click
+      if (duration < 200) {
+        if (ws?.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'mouse-click-current', button: 'left' }));
+        }
+      }
+    });
+
+    // Toolbar buttons
+    document.getElementById('btn-left').onclick = () => {
+      if (ws?.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'mouse-click-current', button: 'left' }));
+      }
+    };
+
+    document.getElementById('btn-right').onclick = () => {
+      if (ws?.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'mouse-click-current', button: 'right' }));
+      }
+    };
+
+    document.getElementById('btn-keyboard').onclick = () => {
+      document.getElementById('keyboard-overlay').classList.add('active');
+      document.getElementById('text-input').focus();
+    };
+
+    document.getElementById('keyboard-close').onclick = () => {
+      document.getElementById('keyboard-overlay').classList.remove('active');
+    };
+
+    document.getElementById('text-input').addEventListener('input', (e) => {
+      const char = e.data;
+      if (char && ws?.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'key-press', key: char }));
+      }
+    });
+
+    document.getElementById('text-input').addEventListener('keydown', (e) => {
+      if (['Enter', 'Backspace', 'Tab', 'Escape', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+        if (ws?.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'key-down', key: e.key }));
+        }
+      }
+    });
+
+    document.getElementById('btn-wake').onclick = () => {
+      if (ws?.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'wake' }));
+      }
+    };
+
+    document.getElementById('btn-disconnect').onclick = () => {
+      if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+      }
+      if (ws) {
+        ws.close();
+        ws = null;
+      }
+      loading.classList.remove('hidden');
+      status.textContent = 'Disconnected';
+    };
+
+    // Start connection
+    connect();
+  </script>
+</body>
+</html>

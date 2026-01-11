@@ -290,9 +290,14 @@ app.post('/api/rooms', (req, res) => {
   });
 });
 
-// Controller route
+// Controller route (browser extension)
 app.get('/remote/:roomId', (req, res) => {
   res.sendFile(join(__dirname, '../public/remote.html'));
+});
+
+// Desktop viewer route (WebRTC streaming)
+app.get('/view/:code', (req, res) => {
+  res.sendFile(join(__dirname, '../public/viewer.html'));
 });
 
 // Privacy policy

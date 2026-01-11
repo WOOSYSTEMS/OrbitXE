@@ -63,15 +63,30 @@ db.exec(`
   );
 
   CREATE INDEX IF NOT EXISTS idx_page_views_date ON page_views(viewed_at);
+
+  CREATE TABLE IF NOT EXISTS computers (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    computer_id TEXT NOT NULL,
+    name TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    last_connected TEXT,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    UNIQUE(user_id, computer_id)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_computers_user_id ON computers(user_id);
 `);
 
 // Feature definitions
 export const FEATURES = {
-  FREE: ['trackpad', 'scroll_buttons'],
+  FREE: ['trackpad', 'scroll_buttons', 'desktop_remote_basic'],
   TRIAL: ['trackpad', 'scroll_buttons', 'keyboard', 'tab_switch', 'open_tab',
-          'youtube', 'netflix', 'slides', 'zoom', 'meet', 'two_finger_scroll'],
+          'youtube', 'netflix', 'slides', 'zoom', 'meet', 'two_finger_scroll',
+          'desktop_remote', 'device_list', 'file_transfer', 'system_controls'],
   PRO: ['trackpad', 'scroll_buttons', 'keyboard', 'tab_switch', 'open_tab',
-        'youtube', 'netflix', 'slides', 'zoom', 'meet', 'two_finger_scroll']
+        'youtube', 'netflix', 'slides', 'zoom', 'meet', 'two_finger_scroll',
+        'desktop_remote', 'device_list', 'file_transfer', 'system_controls']
 };
 
 // User operations
@@ -350,6 +365,81 @@ export function getAdminStats() {
     downloads: downloadStats,
     visitors: visitorStats
   };
+}
+
+// ==================== COMPUTER/DEVICE LIST ====================
+
+// Save a computer for a user
+export function saveComputer({ userId, computerId, name }) {
+  const id = nanoid();
+  const now = new Date().toISOString();
+
+  // Use INSERT OR REPLACE to update if exists
+  const stmt = db.prepare(`
+    INSERT INTO computers (id, user_id, computer_id, name, last_connected)
+    VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT(user_id, computer_id) DO UPDATE SET
+      name = excluded.name,
+      last_connected = excluded.last_connected
+  `);
+  stmt.run(id, userId, computerId.toUpperCase(), name || `Computer ${computerId}`, now);
+  return getComputerByUserAndId(userId, computerId);
+}
+
+// Get a specific computer
+export function getComputerByUserAndId(userId, computerId) {
+  const stmt = db.prepare(`
+    SELECT * FROM computers
+    WHERE user_id = ? AND computer_id = ?
+  `);
+  return stmt.get(userId, computerId.toUpperCase());
+}
+
+// Get all computers for a user
+export function getComputersForUser(userId) {
+  const stmt = db.prepare(`
+    SELECT * FROM computers
+    WHERE user_id = ?
+    ORDER BY last_connected DESC
+  `);
+  return stmt.all(userId);
+}
+
+// Update computer last connected time
+export function updateComputerLastConnected(userId, computerId) {
+  const now = new Date().toISOString();
+  const stmt = db.prepare(`
+    UPDATE computers
+    SET last_connected = ?
+    WHERE user_id = ? AND computer_id = ?
+  `);
+  stmt.run(now, userId, computerId.toUpperCase());
+}
+
+// Rename a computer
+export function renameComputer(userId, computerId, name) {
+  const stmt = db.prepare(`
+    UPDATE computers
+    SET name = ?
+    WHERE user_id = ? AND computer_id = ?
+  `);
+  stmt.run(name, userId, computerId.toUpperCase());
+  return getComputerByUserAndId(userId, computerId);
+}
+
+// Delete a computer
+export function deleteComputer(userId, computerId) {
+  const stmt = db.prepare(`
+    DELETE FROM computers
+    WHERE user_id = ? AND computer_id = ?
+  `);
+  stmt.run(userId, computerId.toUpperCase());
+}
+
+// Check if user has feature access
+export function hasFeature(user, feature) {
+  const license = getLicenseForUser(user);
+  return license.features.includes(feature);
 }
 
 export default db;
