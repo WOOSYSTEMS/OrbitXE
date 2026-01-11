@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, nativeImage, clipboard, screen, desktopCapturer, globalShortcut } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, clipboard, screen, desktopCapturer, globalShortcut, ipcMain } = require('electron');
 const { exec, execSync } = require('child_process');
 const express = require('express');
 const http = require('http');
@@ -1065,15 +1065,46 @@ function connectToSignalingServer() {
 
       switch (msg.type) {
         case 'phone-connected':
-          console.log('[Cloud] Phone connected, ready for commands');
+          console.log('[Cloud] Phone connected');
           phoneConnected = true;
           updateMainWindowStatus();
+          break;
+
+        case 'request-screen':
+          console.log('[Cloud] Phone requested screen share');
+          // Create stream window for WebRTC
+          createStreamWindow();
+          // Notify stream window to start
+          setTimeout(() => {
+            if (streamWindow && !streamWindow.isDestroyed()) {
+              streamWindow.webContents.send('start-stream');
+            }
+          }, 500);
+          break;
+
+        case 'stop-screen':
+          console.log('[Cloud] Phone stopped screen share');
+          if (streamWindow && !streamWindow.isDestroyed()) {
+            streamWindow.webContents.send('stop-stream');
+          }
           break;
 
         case 'phone-disconnected':
           console.log('[Cloud] Phone disconnected');
           phoneConnected = false;
           updateMainWindowStatus();
+          // Stop stream if active
+          if (streamWindow && !streamWindow.isDestroyed()) {
+            streamWindow.webContents.send('stop-stream');
+            streamWindow.close();
+            streamWindow = null;
+          }
+          break;
+
+        // WebRTC signaling messages - forward to stream window
+        case 'webrtc-answer':
+        case 'webrtc-ice':
+          forwardWebRTCToStream(msg);
           break;
 
         // Handle remote control commands from phone
@@ -3093,6 +3124,70 @@ function getQRPageHTML(localQR) {
   </script>
 </body>
 </html>`;
+}
+
+// ==================== IPC HANDLERS FOR WEBRTC STREAMING ====================
+
+let streamWindow = null;
+
+// Create hidden streaming window for WebRTC
+function createStreamWindow() {
+  if (streamWindow && !streamWindow.isDestroyed()) return streamWindow;
+
+  streamWindow = new BrowserWindow({
+    width: 1,
+    height: 1,
+    show: false,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false
+    }
+  });
+
+  streamWindow.loadFile(path.join(__dirname, 'stream.html'));
+  return streamWindow;
+}
+
+// IPC: Get screen sources for WebRTC capture
+ipcMain.handle('get-sources', async () => {
+  const sources = await desktopCapturer.getSources({
+    types: ['screen'],
+    thumbnailSize: { width: 0, height: 0 }
+  });
+  return sources.map(s => ({ id: s.id, name: s.name }));
+});
+
+// IPC: Get screen size
+ipcMain.handle('get-screen-size', () => {
+  const primaryDisplay = screen.getPrimaryDisplay();
+  return primaryDisplay.size;
+});
+
+// IPC: Get computer ID
+ipcMain.handle('get-computer-id', () => COMPUTER_ID);
+
+// IPC: Get mouse position
+ipcMain.handle('get-mouse-position', () => {
+  return screen.getCursorScreenPoint();
+});
+
+// IPC: Clipboard
+ipcMain.handle('clipboard-read', () => clipboard.readText());
+ipcMain.on('clipboard-write', (_, { text }) => clipboard.writeText(text));
+
+// IPC: Forward WebRTC messages to/from signaling server
+ipcMain.on('webrtc-to-server', (_, msg) => {
+  if (signalingWs?.readyState === WebSocket.OPEN) {
+    signalingWs.send(JSON.stringify(msg));
+  }
+});
+
+// Forward WebRTC messages from server to stream window
+function forwardWebRTCToStream(msg) {
+  if (streamWindow && !streamWindow.isDestroyed()) {
+    streamWindow.webContents.send('webrtc-from-server', msg);
+  }
 }
 
 // Start

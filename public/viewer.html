@@ -228,6 +228,69 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .connecting .logo { font-size: 28px; margin-bottom: 24px; }
     .connecting p { margin-top: 16px; color: var(--text2); font-size: 13px; }
+
+    /* Video overlay */
+    .video-overlay {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 150;
+      display: none;
+      flex-direction: column;
+    }
+    .video-overlay.active { display: flex; }
+    .video-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    .video-container video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+    }
+    .video-controls {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 12px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      opacity: 1;
+      transition: opacity 0.3s;
+    }
+    .video-overlay.hide-controls .video-controls { opacity: 0; }
+    .video-close {
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .video-status {
+      font-size: 12px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .video-status .live-dot {
+      width: 8px;
+      height: 8px;
+      background: #f00;
+      border-radius: 50%;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse { 50% { opacity: 0.5; } }
   </style>
 </head>
 <body>
@@ -235,6 +298,21 @@
     <div class="logo">ORBIT<span>XE</span></div>
     <div class="spinner"></div>
     <p id="statusMsg">Connecting to desktop...</p>
+  </div>
+
+  <div class="video-overlay" id="videoOverlay">
+    <div class="video-container" id="videoContainer">
+      <video id="remoteVideo" autoplay playsinline></video>
+      <div class="video-controls">
+        <div class="video-status">
+          <div class="live-dot"></div>
+          <span>Screen Share</span>
+        </div>
+        <button class="video-close" id="videoClose">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
   </div>
 
   <div class="app">
@@ -284,13 +362,13 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 16h8"/></svg>
         <span>Type</span>
       </button>
+      <button class="action-btn" id="btnScreen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        <span>Screen</span>
+      </button>
       <button class="action-btn" id="btnClipboard">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
         <span>Clipboard</span>
-      </button>
-      <button class="action-btn" id="btnWake">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg>
-        <span>Wake</span>
       </button>
     </div>
   </div>
@@ -319,6 +397,75 @@
 
     let ws = null;
     let connected = false;
+
+    // WebRTC for screen sharing
+    const RTC_CONFIG = {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+      ]
+    };
+    let peerConnection = null;
+    const remoteVideo = document.getElementById('remoteVideo');
+    const videoOverlay = document.getElementById('videoOverlay');
+
+    function setupPeerConnection() {
+      peerConnection = new RTCPeerConnection(RTC_CONFIG);
+
+      peerConnection.ontrack = (event) => {
+        console.log('Received remote track:', event.track.kind);
+        if (event.streams && event.streams[0]) {
+          remoteVideo.srcObject = event.streams[0];
+          videoOverlay.classList.add('active');
+        }
+      };
+
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+          send({ type: 'webrtc-ice', candidate: event.candidate });
+        }
+      };
+
+      peerConnection.onconnectionstatechange = () => {
+        console.log('WebRTC state:', peerConnection.connectionState);
+        if (peerConnection.connectionState === 'disconnected' ||
+            peerConnection.connectionState === 'failed') {
+          closeVideo();
+        }
+      };
+    }
+
+    async function handleWebRTCOffer(sdp) {
+      console.log('Received WebRTC offer');
+      setupPeerConnection();
+
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(sdp));
+      const answer = await peerConnection.createAnswer();
+      await peerConnection.setLocalDescription(answer);
+
+      send({ type: 'webrtc-answer', sdp: peerConnection.localDescription });
+      console.log('Sent WebRTC answer');
+    }
+
+    async function handleWebRTCIce(candidate) {
+      if (peerConnection && candidate) {
+        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        console.log('Added ICE candidate');
+      }
+    }
+
+    function closeVideo() {
+      videoOverlay.classList.remove('active');
+      if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+      }
+      remoteVideo.srcObject = null;
+    }
+
+    function requestScreenShare() {
+      send({ type: 'request-screen' });
+    }
 
     // Trackpad state
     let lastTouchX = 0, lastTouchY = 0;
@@ -351,12 +498,17 @@
             statusMsg.textContent = 'Desktop disconnected';
             statusDot.classList.remove('connected');
             statusText.textContent = 'Disconnected';
+            closeVideo();
           } else if (msg.type === 'clipboard-content' && msg.text) {
             navigator.clipboard.writeText(msg.text).then(() => {
               alert('Clipboard synced!');
             }).catch(() => {
               alert('Clipboard: ' + msg.text.slice(0, 100));
             });
+          } else if (msg.type === 'webrtc-offer') {
+            handleWebRTCOffer(msg.sdp).catch(err => console.error('WebRTC offer error:', err));
+          } else if (msg.type === 'webrtc-ice') {
+            handleWebRTCIce(msg.candidate).catch(err => console.error('ICE error:', err));
           }
         } catch (err) {}
       };
@@ -472,8 +624,21 @@
 
     // Bottom bar
     document.getElementById('btnClick').onclick = () => send({ type: 'mouse-click-current', button: 'left' });
-    document.getElementById('btnWake').onclick = () => send({ type: 'wake' });
+    document.getElementById('btnScreen').onclick = () => requestScreenShare();
     document.getElementById('btnClipboard').onclick = () => send({ type: 'clipboard-get' });
+
+    // Video controls
+    document.getElementById('videoClose').onclick = () => {
+      closeVideo();
+      send({ type: 'stop-screen' });
+    };
+
+    // Toggle controls visibility on video tap
+    document.getElementById('videoContainer').onclick = (e) => {
+      if (e.target === remoteVideo) {
+        videoOverlay.classList.toggle('hide-controls');
+      }
+    };
 
     // Keyboard
     const keyboardOverlay = document.getElementById('keyboardOverlay');

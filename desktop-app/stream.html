@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>OrbitXE Stream</title>
+</head>
+<body>
+<script>
+  // WebRTC configuration
+  const RTC_CONFIG = {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' }
+    ]
+  };
+
+  let peerConnection = null;
+  let stream = null;
+
+  // Start streaming when phone connects
+  window.electronAPI.onStartStream = null;
+  const { ipcRenderer } = require('electron');
+
+  ipcRenderer.on('start-stream', async () => {
+    console.log('Starting WebRTC stream...');
+    await startWebRTC();
+  });
+
+  ipcRenderer.on('stop-stream', () => {
+    console.log('Stopping stream...');
+    stopStream();
+  });
+
+  ipcRenderer.on('webrtc-from-server', (_, msg) => {
+    handleWebRTCMessage(msg);
+  });
+
+  async function startWebRTC() {
+    try {
+      // Get screen sources
+      const sources = await window.electronAPI.getSources();
+      if (!sources || sources.length === 0) {
+        console.error('No screen sources available');
+        return;
+      }
+
+      const sourceId = sources[0].id;
+      console.log('Capturing screen:', sources[0].name);
+
+      // Capture screen
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          mandatory: {
+            chromeMediaSource: 'desktop',
+            chromeMediaSourceId: sourceId,
+            minWidth: 1280,
+            maxWidth: 1920,
+            minHeight: 720,
+            maxHeight: 1080,
+            minFrameRate: 15,
+            maxFrameRate: 30
+          }
+        }
+      });
+
+      // Create peer connection
+      peerConnection = new RTCPeerConnection(RTC_CONFIG);
+
+      // Add stream tracks
+      stream.getTracks().forEach(track => {
+        const sender = peerConnection.addTrack(track, stream);
+        console.log('Added track:', track.kind);
+
+        // Set bitrate
+        if (track.kind === 'video') {
+          const params = sender.getParameters();
+          if (!params.encodings) params.encodings = [{}];
+          params.encodings[0].maxBitrate = 2000000; // 2 Mbps
+          sender.setParameters(params).catch(e => console.log('Bitrate error:', e.message));
+        }
+      });
+
+      // Handle ICE candidates
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+          ipcRenderer.send('webrtc-to-server', {
+            type: 'webrtc-ice',
+            candidate: event.candidate
+          });
+        }
+      };
+
+      // Monitor connection state
+      peerConnection.onconnectionstatechange = () => {
+        console.log('Connection state:', peerConnection.connectionState);
+      };
+
+      // Create and send offer
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+
+      ipcRenderer.send('webrtc-to-server', {
+        type: 'webrtc-offer',
+        sdp: peerConnection.localDescription
+      });
+
+      console.log('Sent WebRTC offer');
+
+    } catch (err) {
+      console.error('WebRTC error:', err);
+    }
+  }
+
+  async function handleWebRTCMessage(msg) {
+    if (!peerConnection) return;
+
+    try {
+      if (msg.type === 'webrtc-answer') {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(msg.sdp));
+        console.log('Set remote description (answer)');
+      } else if (msg.type === 'webrtc-ice' && msg.candidate) {
+        await peerConnection.addIceCandidate(new RTCIceCandidate(msg.candidate));
+        console.log('Added ICE candidate');
+      }
+    } catch (err) {
+      console.error('WebRTC message error:', err);
+    }
+  }
+
+  function stopStream() {
+    if (peerConnection) {
+      peerConnection.close();
+      peerConnection = null;
+    }
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      stream = null;
+    }
+  }
+</script>
+</body>
+</html>
