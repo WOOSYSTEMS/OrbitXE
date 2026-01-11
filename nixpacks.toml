@@ -1,0 +1,14 @@
+# Nixpacks config for Railway deployment
+# Ensures proper build environment for native modules like better-sqlite3
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "python3", "gcc", "gnumake"]
+
+[phases.install]
+cmds = ["npm ci || npm install"]
+
+[phases.build]
+cmds = ["npm run build || true"]
+
+[start]
+cmd = "npm start"
