@@ -42,9 +42,14 @@ async function init() {
   computerId = await window.electronAPI.getComputerId();
   codeEl.textContent = computerId;
 
-  // Get temporary session code
+  // Get temporary session code (may be empty for OrbitXE)
   tempCode = await window.electronAPI.getTempCode();
-  tempCodeEl.textContent = tempCode;
+  if (tempCode && tempCodeEl) {
+    tempCodeEl.textContent = tempCode;
+  } else if (tempCodeEl) {
+    // Hide temp code section if not available
+    tempCodeEl.parentElement.style.display = 'none';
+  }
 
   // QR code points to remote page with code
   const connectUrl = `${SIGNALING_SERVER}/view/${computerId}`;

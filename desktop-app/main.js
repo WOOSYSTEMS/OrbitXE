@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, nativeImage, clipboard, screen, desktopCapturer, globalShortcut, ipcMain } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, clipboard, screen, desktopCapturer, globalShortcut } = require('electron');
 const { exec, execSync } = require('child_process');
 const express = require('express');
 const http = require('http');
@@ -58,41 +58,9 @@ const sslOptions = {
 };
 const QRCode = require('qrcode');
 const crypto = require('crypto');
-const WebSocket = require('ws');
 
 const PORT = 8765;
 const CLOUD_API = 'https://orbitxe.com';
-const SIGNALING_SERVER = 'wss://orbitxe.com';
-
-// ==================== CLOUD STREAMING (WebRTC) ====================
-// Unique computer ID for cloud connections (persisted)
-const COMPUTER_ID_PATH = path.join(app.getPath('userData'), 'computer-id.txt');
-
-function getComputerId() {
-  try {
-    if (fs.existsSync(COMPUTER_ID_PATH)) {
-      return fs.readFileSync(COMPUTER_ID_PATH, 'utf8').trim();
-    }
-  } catch (e) {}
-  // Generate new 6-char ID
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let id = '';
-  for (let i = 0; i < 6; i++) {
-    id += chars[Math.floor(Math.random() * chars.length)];
-  }
-  try {
-    fs.writeFileSync(COMPUTER_ID_PATH, id);
-  } catch (e) {}
-  return id;
-}
-
-const COMPUTER_ID = getComputerId();
-console.log('Computer ID:', COMPUTER_ID);
-
-// Cloud streaming state
-let signalingWs = null;
-let cloudConnected = false;
-let phoneConnected = false;
 
 // Generate unique session token for this instance
 const SESSION_TOKEN = crypto.randomBytes(16).toString('hex');
@@ -1040,160 +1008,6 @@ function handleCommand(msg, deviceId = 'unknown') {
         wakeOnLan(msg.mac, msg.broadcast);
       }
       break;
-  }
-}
-
-// ==================== CLOUD STREAMING CONNECTION ====================
-// Connect to orbitxe.com signaling server for WebRTC streaming
-
-function connectToSignalingServer() {
-  if (signalingWs && signalingWs.readyState === WebSocket.OPEN) return;
-
-  console.log('[Cloud] Connecting to signaling server...');
-  signalingWs = new WebSocket(`${SIGNALING_SERVER}/?code=${COMPUTER_ID}&role=desktop`);
-
-  signalingWs.on('open', () => {
-    console.log('[Cloud] Connected to signaling server');
-    cloudConnected = true;
-    updateMainWindowStatus();
-  });
-
-  signalingWs.on('message', async (data) => {
-    try {
-      const msg = JSON.parse(data.toString());
-      console.log('[Cloud] Received:', msg.type);
-
-      switch (msg.type) {
-        case 'phone-connected':
-          console.log('[Cloud] Phone connected');
-          phoneConnected = true;
-          updateMainWindowStatus();
-          break;
-
-        case 'request-screen':
-          console.log('[Cloud] Phone requested screen share');
-          // Create stream window for WebRTC
-          createStreamWindow();
-          // Notify stream window to start
-          setTimeout(() => {
-            if (streamWindow && !streamWindow.isDestroyed()) {
-              console.log('[WebRTC] Sending start-stream to stream window');
-              streamWindow.webContents.send('start-stream');
-            } else {
-              console.log('[WebRTC] Stream window not ready');
-            }
-          }, 500);
-          break;
-
-        case 'stop-screen':
-          console.log('[Cloud] Phone stopped screen share');
-          if (streamWindow && !streamWindow.isDestroyed()) {
-            streamWindow.webContents.send('stop-stream');
-          }
-          break;
-
-        case 'phone-disconnected':
-          console.log('[Cloud] Phone disconnected');
-          phoneConnected = false;
-          updateMainWindowStatus();
-          // Stop stream if active
-          if (streamWindow && !streamWindow.isDestroyed()) {
-            streamWindow.webContents.send('stop-stream');
-            streamWindow.close();
-            streamWindow = null;
-          }
-          break;
-
-        // WebRTC signaling messages - forward to stream window
-        case 'webrtc-answer':
-        case 'webrtc-ice':
-          forwardWebRTCToStream(msg);
-          break;
-
-        // Handle remote control commands from phone
-        case 'mouse-move-delta':
-          if (nutMouse) {
-            const pos = await nutMouse.getPosition();
-            await nutMouse.setPosition({ x: pos.x + msg.deltaX, y: pos.y + msg.deltaY });
-          }
-          break;
-
-        case 'mouse-click-current':
-          if (nutMouse) {
-            const { Button } = require('@nut-tree-fork/nut-js');
-            await nutMouse.click(msg.button === 'right' ? Button.RIGHT : Button.LEFT);
-          }
-          break;
-
-        case 'mouse-double-click':
-          if (nutMouse) {
-            const { Button } = require('@nut-tree-fork/nut-js');
-            await nutMouse.doubleClick(Button.LEFT);
-          }
-          break;
-
-        case 'mouse-scroll':
-          if (nutMouse) {
-            await nutMouse.scrollDown(msg.deltaY > 0 ? Math.abs(msg.deltaY) : 0);
-            await nutMouse.scrollUp(msg.deltaY < 0 ? Math.abs(msg.deltaY) : 0);
-          }
-          break;
-
-        case 'key-press':
-          if (nutKeyboard && msg.key) {
-            await nutKeyboard.type(msg.key);
-          }
-          break;
-
-        case 'key-down':
-          handleCommand({ type: 'key', key: msg.key.toLowerCase() }, 'cloud');
-          break;
-
-        case 'shortcut':
-          handleCommand({ type: 'shortcut', key: msg.key, modifiers: { cmd: true, shift: msg.shift, alt: msg.alt } }, 'cloud');
-          break;
-
-        case 'wake':
-          handleCommand({ type: 'wake' }, 'cloud');
-          break;
-
-        case 'clipboard-get':
-          const text = clipboard.readText();
-          if (signalingWs?.readyState === WebSocket.OPEN) {
-            signalingWs.send(JSON.stringify({ type: 'clipboard-content', text }));
-          }
-          break;
-
-        case 'clipboard-set':
-          if (msg.text) clipboard.writeText(msg.text);
-          break;
-      }
-    } catch (err) {
-      console.error('[Cloud] Message error:', err);
-    }
-  });
-
-  signalingWs.on('close', () => {
-    console.log('[Cloud] Disconnected from signaling server');
-    cloudConnected = false;
-    phoneConnected = false;
-    updateMainWindowStatus();
-    // Reconnect after delay
-    setTimeout(connectToSignalingServer, 5000);
-  });
-
-  signalingWs.on('error', (err) => {
-    console.error('[Cloud] WebSocket error:', err.message);
-  });
-}
-
-function updateMainWindowStatus() {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.executeJavaScript(`
-      if (typeof updateCloudStatus === 'function') {
-        updateCloudStatus(${cloudConnected}, ${phoneConnected});
-      }
-    `).catch(() => {});
   }
 }
 
@@ -3057,7 +2871,6 @@ function handleLaserOrientation(e) {
 
 // QR Page HTML
 function getQRPageHTML(localQR) {
-  const cloudUrl = `https://orbitxe.com/view/${COMPUTER_ID}`;
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -3065,147 +2878,39 @@ function getQRPageHTML(localQR) {
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{background:#0a0a0a;color:#fff;font-family:-apple-system,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center}
-    .container{text-align:center;padding:20px}
-    h1{font-size:28px;margin-bottom:5px}h1 span{color:#00ff88}
-    .subtitle{color:#666;margin-bottom:20px;font-size:13px}
-    .modes{display:flex;gap:20px;margin-bottom:15px}
-    .mode{flex:1;background:#141414;border-radius:12px;padding:15px;border:1px solid #222}
-    .mode-title{font-size:11px;color:#888;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px}
-    .qr-box{background:#fff;padding:10px;border-radius:12px;display:inline-block;margin-bottom:10px}
-    .qr-box img{display:block;width:140px;height:140px}
-    .url{font-family:monospace;color:#00ff88;font-size:10px;margin-bottom:5px;word-break:break-all}
-    .hint{color:#555;font-size:10px}
-    .cloud-code{font-size:28px;font-weight:700;letter-spacing:6px;color:#00ff88;margin:10px 0}
-    .cloud-status{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:#666}
-    .status-dot{width:8px;height:8px;border-radius:50%;background:#f59e0b}
-    .status-dot.connected{background:#00ff88;box-shadow:0 0 8px #00ff88}
-    .badge{display:inline-block;margin-top:15px;padding:5px 10px;background:#1a1a1a;border-radius:15px;font-size:10px;color:#666}
+    .container{text-align:center;padding:30px}
+    h1{font-size:32px;margin-bottom:5px}h1 span{color:#00ff88}
+    .subtitle{color:#666;margin-bottom:25px;font-size:14px}
+    .qr-box{background:#fff;padding:15px;border-radius:16px;display:inline-block;margin-bottom:15px}
+    .qr-box img{display:block;width:220px;height:220px}
+    .url{font-family:monospace;color:#00ff88;font-size:13px;margin-bottom:8px;word-break:break-all}
+    .hint{color:#666;font-size:12px}
+    .badge{display:inline-block;margin-top:20px;padding:6px 12px;background:#1a1a1a;border-radius:20px;font-size:11px;color:#666}
     .badge span{color:#00ff88}
+    .features{margin-top:20px;text-align:left;display:inline-block}
+    .feature{font-size:11px;color:#666;padding:3px 0}
+    .feature::before{content:'✓ ';color:#00ff88}
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Orbit<span>XE</span> Pro</h1>
     <p class="subtitle">Universal Device Control</p>
-
-    <div class="modes">
-      <div class="mode">
-        <div class="mode-title">Local (Same WiFi)</div>
-        <div class="qr-box"><img src="${localQR}"></div>
-        <div class="url">${secureRemoteUrl}</div>
-        <p class="hint">Scan with phone on same network</p>
-      </div>
-      <div class="mode">
-        <div class="mode-title">Cloud (Anywhere)</div>
-        <div class="cloud-code" id="cloudCode">${COMPUTER_ID}</div>
-        <div class="cloud-status">
-          <div class="status-dot" id="cloudDot"></div>
-          <span id="cloudStatus">Connecting...</span>
-        </div>
-        <div class="url">${cloudUrl}</div>
-        <p class="hint">Control from anywhere via internet</p>
-      </div>
-    </div>
-
+    <div class="qr-box"><img src="${localQR}"></div>
+    <div class="url">${secureRemoteUrl}</div>
+    <p class="hint">Scan with your phone • Same WiFi network</p>
     <div class="badge">Pro Features <span>Unlocked</span></div>
+    <div class="features">
+      <div class="feature">Full Keyboard & Gestures</div>
+      <div class="feature">App-Specific Controls</div>
+      <div class="feature">Screen Preview</div>
+      <div class="feature">Clipboard Sync</div>
+      <div class="feature">Voice Commands</div>
+      <div class="feature">Multi-Monitor Support</div>
+    </div>
   </div>
-  <script>
-    function updateCloudStatus(connected, phoneConnected) {
-      const dot = document.getElementById('cloudDot');
-      const status = document.getElementById('cloudStatus');
-      if (phoneConnected) {
-        dot.className = 'status-dot connected';
-        status.textContent = 'Phone Connected';
-      } else if (connected) {
-        dot.className = 'status-dot connected';
-        status.textContent = 'Ready';
-      } else {
-        dot.className = 'status-dot';
-        status.textContent = 'Connecting...';
-      }
-    }
-  </script>
 </body>
 </html>`;
-}
-
-// ==================== IPC HANDLERS FOR WEBRTC STREAMING ====================
-
-let streamWindow = null;
-
-// Create hidden streaming window for WebRTC
-function createStreamWindow() {
-  if (streamWindow && !streamWindow.isDestroyed()) {
-    console.log('[WebRTC] Stream window already exists');
-    return streamWindow;
-  }
-
-  console.log('[WebRTC] Creating stream window...');
-  streamWindow = new BrowserWindow({
-    width: 1,
-    height: 1,
-    show: false,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false
-    }
-  });
-
-  streamWindow.webContents.on('did-finish-load', () => {
-    console.log('[WebRTC] Stream window loaded');
-  });
-
-  streamWindow.webContents.on('console-message', (_, level, message) => {
-    console.log('[StreamWindow]', message);
-  });
-
-  streamWindow.loadFile(path.join(__dirname, 'stream.html'));
-  return streamWindow;
-}
-
-// IPC: Get screen sources for WebRTC capture
-ipcMain.handle('get-sources', async () => {
-  const sources = await desktopCapturer.getSources({
-    types: ['screen'],
-    thumbnailSize: { width: 0, height: 0 }
-  });
-  return sources.map(s => ({ id: s.id, name: s.name }));
-});
-
-// IPC: Get screen size
-ipcMain.handle('get-screen-size', () => {
-  const primaryDisplay = screen.getPrimaryDisplay();
-  return primaryDisplay.size;
-});
-
-// IPC: Get computer ID
-ipcMain.handle('get-computer-id', () => COMPUTER_ID);
-
-// IPC: Get mouse position
-ipcMain.handle('get-mouse-position', () => {
-  return screen.getCursorScreenPoint();
-});
-
-// IPC: Clipboard
-ipcMain.handle('clipboard-read', () => clipboard.readText());
-ipcMain.on('clipboard-write', (_, { text }) => clipboard.writeText(text));
-
-// IPC: Forward WebRTC messages to/from signaling server
-ipcMain.on('webrtc-to-server', (_, msg) => {
-  console.log('[WebRTC] Sending to server:', msg.type);
-  if (signalingWs?.readyState === WebSocket.OPEN) {
-    signalingWs.send(JSON.stringify(msg));
-  } else {
-    console.log('[WebRTC] Cannot send - WebSocket not open');
-  }
-});
-
-// Forward WebRTC messages from server to stream window
-function forwardWebRTCToStream(msg) {
-  if (streamWindow && !streamWindow.isDestroyed()) {
-    streamWindow.webContents.send('webrtc-from-server', msg);
-  }
 }
 
 // Start
@@ -3217,8 +2922,6 @@ app.whenReady().then(() => {
     console.log(`OrbitXE HTTPS running on ${localIP}:${PORT + 1} (for Android gyro)`);
     createWindow();
     createTray();
-    // Connect to cloud signaling server for remote access
-    connectToSignalingServer();
   });
 });
 

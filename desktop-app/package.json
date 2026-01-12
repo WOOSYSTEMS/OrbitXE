@@ -22,8 +22,7 @@
   "dependencies": {
     "@nut-tree-fork/nut-js": "^4.2.6",
     "express": "^4.18.2",
-    "qrcode": "^1.5.3",
-    "ws": "^8.19.0"
+    "qrcode": "^1.5.3"
   },
   "build": {
     "appId": "com.orbitxe.desktop",
@@ -61,15 +60,11 @@
       "target": [
         {
           "target": "nsis",
-          "arch": [
-            "x64"
-          ]
+          "arch": ["x64"]
         },
         {
           "target": "portable",
-          "arch": [
-            "x64"
-          ]
+          "arch": ["x64"]
         }
       ],
       "icon": "icon.png"
